@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlayerDetailDialog } from "./PlayerDetailDialog";
-import { Triangle, Plus, Minus, X, Circle, Star, Square } from "lucide-react";
+import { Triangle, Plus, Minus, X, Circle, Square } from "lucide-react";
 
 interface PlayerCardProps {
   player: Player;
@@ -101,60 +101,30 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               </div>
             ) : (
               <div className="flex space-x-1 flex-shrink-0">
-                {/* Quality buttons with different shapes for fail (triangle) and ace (star) */}
+                {/* Quality buttons - square for fail, triangle/diamond for ace, with symbols inside */}
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 flex items-center justify-center p-0 overflow-hidden ${getQualityColor("good")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("good")}`}
                   onClick={() => handleServeClick(activeType, "good")}
                 >
-                  {activeType === "fail" ? (
-                    <div className="relative w-full h-full flex items-center justify-center">
-                      <Triangle className="h-6 w-6 fill-current absolute" />
-                      <Plus className="h-4 w-4 z-10 relative" />
-                    </div>
-                  ) : (
-                    <div className="relative w-full h-full flex items-center justify-center">
-                      <Star className="h-6 w-6 fill-current absolute" />
-                      <Plus className="h-4 w-4 z-10 relative" />
-                    </div>
-                  )}
+                  <Plus className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
                 </Button>
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 flex items-center justify-center p-0 overflow-hidden ${getQualityColor("neutral")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("neutral")}`}
                   onClick={() => handleServeClick(activeType, "neutral")}
                 >
-                  {activeType === "fail" ? (
-                    <div className="relative w-full h-full flex items-center justify-center">
-                      <Triangle className="h-6 w-6 fill-current absolute" />
-                      <Circle className="h-4 w-4 z-10 relative" />
-                    </div>
-                  ) : (
-                    <div className="relative w-full h-full flex items-center justify-center">
-                      <Star className="h-6 w-6 fill-current absolute" />
-                      <Circle className="h-4 w-4 z-10 relative" />
-                    </div>
-                  )}
+                  <Circle className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
                 </Button>
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 flex items-center justify-center p-0 overflow-hidden ${getQualityColor("bad")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("bad")}`}
                   onClick={() => handleServeClick(activeType, "bad")}
                 >
-                  {activeType === "fail" ? (
-                    <div className="relative w-full h-full flex items-center justify-center">
-                      <Triangle className="h-6 w-6 fill-current absolute" />
-                      <Minus className="h-4 w-4 z-10 relative" />
-                    </div>
-                  ) : (
-                    <div className="relative w-full h-full flex items-center justify-center">
-                      <Star className="h-6 w-6 fill-current absolute" />
-                      <Minus className="h-4 w-4 z-10 relative" />
-                    </div>
-                  )}
+                  <Minus className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
                 </Button>
                 <Button 
                   variant="outline" 

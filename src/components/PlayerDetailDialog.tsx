@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { X, Trash, Pencil, Star, Triangle, Plus, Circle, Minus } from "lucide-react";
+import { X, Trash, Pencil, Square, Plus, Circle, Minus } from "lucide-react";
 
 interface PlayerDetailDialogProps {
   playerId: string;
@@ -59,24 +59,18 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   
   // Get quality icon based on quality and type
   const QualityIcon = ({ quality, type }: { quality: ServeQuality, type: "fail" | "ace" }) => {
+    const isSquare = type === "fail";
+    
     // Define the icon based on quality
-    let IconSymbol = Circle;
-    if (quality === "good") IconSymbol = Plus;
-    else if (quality === "bad") IconSymbol = Minus;
+    let Icon = Circle;
+    if (quality === "good") Icon = Plus;
+    else if (quality === "bad") Icon = Minus;
 
     return (
-      <div className="relative w-6 h-6 inline-flex items-center justify-center">
-        {type === "fail" ? (
-          <>
-            <Triangle className={`h-6 w-6 fill-current absolute ${getQualityColor(quality)}`} />
-            <IconSymbol className="h-3 w-3 z-10 relative" />
-          </>
-        ) : (
-          <>
-            <Star className={`h-6 w-6 fill-current absolute ${getQualityColor(quality)}`} />
-            <IconSymbol className="h-3 w-3 z-10 relative" />
-          </>
-        )}
+      <div 
+        className={`inline-flex items-center justify-center h-6 w-6 ${isSquare ? 'rounded-md' : 'rounded-none transform rotate-45'} ${getQualityColor(quality)}`}
+      >
+        <Icon className={`h-3 w-3 ${!isSquare ? "transform -rotate-45" : ""}`} />
       </div>
     );
   };
