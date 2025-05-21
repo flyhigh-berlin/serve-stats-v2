@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlayerDetailDialog } from "./PlayerDetailDialog";
-import { Triangle, Plus, Minus, X, Circle, Square, Star } from "lucide-react";
+import { Triangle, Plus, Minus, X, Circle, Square } from "lucide-react";
 
 interface PlayerCardProps {
   player: Player;
@@ -101,51 +101,30 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               </div>
             ) : (
               <div className="flex space-x-1 flex-shrink-0">
-                {/* Quality buttons - square for fail, star for ace, with symbols inside */}
+                {/* Quality buttons - square for fail, triangle/diamond for ace, with symbols inside */}
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "star-button"} p-0 ${getQualityColor("good")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("good")}`}
                   onClick={() => handleServeClick(activeType, "good")}
                 >
-                  {activeType === "fail" ? (
-                    <Plus className="h-4 w-4" />
-                  ) : (
-                    <div className="relative">
-                      <Star className="h-8 w-8 absolute top-0 left-0 fill-current" />
-                      <Plus className="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10" />
-                    </div>
-                  )}
+                  <Plus className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
                 </Button>
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "star-button"} p-0 ${getQualityColor("neutral")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("neutral")}`}
                   onClick={() => handleServeClick(activeType, "neutral")}
                 >
-                  {activeType === "fail" ? (
-                    <Circle className="h-4 w-4" />
-                  ) : (
-                    <div className="relative">
-                      <Star className="h-8 w-8 absolute top-0 left-0 fill-current" />
-                      <Circle className="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10" />
-                    </div>
-                  )}
+                  <Circle className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
                 </Button>
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "star-button"} p-0 ${getQualityColor("bad")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("bad")}`}
                   onClick={() => handleServeClick(activeType, "bad")}
                 >
-                  {activeType === "fail" ? (
-                    <Minus className="h-4 w-4" />
-                  ) : (
-                    <div className="relative">
-                      <Star className="h-8 w-8 absolute top-0 left-0 fill-current" />
-                      <Minus className="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10" />
-                    </div>
-                  )}
+                  <Minus className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
                 </Button>
                 <Button 
                   variant="outline" 
