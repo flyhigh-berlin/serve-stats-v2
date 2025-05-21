@@ -68,7 +68,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     // Make sure circle and diamond are similar in appearance - increased size for circle to match diamond's visual weight
     return (
       <div 
-        className={`inline-flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7'} ${getQualityColor(quality)}`}
+        className={`inline-flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-95'} ${getQualityColor(quality)}`}
       >
         <Icon className={`h-3 w-3 ${!isCircle ? "transform -rotate-45" : ""}`} />
       </div>
