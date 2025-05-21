@@ -68,7 +68,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
 
     return (
       <div 
-        className={`inline-flex items-center justify-center h-6 w-6 ${isCircle ? 'rounded-full' : 'rounded-none transform rotate-45'} ${getQualityColor(quality)}`}
+        className={`inline-flex items-center justify-center h-7 w-7 ${isCircle ? 'rounded-full' : 'rounded-none transform rotate-45'} ${getQualityColor(quality)}`}
       >
         <Icon className={`h-3 w-3 ${!isCircle ? "transform -rotate-45" : ""}`} />
       </div>
