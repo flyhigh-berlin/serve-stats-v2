@@ -101,42 +101,30 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               </div>
             ) : (
               <div className="flex space-x-1 flex-shrink-0">
-                {/* Quality buttons with shape based on fail/ace and color based on quality */}
+                {/* Quality buttons - square for fail, circle for ace, with symbols inside */}
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 rounded-full p-0 ${getQualityColor("good")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-full"} p-0 ${getQualityColor("good")}`}
                   onClick={() => handleServeClick(activeType, "good")}
                 >
-                  {activeType === "fail" ? (
-                    <Square className="h-4 w-4" />
-                  ) : (
-                    <Circle className="h-4 w-4" />
-                  )}
+                  <Plus className="h-4 w-4" />
                 </Button>
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 rounded-full p-0 ${getQualityColor("neutral")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-full"} p-0 ${getQualityColor("neutral")}`}
                   onClick={() => handleServeClick(activeType, "neutral")}
                 >
-                  {activeType === "fail" ? (
-                    <Square className="h-4 w-4" />
-                  ) : (
-                    <Circle className="h-4 w-4" />
-                  )}
+                  <Circle className="h-4 w-4" />
                 </Button>
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 rounded-full p-0 ${getQualityColor("bad")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-full"} p-0 ${getQualityColor("bad")}`}
                   onClick={() => handleServeClick(activeType, "bad")}
                 >
-                  {activeType === "fail" ? (
-                    <Square className="h-4 w-4" />
-                  ) : (
-                    <Circle className="h-4 w-4" />
-                  )}
+                  <Minus className="h-4 w-4" />
                 </Button>
                 <Button 
                   variant="outline" 
