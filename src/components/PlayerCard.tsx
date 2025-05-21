@@ -4,7 +4,7 @@ import { Player, ServeQuality } from "../types";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface PlayerCardProps {
   player: Player;
@@ -39,34 +39,32 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   
   return (
     <Card className="w-full">
-      <CardContent className="p-3 sm:p-6">
-        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <span className="font-semibold text-base truncate max-w-[100px] sm:max-w-[150px]">
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between">
+          {/* Player name and stats section */}
+          <div className="flex items-center space-x-2 overflow-hidden">
+            <span className="font-semibold truncate max-w-[100px] sm:max-w-[150px]">
               {player.name}
             </span>
-            <div className="flex items-center gap-2">
-              <div className="flex flex-col items-center">
-                <span className="text-xs text-muted-foreground">F</span>
-                <span className={`text-sm font-semibold ${animatingFail ? "stat-change" : ""}`}>
-                  {stats.fails}
-                </span>
-              </div>
-              <div className="flex flex-col items-center">
-                <span className="text-xs text-muted-foreground">A</span>
-                <span className={`text-sm font-semibold ${animatingAce ? "stat-change" : ""}`}>
-                  {stats.aces}
-                </span>
-              </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm">
+                <span className="text-muted-foreground">F:</span>
+                <span className={`font-medium ${animatingFail ? "stat-change" : ""}`}>{stats.fails}</span>
+              </span>
+              <span className="text-sm">
+                <span className="text-muted-foreground">A:</span>
+                <span className={`font-medium ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
+              </span>
             </div>
           </div>
           
+          {/* Action buttons section */}
           {!activeType ? (
-            <div className="flex gap-1">
+            <div className="flex space-x-1 flex-shrink-0">
               <Button 
                 variant="destructive" 
                 size="sm"
-                className="h-7 px-2 text-xs"
+                className="h-7 w-10 px-1 text-xs"
                 onClick={() => setActiveType("fail")}
               >
                 +F
@@ -74,34 +72,34 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               <Button 
                 variant="default" 
                 size="sm"
-                className="h-7 px-2 text-xs"
+                className="h-7 w-10 px-1 text-xs"
                 onClick={() => setActiveType("ace")}
               >
                 +A
               </Button>
             </div>
           ) : (
-            <div className="flex gap-1 flex-wrap justify-end">
+            <div className="flex space-x-1 flex-shrink-0">
               <Badge 
-                className="cursor-pointer bg-serve-good hover:bg-serve-good/80 text-xs py-0 h-6"
+                className="cursor-pointer bg-serve-good hover:bg-serve-good/80 text-xs py-0 h-6 w-6 flex items-center justify-center"
                 onClick={() => handleServeClick(activeType, "good")}
               >
                 G
               </Badge>
               <Badge 
-                className="cursor-pointer bg-serve-neutral hover:bg-serve-neutral/80 text-black text-xs py-0 h-6"
+                className="cursor-pointer bg-serve-neutral hover:bg-serve-neutral/80 text-black text-xs py-0 h-6 w-6 flex items-center justify-center"
                 onClick={() => handleServeClick(activeType, "neutral")}
               >
                 N
               </Badge>
               <Badge 
-                className="cursor-pointer bg-serve-bad hover:bg-serve-bad/80 text-xs py-0 h-6"
+                className="cursor-pointer bg-serve-bad hover:bg-serve-bad/80 text-xs py-0 h-6 w-6 flex items-center justify-center"
                 onClick={() => handleServeClick(activeType, "bad")}
               >
                 B
               </Badge>
               <Badge 
-                className="cursor-pointer bg-gray-300 hover:bg-gray-400 text-gray-700 text-xs py-0 h-6"
+                className="cursor-pointer bg-gray-300 hover:bg-gray-400 text-gray-700 text-xs py-0 h-6 w-6 flex items-center justify-center"
                 onClick={() => setActiveType(null)}
               >
                 X

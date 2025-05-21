@@ -27,10 +27,10 @@ export function AddPlayerForm() {
   
   return (
     <Card>
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-1 pt-4">
         <CardTitle className="text-lg">Add Player</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-1 pb-4">
         <form onSubmit={handleSubmit} className="flex space-x-2">
           <Input
             value={playerName}
@@ -38,7 +38,7 @@ export function AddPlayerForm() {
             placeholder="Player name"
             className="flex-1"
           />
-          <Button type="submit" size="sm" className="whitespace-nowrap">Add</Button>
+          <Button type="submit" className="px-4 text-sm">Add</Button>
         </form>
       </CardContent>
     </Card>
