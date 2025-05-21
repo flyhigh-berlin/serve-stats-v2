@@ -42,16 +42,16 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       <CardContent className="p-3">
         <div className="flex items-center justify-between">
           {/* Player name and stats section */}
-          <div className="flex flex-col mr-2">
-            <span className="font-semibold truncate max-w-[120px] sm:max-w-[150px]">
+          <div className="flex items-center space-x-2 overflow-hidden">
+            <span className="font-semibold truncate max-w-[100px] sm:max-w-[150px]">
               {player.name}
             </span>
-            <div className="flex space-x-4">
-              <span className="text-sm">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs">
                 <span className="text-muted-foreground">F:</span>
                 <span className={`font-medium ${animatingFail ? "stat-change" : ""}`}>{stats.fails}</span>
               </span>
-              <span className="text-sm">
+              <span className="text-xs">
                 <span className="text-muted-foreground">A:</span>
                 <span className={`font-medium ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
               </span>
