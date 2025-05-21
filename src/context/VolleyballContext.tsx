@@ -13,6 +13,7 @@ interface VolleyballContextType {
   // Actions
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
+  updatePlayerName: (playerId: string, newName: string) => void;
   addGameDay: (date: string, location?: string, notes?: string) => void;
   setCurrentGameDay: (gameId: string | null) => void;
   
@@ -96,6 +97,13 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   // Remove a player
   const removePlayer = (id: string) => {
     setPlayers(players.filter(player => player.id !== id));
+  };
+
+  // Update player name
+  const updatePlayerName = (playerId: string, newName: string) => {
+    setPlayers(players.map(player => 
+      player.id === playerId ? { ...player, name: newName } : player
+    ));
   };
 
   // Add a new game day
@@ -244,6 +252,7 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     currentGameDay,
     addPlayer,
     removePlayer,
+    updatePlayerName,
     addGameDay,
     setCurrentGameDay,
     addServe,

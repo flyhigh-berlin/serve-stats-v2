@@ -5,6 +5,7 @@ import { useVolleyball } from "../context/VolleyballContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { PlayerDetailDialog } from "./PlayerDetailDialog";
 
 interface PlayerCardProps {
   player: Player;
@@ -16,6 +17,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   const [activeType, setActiveType] = useState<"fail" | "ace" | null>(null);
   const [animatingFail, setAnimatingFail] = useState(false);
   const [animatingAce, setAnimatingAce] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   // Get the player's stats for the current game or all games
   const stats = getPlayerStats(player.id, gameId);
@@ -38,80 +40,92 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   };
   
   return (
-    <Card className="w-full">
-      <CardContent className="p-3">
-        <div className="flex items-center justify-between">
-          {/* Player name section */}
-          <div className="flex-grow mr-2 overflow-hidden">
-            <span className="font-semibold truncate block max-w-full">
-              {player.name}
-            </span>
-          </div>
-          
-          {/* Stats section - always positioned to the right */}
-          <div className="flex items-center mr-2 flex-shrink-0">
-            <div className="flex flex-col items-end">
-              <span className="text-xs">
-                <span className="text-muted-foreground">F:</span>
-                <span className={`font-medium ${animatingFail ? "stat-change" : ""}`}>{stats.fails}</span>
-              </span>
-              <span className="text-xs">
-                <span className="text-muted-foreground">A:</span>
-                <span className={`font-medium ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
+    <>
+      <Card className="w-full">
+        <CardContent className="p-3">
+          <div className="flex items-center justify-between">
+            {/* Player name section - clickable to open dialog */}
+            <div 
+              className="flex-grow mr-2 overflow-hidden cursor-pointer hover:text-primary"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <span className="font-semibold truncate block max-w-full">
+                {player.name}
               </span>
             </div>
+            
+            {/* Stats section - always positioned to the right */}
+            <div className="flex items-center mr-2 flex-shrink-0">
+              <div className="flex flex-col items-end">
+                <span className="text-xs">
+                  <span className="text-muted-foreground">F:</span>
+                  <span className={`font-medium ${animatingFail ? "stat-change" : ""}`}>{stats.fails}</span>
+                </span>
+                <span className="text-xs">
+                  <span className="text-muted-foreground">A:</span>
+                  <span className={`font-medium ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
+                </span>
+              </div>
+            </div>
+            
+            {/* Action buttons section */}
+            {!activeType ? (
+              <div className="flex space-x-1 flex-shrink-0">
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  className="h-7 w-10 px-1 text-xs"
+                  onClick={() => setActiveType("fail")}
+                >
+                  +F
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  className="h-7 w-10 px-1 text-xs"
+                  onClick={() => setActiveType("ace")}
+                >
+                  +A
+                </Button>
+              </div>
+            ) : (
+              <div className="flex space-x-1 flex-shrink-0">
+                <Badge 
+                  className="cursor-pointer bg-serve-good hover:bg-serve-good/80 text-xs py-0 h-6 w-6 flex items-center justify-center"
+                  onClick={() => handleServeClick(activeType, "good")}
+                >
+                  G
+                </Badge>
+                <Badge 
+                  className="cursor-pointer bg-serve-neutral hover:bg-serve-neutral/80 text-black text-xs py-0 h-6 w-6 flex items-center justify-center"
+                  onClick={() => handleServeClick(activeType, "neutral")}
+                >
+                  N
+                </Badge>
+                <Badge 
+                  className="cursor-pointer bg-serve-bad hover:bg-serve-bad/80 text-xs py-0 h-6 w-6 flex items-center justify-center"
+                  onClick={() => handleServeClick(activeType, "bad")}
+                >
+                  B
+                </Badge>
+                <Badge 
+                  className="cursor-pointer bg-gray-300 hover:bg-gray-400 text-gray-700 text-xs py-0 h-6 w-6 flex items-center justify-center"
+                  onClick={() => setActiveType(null)}
+                >
+                  X
+                </Badge>
+              </div>
+            )}
           </div>
-          
-          {/* Action buttons section */}
-          {!activeType ? (
-            <div className="flex space-x-1 flex-shrink-0">
-              <Button 
-                variant="destructive" 
-                size="sm"
-                className="h-7 w-10 px-1 text-xs"
-                onClick={() => setActiveType("fail")}
-              >
-                +F
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm"
-                className="h-7 w-10 px-1 text-xs"
-                onClick={() => setActiveType("ace")}
-              >
-                +A
-              </Button>
-            </div>
-          ) : (
-            <div className="flex space-x-1 flex-shrink-0">
-              <Badge 
-                className="cursor-pointer bg-serve-good hover:bg-serve-good/80 text-xs py-0 h-6 w-6 flex items-center justify-center"
-                onClick={() => handleServeClick(activeType, "good")}
-              >
-                G
-              </Badge>
-              <Badge 
-                className="cursor-pointer bg-serve-neutral hover:bg-serve-neutral/80 text-black text-xs py-0 h-6 w-6 flex items-center justify-center"
-                onClick={() => handleServeClick(activeType, "neutral")}
-              >
-                N
-              </Badge>
-              <Badge 
-                className="cursor-pointer bg-serve-bad hover:bg-serve-bad/80 text-xs py-0 h-6 w-6 flex items-center justify-center"
-                onClick={() => handleServeClick(activeType, "bad")}
-              >
-                B
-              </Badge>
-              <Badge 
-                className="cursor-pointer bg-gray-300 hover:bg-gray-400 text-gray-700 text-xs py-0 h-6 w-6 flex items-center justify-center"
-                onClick={() => setActiveType(null)}
-              >
-                X
-              </Badge>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      
+      {/* Player detail dialog */}
+      <PlayerDetailDialog
+        playerId={player.id}
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+      />
+    </>
   );
 }
