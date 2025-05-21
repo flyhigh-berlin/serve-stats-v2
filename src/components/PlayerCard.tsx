@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlayerDetailDialog } from "./PlayerDetailDialog";
-import { Circle, Plus, Minus, X, Check } from "lucide-react";
+import { Circle, Plus, Minus, X, Check, Square } from "lucide-react";
 
 interface PlayerCardProps {
   player: Player;
@@ -38,6 +38,16 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
     
     // Reset the active type
     setActiveType(null);
+  };
+  
+  // Get color based on quality
+  const getQualityColor = (quality: ServeQuality) => {
+    switch (quality) {
+      case "good": return "bg-serve-good hover:bg-serve-good/80";
+      case "neutral": return "bg-serve-neutral hover:bg-serve-neutral/80 text-black";
+      case "bad": return "bg-serve-bad hover:bg-serve-bad/80";
+      default: return "";
+    }
   };
   
   return (
@@ -91,30 +101,42 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               </div>
             ) : (
               <div className="flex space-x-1 flex-shrink-0">
-                {/* Quality buttons with consistent sizing and shapes based on fail/ace */}
+                {/* Quality buttons with shape based on fail/ace and color based on quality */}
                 <Button 
-                  variant={activeType === "fail" ? "destructive" : "default"}
+                  variant="outline"
                   size="icon"
-                  className="h-8 w-8 rounded-full p-0"
+                  className={`h-8 w-8 rounded-full p-0 ${getQualityColor("good")}`}
                   onClick={() => handleServeClick(activeType, "good")}
                 >
-                  <Plus className="h-4 w-4" />
+                  {activeType === "fail" ? (
+                    <Square className="h-4 w-4" />
+                  ) : (
+                    <Circle className="h-4 w-4" />
+                  )}
                 </Button>
                 <Button 
-                  variant={activeType === "fail" ? "destructive" : "default"}
+                  variant="outline"
                   size="icon"
-                  className="h-8 w-8 rounded-full p-0"
+                  className={`h-8 w-8 rounded-full p-0 ${getQualityColor("neutral")}`}
                   onClick={() => handleServeClick(activeType, "neutral")}
                 >
-                  <Circle className="h-4 w-4" />
+                  {activeType === "fail" ? (
+                    <Square className="h-4 w-4" />
+                  ) : (
+                    <Circle className="h-4 w-4" />
+                  )}
                 </Button>
                 <Button 
-                  variant={activeType === "fail" ? "destructive" : "default"}
+                  variant="outline"
                   size="icon"
-                  className="h-8 w-8 rounded-full p-0"
+                  className={`h-8 w-8 rounded-full p-0 ${getQualityColor("bad")}`}
                   onClick={() => handleServeClick(activeType, "bad")}
                 >
-                  <Minus className="h-4 w-4" />
+                  {activeType === "fail" ? (
+                    <Square className="h-4 w-4" />
+                  ) : (
+                    <Circle className="h-4 w-4" />
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
