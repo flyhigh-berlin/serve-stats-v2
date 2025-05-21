@@ -41,12 +41,16 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
     <Card className="w-full">
       <CardContent className="p-3">
         <div className="flex items-center justify-between">
-          {/* Player name and stats section */}
-          <div className="flex items-center space-x-2 overflow-hidden">
-            <span className="font-semibold truncate max-w-[100px] sm:max-w-[150px]">
+          {/* Player name section */}
+          <div className="flex-grow mr-2 overflow-hidden">
+            <span className="font-semibold truncate block max-w-full">
               {player.name}
             </span>
-            <div className="flex items-center space-x-2">
+          </div>
+          
+          {/* Stats section - always positioned to the right */}
+          <div className="flex items-center mr-2 flex-shrink-0">
+            <div className="flex flex-col items-end">
               <span className="text-xs">
                 <span className="text-muted-foreground">F:</span>
                 <span className={`font-medium ${animatingFail ? "stat-change" : ""}`}>{stats.fails}</span>
