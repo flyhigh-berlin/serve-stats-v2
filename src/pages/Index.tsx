@@ -1,13 +1,52 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React from "react";
+import { VolleyballProvider } from "../context/VolleyballContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PlayerList } from "@/components/PlayerList";
+import { AddPlayerForm } from "@/components/AddPlayerForm";
+import { GameDaySelector } from "@/components/GameDaySelector";
+import { Scoreboard } from "@/components/Scoreboard";
+import { GameHistory } from "@/components/GameHistory";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <VolleyballProvider>
+      <div className="container py-6 max-w-5xl">
+        <header className="mb-6">
+          <h1 className="text-3xl font-bold text-team-primary">Volleyball Team Stats</h1>
+          <p className="text-muted-foreground">Track serves, fails, and aces for your volleyball team</p>
+        </header>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <GameDaySelector />
+          </div>
+          <div>
+            <AddPlayerForm />
+          </div>
+        </div>
+        
+        <Tabs defaultValue="players" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="players">Players</TabsTrigger>
+            <TabsTrigger value="scoreboard">Scoreboard</TabsTrigger>
+            <TabsTrigger value="history">Game History</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="players" className="min-h-[400px]">
+            <PlayerList />
+          </TabsContent>
+          
+          <TabsContent value="scoreboard" className="min-h-[400px]">
+            <Scoreboard />
+          </TabsContent>
+          
+          <TabsContent value="history" className="min-h-[400px]">
+            <GameHistory />
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>
+    </VolleyballProvider>
   );
 };
 

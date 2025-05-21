@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,13 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+                // Custom colors for volleyball app
+                'team-primary': '#0a192f',
+                'team-secondary': '#f8fafc',
+                'serve-good': '#4ade80',
+                'serve-neutral': '#facc15',
+                'serve-bad': '#f87171',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +91,17 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+                // Custom animations for stat changes
+                'pulse-score': {
+                    '0%, 100%': { transform: 'scale(1)' },
+                    '50%': { transform: 'scale(1.05)' },
+                },
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+                'pulse-score': 'pulse-score 0.5s ease-in-out',
 			}
 		}
 	},
