@@ -27,8 +27,8 @@ export function AddPlayerForm() {
   
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Add Player</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg">Add Player</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="flex space-x-2">
@@ -38,7 +38,7 @@ export function AddPlayerForm() {
             placeholder="Player name"
             className="flex-1"
           />
-          <Button type="submit">Add</Button>
+          <Button type="submit" size="sm" className="whitespace-nowrap">Add</Button>
         </form>
       </CardContent>
     </Card>

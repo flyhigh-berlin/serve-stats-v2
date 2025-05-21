@@ -10,17 +10,17 @@ export function PlayerList() {
   
   return (
     <Card className="w-full">
-      <CardHeader>
+      <CardHeader className="pb-2 px-4 sm:px-6">
         <CardTitle>Players</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs sm:text-sm">
           {currentGameDay 
             ? `Recording stats for game on ${new Date(currentGameDay.date).toLocaleDateString()}`
             : "No game day selected. Stats will be recorded for all games."}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[calc(100vh-20rem)] pr-4">
-          <div className="space-y-4">
+      <CardContent className="px-2 sm:px-6">
+        <ScrollArea className="h-[calc(100vh-20rem)] pr-2 sm:pr-4">
+          <div className="space-y-2">
             {players.length > 0 ? (
               players.map(player => (
                 <PlayerCard 
