@@ -101,11 +101,11 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               </div>
             ) : (
               <div className="flex space-x-1 flex-shrink-0">
-                {/* Quality buttons - square for fail, triangle/diamond for ace, with symbols inside */}
+                {/* Quality buttons - circle for fail, diamond for ace, with symbols inside */}
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("good")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-full" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("good")}`}
                   onClick={() => handleServeClick(activeType, "good")}
                 >
                   <Plus className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
@@ -113,7 +113,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("neutral")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-full" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("neutral")}`}
                   onClick={() => handleServeClick(activeType, "neutral")}
                 >
                   <Circle className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
@@ -121,7 +121,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
                 <Button 
                   variant="outline"
                   size="icon"
-                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-md" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("bad")}`}
+                  className={`h-8 w-8 ${activeType === "fail" ? "rounded-full" : "rounded-none transform rotate-45"} p-0 ${getQualityColor("bad")}`}
                   onClick={() => handleServeClick(activeType, "bad")}
                 >
                   <Minus className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />

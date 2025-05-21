@@ -59,7 +59,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   
   // Get quality icon based on quality and type
   const QualityIcon = ({ quality, type }: { quality: ServeQuality, type: "fail" | "ace" }) => {
-    const isSquare = type === "fail";
+    const isCircle = type === "fail";
     
     // Define the icon based on quality
     let Icon = Circle;
@@ -68,9 +68,9 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
 
     return (
       <div 
-        className={`inline-flex items-center justify-center h-6 w-6 ${isSquare ? 'rounded-md' : 'rounded-none transform rotate-45'} ${getQualityColor(quality)}`}
+        className={`inline-flex items-center justify-center h-6 w-6 ${isCircle ? 'rounded-full' : 'rounded-none transform rotate-45'} ${getQualityColor(quality)}`}
       >
-        <Icon className={`h-3 w-3 ${!isSquare ? "transform -rotate-45" : ""}`} />
+        <Icon className={`h-3 w-3 ${!isCircle ? "transform -rotate-45" : ""}`} />
       </div>
     );
   };
