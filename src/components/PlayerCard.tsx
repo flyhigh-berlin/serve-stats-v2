@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlayerDetailDialog } from "./PlayerDetailDialog";
+import { Circle, Plus, Minus, X, Check } from "lucide-react";
 
 interface PlayerCardProps {
   player: Player;
@@ -90,30 +91,39 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               </div>
             ) : (
               <div className="flex space-x-1 flex-shrink-0">
-                <Badge 
-                  className="cursor-pointer bg-serve-good hover:bg-serve-good/80 text-xs py-0 h-6 w-6 flex items-center justify-center"
+                {/* Quality buttons with consistent sizing and shapes based on fail/ace */}
+                <Button 
+                  variant={activeType === "fail" ? "destructive" : "default"}
+                  size="icon"
+                  className="h-8 w-8 rounded-full p-0"
                   onClick={() => handleServeClick(activeType, "good")}
                 >
-                  G
-                </Badge>
-                <Badge 
-                  className="cursor-pointer bg-serve-neutral hover:bg-serve-neutral/80 text-black text-xs py-0 h-6 w-6 flex items-center justify-center"
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant={activeType === "fail" ? "destructive" : "default"}
+                  size="icon"
+                  className="h-8 w-8 rounded-full p-0"
                   onClick={() => handleServeClick(activeType, "neutral")}
                 >
-                  N
-                </Badge>
-                <Badge 
-                  className="cursor-pointer bg-serve-bad hover:bg-serve-bad/80 text-xs py-0 h-6 w-6 flex items-center justify-center"
+                  <Circle className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant={activeType === "fail" ? "destructive" : "default"}
+                  size="icon"
+                  className="h-8 w-8 rounded-full p-0"
                   onClick={() => handleServeClick(activeType, "bad")}
                 >
-                  B
-                </Badge>
-                <Badge 
-                  className="cursor-pointer bg-gray-300 hover:bg-gray-400 text-gray-700 text-xs py-0 h-6 w-6 flex items-center justify-center"
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="h-8 w-8 rounded-full p-0"
                   onClick={() => setActiveType(null)}
                 >
-                  X
-                </Badge>
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             )}
           </div>
