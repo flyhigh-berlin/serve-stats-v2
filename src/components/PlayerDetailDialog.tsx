@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { X, Trash } from "lucide-react";
+import { X, Trash, Pencil, Square, Plus, Circle, Minus } from "lucide-react";
 
 interface PlayerDetailDialogProps {
   playerId: string;
@@ -31,6 +31,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   if (!player) return null;
   
   const [editedName, setEditedName] = useState(player.name);
+  const [isEditing, setIsEditing] = useState(false);
   
   // Get the serves to display (filtered by current game day if one is selected)
   const serves = currentGameDay 
@@ -42,7 +43,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
   
-  // Helper to get badge color for serve quality
+  // Helper to get quality color
   const getQualityColor = (quality: ServeQuality) => {
     switch (quality) {
       case "good":
@@ -56,13 +57,31 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     }
   };
   
+  // Get quality icon based on quality and type
+  const QualityIcon = ({ quality, type }: { quality: ServeQuality, type: "fail" | "ace" }) => {
+    const isSquare = type === "fail";
+    
+    // Define the icon based on quality
+    let Icon = Circle;
+    if (quality === "good") Icon = Plus;
+    else if (quality === "bad") Icon = Minus;
+
+    return (
+      <div 
+        className={`inline-flex items-center justify-center h-6 w-6 ${isSquare ? 'rounded-md' : 'rounded-none transform rotate-45'} ${getQualityColor(quality)}`}
+      >
+        <Icon className={`h-3 w-3 ${!isSquare ? "transform -rotate-45" : ""}`} />
+      </div>
+    );
+  };
+  
   const handleSave = () => {
     // Trim the name and ensure it's not empty
     const trimmedName = editedName.trim();
     if (trimmedName) {
       updatePlayerName(player.id, trimmedName);
     }
-    onClose();
+    setIsEditing(false);
   };
   
   const handleDeleteServe = (serveId: string) => {
@@ -73,20 +92,38 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit Player</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <span>{player.name}</span>
+            {!isEditing && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0" 
+                onClick={() => setIsEditing(true)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+          </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
-          {/* Edit player name */}
-          <div className="space-y-2">
-            <Label htmlFor="name">Player Name</Label>
-            <Input
-              id="name"
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-              placeholder="Enter player name"
-            />
-          </div>
+          {/* Edit player name (only shown when isEditing is true) */}
+          {isEditing && (
+            <div className="space-y-2">
+              <Label htmlFor="name">Player Name</Label>
+              <div className="flex space-x-2">
+                <Input
+                  id="name"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  placeholder="Enter player name"
+                  className="flex-grow"
+                />
+                <Button onClick={handleSave}>Save</Button>
+              </div>
+            </div>
+          )}
           
           {/* Serve history */}
           <div className="space-y-2">
@@ -111,9 +148,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge className={getQualityColor(serve.quality)}>
-                            {serve.quality}
-                          </Badge>
+                          <QualityIcon quality={serve.quality} type={serve.type} />
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {format(new Date(serve.timestamp), "MMM d, yyyy - p")}
@@ -142,8 +177,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave}>Save Changes</Button>
+          <Button variant="outline" onClick={onClose}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

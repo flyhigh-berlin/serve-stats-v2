@@ -101,7 +101,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               </div>
             ) : (
               <div className="flex space-x-1 flex-shrink-0">
-                {/* Quality buttons - square for fail, triangle for ace, with symbols inside */}
+                {/* Quality buttons - square for fail, triangle/diamond for ace, with symbols inside */}
                 <Button 
                   variant="outline"
                   size="icon"
