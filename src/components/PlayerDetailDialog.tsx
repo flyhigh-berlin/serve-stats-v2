@@ -68,17 +68,20 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
       good: 0,
       neutral: 0,
       bad: 0,
+      total: 0
     },
     fail: {
       good: 0,
       neutral: 0,
       bad: 0,
+      total: 0
     }
   };
   
   // Count the serves
   serves.forEach(serve => {
     serveCounts[serve.type][serve.quality]++;
+    serveCounts[serve.type].total++;
   });
   
   // Helper to get quality color
@@ -204,21 +207,21 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
               )}
             </DialogTitle>
             
-            {/* Replace the description with a serve summary */}
+            {/* Updated serve summary - all in one line */}
             <div className="mt-2">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium mb-1">Aces</h4>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-medium mb-1">Aces ({serveCounts.ace.total})</h4>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <SummaryIcon quality="good" type="ace" />
                       <span className="text-sm">{serveCounts.ace.good}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <SummaryIcon quality="neutral" type="ace" />
                       <span className="text-sm">{serveCounts.ace.neutral}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <SummaryIcon quality="bad" type="ace" />
                       <span className="text-sm">{serveCounts.ace.bad}</span>
                     </div>
@@ -226,17 +229,17 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                 </div>
                 
                 <div>
-                  <h4 className="text-sm font-medium mb-1">Fails</h4>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-medium mb-1">Fails ({serveCounts.fail.total})</h4>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <SummaryIcon quality="good" type="fail" />
                       <span className="text-sm">{serveCounts.fail.good}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <SummaryIcon quality="neutral" type="fail" />
                       <span className="text-sm">{serveCounts.fail.neutral}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       <SummaryIcon quality="bad" type="fail" />
                       <span className="text-sm">{serveCounts.fail.bad}</span>
                     </div>
