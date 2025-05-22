@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { X, Trash, Pencil, Square, Plus, Circle, Minus, UserX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 interface PlayerDetailDialogProps {
   playerId: string;
@@ -61,6 +62,25 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
   
+  // Count serves by type and quality
+  const serveCounts = {
+    ace: {
+      good: 0,
+      neutral: 0,
+      bad: 0,
+    },
+    fail: {
+      good: 0,
+      neutral: 0,
+      bad: 0,
+    }
+  };
+  
+  // Count the serves
+  serves.forEach(serve => {
+    serveCounts[serve.type][serve.quality]++;
+  });
+  
   // Helper to get quality color
   const getQualityColor = (quality: ServeQuality) => {
     switch (quality) {
@@ -90,6 +110,26 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
           className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-90'} ${getQualityColor(quality)}`}
         >
           <Icon className={`h-3 w-3 absolute ${!isCircle ? "transform -rotate-45" : ""}`} />
+        </div>
+      </div>
+    );
+  };
+  
+  // Small version of icon for the summary
+  const SummaryIcon = ({ quality, type }: { quality: ServeQuality, type: "fail" | "ace" }) => {
+    const isCircle = type === "fail";
+    
+    // Define the icon based on quality
+    let Icon = Circle;
+    if (quality === "good") Icon = Plus;
+    else if (quality === "bad") Icon = Minus;
+
+    return (
+      <div className="flex items-center justify-center w-5">
+        <div 
+          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-5 w-5' : 'rounded-none transform rotate-45 h-4 w-4 scale-90'} ${getQualityColor(quality)}`}
+        >
+          <Icon className={`h-2 w-2 absolute ${!isCircle ? "transform -rotate-45" : ""}`} />
         </div>
       </div>
     );
@@ -163,9 +203,49 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                 </div>
               )}
             </DialogTitle>
-            <DialogDescription>
-              Player statistics and serve history
-            </DialogDescription>
+            
+            {/* Replace the description with a serve summary */}
+            <div className="mt-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Aces</h4>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <SummaryIcon quality="good" type="ace" />
+                      <span className="text-sm">{serveCounts.ace.good}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <SummaryIcon quality="neutral" type="ace" />
+                      <span className="text-sm">{serveCounts.ace.neutral}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <SummaryIcon quality="bad" type="ace" />
+                      <span className="text-sm">{serveCounts.ace.bad}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Fails</h4>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <SummaryIcon quality="good" type="fail" />
+                      <span className="text-sm">{serveCounts.fail.good}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <SummaryIcon quality="neutral" type="fail" />
+                      <span className="text-sm">{serveCounts.fail.neutral}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <SummaryIcon quality="bad" type="fail" />
+                      <span className="text-sm">{serveCounts.fail.bad}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <Separator className="my-2" />
+            </div>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
@@ -212,7 +292,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                             <QualityIcon quality={serve.quality} type={serve.type} />
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
-                            {format(new Date(serve.timestamp), "MMM d, yyyy - p")}
+                            {format(new Date(serve.timestamp), "MM.dd.yy")}
                           </TableCell>
                           <TableCell>
                             <Button
