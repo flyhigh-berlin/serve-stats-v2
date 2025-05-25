@@ -1,35 +1,43 @@
+
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
-import { Player, GameDay, Serve, ServeQuality, SortField, SortDirection, GameType, gameTypes } from "../types";
+import { Player, GameDay, Serve, ServeQuality, SortField, SortDirection, GameType, gameTypes as defaultGameTypes } from "../types";
 
 interface VolleyballContextType {
   // Data
   players: Player[];
   gameDays: GameDay[];
   gameTypes: Record<GameType, string>;
+  customGameTypes: Record<string, string>;
   
   // Current selections
   currentGameDay: GameDay | null;
-  gameTypeFilter: GameType | null;
+  gameTypeFilter: GameType | string | null;
   
   // Actions
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
   updatePlayerName: (playerId: string, newName: string) => void;
-  addGameDay: (date: string, gameType: GameType, title?: string, notes?: string) => void;
+  addGameDay: (date: string, gameType: GameType | string, title?: string, notes?: string) => void;
   setCurrentGameDay: (gameId: string | null) => void;
-  setGameTypeFilter: (gameType: GameType | null) => void;
+  setGameTypeFilter: (gameType: GameType | string | null) => void;
+  
+  // Game type management
+  addCustomGameType: (abbreviation: string, name: string) => void;
+  updateGameType: (abbreviation: string, name: string) => void;
+  removeCustomGameType: (abbreviation: string) => void;
+  getAllGameTypes: () => Record<string, string>;
   
   // Stats tracking
   addServe: (playerId: string, type: "fail" | "ace", quality: ServeQuality) => void;
   removeServe: (playerId: string, serveId: string) => void;
   
   // Helper functions
-  getPlayerStats: (playerId: string, gameId?: string, gameType?: GameType) => { fails: number, aces: number };
+  getPlayerStats: (playerId: string, gameId?: string, gameType?: GameType | string) => { fails: number, aces: number };
   getGameDayServes: (gameId: string) => Serve[];
   getFilteredGameDays: () => GameDay[];
   
   // Sorting and filtering
-  sortedPlayers: (field: SortField, direction: SortDirection, gameId?: string, gameType?: GameType) => Player[];
+  sortedPlayers: (field: SortField, direction: SortDirection, gameId?: string, gameType?: GameType | string) => Player[];
 }
 
 // Create the context
@@ -40,13 +48,15 @@ const PLAYERS_STORAGE_KEY = "volleyball_players";
 const GAME_DAYS_STORAGE_KEY = "volleyball_game_days";
 const CURRENT_GAME_DAY_KEY = "volleyball_current_game";
 const GAME_TYPE_FILTER_KEY = "volleyball_game_type_filter";
+const CUSTOM_GAME_TYPES_KEY = "volleyball_custom_game_types";
 
 export function VolleyballProvider({ children }: { children: ReactNode }) {
   // State for players and game days
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameDays, setGameDays] = useState<GameDay[]>([]);
   const [currentGameDay, setCurrentGameDayState] = useState<GameDay | null>(null);
-  const [gameTypeFilter, setGameTypeFilterState] = useState<GameType | null>(null);
+  const [gameTypeFilter, setGameTypeFilterState] = useState<GameType | string | null>(null);
+  const [customGameTypes, setCustomGameTypes] = useState<Record<string, string>>({});
 
   // Load data from localStorage on component mount
   useEffect(() => {
@@ -54,6 +64,7 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     const storedGameDays = localStorage.getItem(GAME_DAYS_STORAGE_KEY);
     const storedCurrentGameDay = localStorage.getItem(CURRENT_GAME_DAY_KEY);
     const storedGameTypeFilter = localStorage.getItem(GAME_TYPE_FILTER_KEY);
+    const storedCustomGameTypes = localStorage.getItem(CUSTOM_GAME_TYPES_KEY);
     
     if (storedPlayers) {
       setPlayers(JSON.parse(storedPlayers));
@@ -77,6 +88,10 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     if (storedGameTypeFilter) {
       setGameTypeFilterState(JSON.parse(storedGameTypeFilter));
     }
+
+    if (storedCustomGameTypes) {
+      setCustomGameTypes(JSON.parse(storedCustomGameTypes));
+    }
   }, []);
 
   // Save data to localStorage whenever it changes
@@ -95,6 +110,15 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem(GAME_TYPE_FILTER_KEY, JSON.stringify(gameTypeFilter));
   }, [gameTypeFilter]);
+
+  useEffect(() => {
+    localStorage.setItem(CUSTOM_GAME_TYPES_KEY, JSON.stringify(customGameTypes));
+  }, [customGameTypes]);
+
+  // Get all game types (default + custom)
+  const getAllGameTypes = () => {
+    return { ...defaultGameTypes, ...customGameTypes };
+  };
 
   // Add a new player
   const addPlayer = (name: string) => {
@@ -121,11 +145,11 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   };
 
   // Add a new game day
-  const addGameDay = (date: string, gameType: GameType, title?: string, notes?: string) => {
+  const addGameDay = (date: string, gameType: GameType | string, title?: string, notes?: string) => {
     const newGameDay: GameDay = {
       id: crypto.randomUUID(),
       date,
-      gameType,
+      gameType: gameType as GameType,
       title,
       notes
     };
@@ -149,8 +173,31 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   };
 
   // Set game type filter
-  const setGameTypeFilter = (gameType: GameType | null) => {
+  const setGameTypeFilter = (gameType: GameType | string | null) => {
     setGameTypeFilterState(gameType);
+  };
+
+  // Game type management functions
+  const addCustomGameType = (abbreviation: string, name: string) => {
+    setCustomGameTypes(prev => ({ ...prev, [abbreviation]: name }));
+  };
+
+  const updateGameType = (abbreviation: string, name: string) => {
+    if (abbreviation in defaultGameTypes) {
+      // Can't edit default game types, but could add override
+      setCustomGameTypes(prev => ({ ...prev, [abbreviation]: name }));
+    } else {
+      setCustomGameTypes(prev => ({ ...prev, [abbreviation]: name }));
+    }
+  };
+
+  const removeCustomGameType = (abbreviation: string) => {
+    if (abbreviation in defaultGameTypes) return; // Can't remove default types
+    setCustomGameTypes(prev => {
+      const updated = { ...prev };
+      delete updated[abbreviation];
+      return updated;
+    });
   };
 
   // Get filtered game days based on game type filter
@@ -269,7 +316,8 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   const value = {
     players,
     gameDays,
-    gameTypes,
+    gameTypes: defaultGameTypes,
+    customGameTypes,
     currentGameDay,
     gameTypeFilter,
     addPlayer,
@@ -278,6 +326,10 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     addGameDay,
     setCurrentGameDay,
     setGameTypeFilter,
+    addCustomGameType,
+    updateGameType,
+    removeCustomGameType,
+    getAllGameTypes,
     addServe,
     removeServe,
     getPlayerStats,

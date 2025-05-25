@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { useVolleyball } from "../context/VolleyballContext";
-import { gameTypes, GameType } from "../types";
+import { GameType } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -23,15 +23,27 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GameTypeManager } from "./GameTypeManager";
 import { toast } from "sonner";
 
 export function GameDaySelector() {
-  const { gameDays, addGameDay, setCurrentGameDay, currentGameDay, setGameTypeFilter, gameTypeFilter } = useVolleyball();
+  const { 
+    gameDays, 
+    addGameDay, 
+    setCurrentGameDay, 
+    currentGameDay, 
+    setGameTypeFilter, 
+    gameTypeFilter,
+    getAllGameTypes 
+  } = useVolleyball();
+  
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newGameDate, setNewGameDate] = useState<Date>(new Date());
   const [gameType, setGameType] = useState<GameType>("KL");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  
+  const allGameTypes = getAllGameTypes();
   
   // Handle adding a new game day
   const handleAddGameDay = () => {
@@ -61,7 +73,13 @@ export function GameDaySelector() {
   
   // Handle selecting a game day
   const handleSelectGameDay = (gameId: string) => {
-    setCurrentGameDay(gameId);
+    if (gameId === "all") {
+      setCurrentGameDay(null);
+    } else {
+      setCurrentGameDay(gameId);
+      // Clear game type filter when specific game is selected
+      setGameTypeFilter(null);
+    }
   };
 
   // Handle game type filter change
@@ -69,7 +87,9 @@ export function GameDaySelector() {
     if (value === "all") {
       setGameTypeFilter(null);
     } else {
-      setGameTypeFilter(value as GameType);
+      setGameTypeFilter(value);
+      // Clear specific game selection when game type filter is applied
+      setCurrentGameDay(null);
     }
   };
 
@@ -91,71 +111,74 @@ export function GameDaySelector() {
       <CardHeader className="pb-3">
         <CardTitle className="flex justify-between items-center">
           <span>Game Day</span>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">Add Game</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Game Day</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="flex flex-col items-center gap-4">
-                  <Calendar
-                    mode="single"
-                    selected={newGameDate}
-                    onSelect={(date) => date && setNewGameDate(date)}
-                    className="rounded-md border pointer-events-auto"
-                  />
+          <div className="flex gap-2">
+            <GameTypeManager />
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">Add Game</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Game Day</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="flex flex-col items-center gap-4">
+                    <Calendar
+                      mode="single"
+                      selected={newGameDate}
+                      onSelect={(date) => date && setNewGameDate(date)}
+                      className="rounded-md border pointer-events-auto"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="gameType">Game Type</Label>
+                    <Select value={gameType} onValueChange={(value) => setGameType(value as GameType)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(allGameTypes).map(([key, label]) => (
+                          <SelectItem key={key} value={key}>
+                            [{key}] {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Leave blank to use weekday"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="notes">Notes</Label>
+                    <Input
+                      id="notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Optional notes"
+                    />
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="gameType">Game Type</Label>
-                  <Select value={gameType} onValueChange={(value) => setGameType(value as GameType)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(gameTypes).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>
-                          [{key}] {label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Leave blank to use weekday"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Input
-                    id="notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Optional notes"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsAddDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="button" onClick={handleAddGameDay}>
-                  Add Game Day
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsAddDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="button" onClick={handleAddGameDay}>
+                    Add Game Day
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -170,7 +193,7 @@ export function GameDaySelector() {
               <SelectValue placeholder="Select a game day" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all" onClick={() => setCurrentGameDay(null)}>
+              <SelectItem value="all">
                 All Games (Total Stats)
               </SelectItem>
               {gameDays.map((gameDay) => (
@@ -182,26 +205,28 @@ export function GameDaySelector() {
           </Select>
         </div>
 
-        {/* Game type filter */}
-        <div>
-          <Label className="text-sm font-medium mb-2 block">Filter by Game Type</Label>
-          <Select 
-            onValueChange={handleGameTypeFilterChange}
-            value={gameTypeFilter || "all"}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Game Types</SelectItem>
-              {Object.entries(gameTypes).map(([key, label]) => (
-                <SelectItem key={key} value={key}>
-                  [{key}] {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Game type filter - only show when no specific game is selected */}
+        {!currentGameDay && (
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Filter by Game Type</Label>
+            <Select 
+              onValueChange={handleGameTypeFilterChange}
+              value={gameTypeFilter || "all"}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Game Types</SelectItem>
+                {Object.entries(allGameTypes).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    [{key}] {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

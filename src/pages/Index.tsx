@@ -7,6 +7,7 @@ import { AddPlayerForm } from "@/components/AddPlayerForm";
 import { GameDaySelector } from "@/components/GameDaySelector";
 import { Scoreboard } from "@/components/Scoreboard";
 import { GameHistory } from "@/components/GameHistory";
+import { StatsDescription } from "@/components/StatsDescription";
 
 const Index = () => {
   return (
@@ -32,6 +33,8 @@ const Index = () => {
             <TabsTrigger value="scoreboard">Scoreboard</TabsTrigger>
             <TabsTrigger value="history">Game History</TabsTrigger>
           </TabsList>
+          
+          <StatsDescription />
           
           <TabsContent value="players" className="min-h-[400px]">
             <PlayerList />

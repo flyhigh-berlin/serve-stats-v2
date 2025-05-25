@@ -14,7 +14,17 @@ import {
 } from "@/components/ui/accordion";
 
 export function GameHistory() {
-  const { getFilteredGameDays, getGameDayServes, players, setCurrentGameDay, gameTypeFilter, gameTypes } = useVolleyball();
+  const { 
+    gameDays, 
+    getGameDayServes, 
+    players, 
+    setCurrentGameDay, 
+    currentGameDay, 
+    gameTypeFilter, 
+    getAllGameTypes 
+  } = useVolleyball();
+
+  const allGameTypes = getAllGameTypes();
 
   // Helper to get badge color for serve quality
   const getQualityColor = (quality: ServeQuality) => {
@@ -49,22 +59,40 @@ export function GameHistory() {
     return `${typeLabel} ${titlePart} (${datePart})`;
   };
   
-  // Get filtered game days based on game type filter and sort by date (latest first)
+  // Get filtered game days
+  const getFilteredGameDays = () => {
+    if (currentGameDay) {
+      // If specific game is selected, show all games with the same game type
+      return gameDays.filter(gameDay => gameDay.gameType === currentGameDay.gameType);
+    } else if (gameTypeFilter) {
+      // If game type filter is applied, show games of that type
+      return gameDays.filter(gameDay => gameDay.gameType === gameTypeFilter);
+    } else {
+      // Show all games
+      return gameDays;
+    }
+  };
+  
+  // Get filtered and sorted game days (latest first)
   const sortedGameDays = [...getFilteredGameDays()].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
   
+  // Get header title
+  const getHeaderTitle = () => {
+    if (currentGameDay) {
+      return `Game History - ${allGameTypes[currentGameDay.gameType]} Games`;
+    } else if (gameTypeFilter) {
+      return `Game History - ${allGameTypes[gameTypeFilter]}`;
+    } else {
+      return "Game History";
+    }
+  };
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          Game History
-          {gameTypeFilter && (
-            <span className="text-sm font-normal text-muted-foreground ml-2">
-              - {gameTypes[gameTypeFilter]}
-            </span>
-          )}
-        </CardTitle>
+        <CardTitle>{getHeaderTitle()}</CardTitle>
       </CardHeader>
       <CardContent>
         {sortedGameDays.length > 0 ? (
@@ -141,10 +169,7 @@ export function GameHistory() {
           </Accordion>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            {gameTypeFilter 
-              ? `No ${gameTypes[gameTypeFilter]} games recorded yet.`
-              : "No game days recorded yet. Add a game day to get started."
-            }
+            No games found for the current filter.
           </div>
         )}
       </CardContent>

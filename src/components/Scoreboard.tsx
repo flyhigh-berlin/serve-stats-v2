@@ -13,10 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { format } from "date-fns";
 
 export function Scoreboard() {
-  const { sortedPlayers, getPlayerStats, currentGameDay, gameTypeFilter, gameTypes } = useVolleyball();
+  const { sortedPlayers, getPlayerStats, currentGameDay, gameTypeFilter } = useVolleyball();
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
@@ -78,31 +77,11 @@ export function Scoreboard() {
         return "";
     }
   };
-
-  // Format game display text
-  const formatGameDisplay = (gameDay: any) => {
-    const typeLabel = `[${gameDay.gameType}]`;
-    const titlePart = gameDay.title || format(new Date(gameDay.date), "EEEE");
-    const datePart = format(new Date(gameDay.date), "dd.MM.yy");
-    
-    return `${typeLabel} ${titlePart} (${datePart})`;
-  };
-  
-  // Get title for scoreboard
-  const getScoreboardTitle = () => {
-    if (currentGameDay) {
-      return `Scoreboard for ${formatGameDisplay(currentGameDay)}`;
-    } else if (gameTypeFilter) {
-      return `Scoreboard for ${gameTypes[gameTypeFilter]} Games`;
-    } else {
-      return "Season Scoreboard";
-    }
-  };
   
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{getScoreboardTitle()}</CardTitle>
+        <CardTitle>Scoreboard</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
