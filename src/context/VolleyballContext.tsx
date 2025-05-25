@@ -1,11 +1,11 @@
-
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
-import { Player, GameDay, Serve, ServeQuality, SortField, SortDirection, GameType } from "../types";
+import { Player, GameDay, Serve, ServeQuality, SortField, SortDirection, GameType, gameTypes } from "../types";
 
 interface VolleyballContextType {
   // Data
   players: Player[];
   gameDays: GameDay[];
+  gameTypes: Record<GameType, string>;
   
   // Current selections
   currentGameDay: GameDay | null;
@@ -269,6 +269,7 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   const value = {
     players,
     gameDays,
+    gameTypes,
     currentGameDay,
     gameTypeFilter,
     addPlayer,
