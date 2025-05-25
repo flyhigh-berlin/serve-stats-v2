@@ -2,6 +2,17 @@
 // Quality of serve: good (close fail/clean ace), neutral, bad (not close fail/enemy's fault ace)
 export type ServeQuality = "good" | "neutral" | "bad";
 
+// Game types
+export type GameType = "KL" | "MX" | "TNM" | "TG" | "FH";
+
+export const gameTypes: Record<GameType, string> = {
+  "KL": "Liga",
+  "MX": "Mixed", 
+  "TNM": "Tournament",
+  "TG": "Test Game",
+  "FH": "Fly High Training"
+};
+
 // Player model
 export interface Player {
   id: string;
@@ -24,7 +35,8 @@ export interface Serve {
 export interface GameDay {
   id: string;
   date: string;
-  location?: string;
+  gameType: GameType;
+  title?: string;
   notes?: string;
 }
 

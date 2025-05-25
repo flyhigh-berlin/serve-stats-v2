@@ -1,6 +1,6 @@
 
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
-import { Player, GameDay, Serve, ServeQuality, SortField, SortDirection } from "../types";
+import { Player, GameDay, Serve, ServeQuality, SortField, SortDirection, GameType } from "../types";
 
 interface VolleyballContextType {
   // Data
@@ -9,24 +9,27 @@ interface VolleyballContextType {
   
   // Current selections
   currentGameDay: GameDay | null;
+  gameTypeFilter: GameType | null;
   
   // Actions
   addPlayer: (name: string) => void;
   removePlayer: (id: string) => void;
   updatePlayerName: (playerId: string, newName: string) => void;
-  addGameDay: (date: string, location?: string, notes?: string) => void;
+  addGameDay: (date: string, gameType: GameType, title?: string, notes?: string) => void;
   setCurrentGameDay: (gameId: string | null) => void;
+  setGameTypeFilter: (gameType: GameType | null) => void;
   
   // Stats tracking
   addServe: (playerId: string, type: "fail" | "ace", quality: ServeQuality) => void;
   removeServe: (playerId: string, serveId: string) => void;
   
   // Helper functions
-  getPlayerStats: (playerId: string, gameId?: string) => { fails: number, aces: number };
+  getPlayerStats: (playerId: string, gameId?: string, gameType?: GameType) => { fails: number, aces: number };
   getGameDayServes: (gameId: string) => Serve[];
+  getFilteredGameDays: () => GameDay[];
   
   // Sorting and filtering
-  sortedPlayers: (field: SortField, direction: SortDirection, gameId?: string) => Player[];
+  sortedPlayers: (field: SortField, direction: SortDirection, gameId?: string, gameType?: GameType) => Player[];
 }
 
 // Create the context
@@ -36,18 +39,21 @@ const VolleyballContext = createContext<VolleyballContextType | undefined>(undef
 const PLAYERS_STORAGE_KEY = "volleyball_players";
 const GAME_DAYS_STORAGE_KEY = "volleyball_game_days";
 const CURRENT_GAME_DAY_KEY = "volleyball_current_game";
+const GAME_TYPE_FILTER_KEY = "volleyball_game_type_filter";
 
 export function VolleyballProvider({ children }: { children: ReactNode }) {
   // State for players and game days
   const [players, setPlayers] = useState<Player[]>([]);
   const [gameDays, setGameDays] = useState<GameDay[]>([]);
   const [currentGameDay, setCurrentGameDayState] = useState<GameDay | null>(null);
+  const [gameTypeFilter, setGameTypeFilterState] = useState<GameType | null>(null);
 
   // Load data from localStorage on component mount
   useEffect(() => {
     const storedPlayers = localStorage.getItem(PLAYERS_STORAGE_KEY);
     const storedGameDays = localStorage.getItem(GAME_DAYS_STORAGE_KEY);
     const storedCurrentGameDay = localStorage.getItem(CURRENT_GAME_DAY_KEY);
+    const storedGameTypeFilter = localStorage.getItem(GAME_TYPE_FILTER_KEY);
     
     if (storedPlayers) {
       setPlayers(JSON.parse(storedPlayers));
@@ -67,6 +73,10 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
         }
       }
     }
+
+    if (storedGameTypeFilter) {
+      setGameTypeFilterState(JSON.parse(storedGameTypeFilter));
+    }
   }, []);
 
   // Save data to localStorage whenever it changes
@@ -81,6 +91,10 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem(CURRENT_GAME_DAY_KEY, JSON.stringify(currentGameDay?.id || null));
   }, [currentGameDay]);
+
+  useEffect(() => {
+    localStorage.setItem(GAME_TYPE_FILTER_KEY, JSON.stringify(gameTypeFilter));
+  }, [gameTypeFilter]);
 
   // Add a new player
   const addPlayer = (name: string) => {
@@ -107,11 +121,12 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   };
 
   // Add a new game day
-  const addGameDay = (date: string, location?: string, notes?: string) => {
+  const addGameDay = (date: string, gameType: GameType, title?: string, notes?: string) => {
     const newGameDay: GameDay = {
       id: crypto.randomUUID(),
       date,
-      location,
+      gameType,
+      title,
       notes
     };
     setGameDays([...gameDays, newGameDay]);
@@ -131,6 +146,17 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     
     const gameDay = gameDays.find(day => day.id === gameId);
     setCurrentGameDayState(gameDay || null);
+  };
+
+  // Set game type filter
+  const setGameTypeFilter = (gameType: GameType | null) => {
+    setGameTypeFilterState(gameType);
+  };
+
+  // Get filtered game days based on game type filter
+  const getFilteredGameDays = () => {
+    if (!gameTypeFilter) return gameDays;
+    return gameDays.filter(gameDay => gameDay.gameType === gameTypeFilter);
   };
 
   // Add a new serve (fail or ace)
@@ -178,19 +204,28 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     }));
   };
 
-  // Get player stats for all games or a specific game day
-  const getPlayerStats = (playerId: string, gameId?: string) => {
+  // Get player stats for all games, a specific game day, or filtered by game type
+  const getPlayerStats = (playerId: string, gameId?: string, gameType?: GameType) => {
     const player = players.find(p => p.id === playerId);
     if (!player) return { fails: 0, aces: 0 };
     
-    if (!gameId) {
+    let relevantServes = player.serves;
+
+    if (gameId) {
+      // Filter serves for the specific game
+      relevantServes = player.serves.filter(serve => serve.gameId === gameId);
+    } else if (gameType) {
+      // Filter serves for the specific game type
+      const filteredGameDays = gameDays.filter(gameDay => gameDay.gameType === gameType);
+      const gameIds = filteredGameDays.map(gameDay => gameDay.id);
+      relevantServes = player.serves.filter(serve => gameIds.includes(serve.gameId));
+    } else if (!gameId && !gameType) {
+      // Use total stats
       return { fails: player.totalFails, aces: player.totalAces };
     }
     
-    // Filter serves for the specific game
-    const gameServes = player.serves.filter(serve => serve.gameId === gameId);
-    const fails = gameServes.filter(serve => serve.type === "fail").length;
-    const aces = gameServes.filter(serve => serve.type === "ace").length;
+    const fails = relevantServes.filter(serve => serve.type === "fail").length;
+    const aces = relevantServes.filter(serve => serve.type === "ace").length;
     
     return { fails, aces };
   };
@@ -203,7 +238,7 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   };
 
   // Sort players based on various criteria
-  const sortedPlayers = (field: SortField, direction: SortDirection, gameId?: string) => {
+  const sortedPlayers = (field: SortField, direction: SortDirection, gameId?: string, gameType?: GameType) => {
     return [...players].sort((a, b) => {
       let aValue, bValue;
       
@@ -213,33 +248,18 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
         return direction === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
       }
       
-      if (gameId) {
-        // Sort based on game-specific stats
-        const aStats = getPlayerStats(a.id, gameId);
-        const bStats = getPlayerStats(b.id, gameId);
-        
-        if (field === "serves") {
-          aValue = aStats.fails + aStats.aces;
-          bValue = bStats.fails + bStats.aces;
-        } else if (field === "fails") {
-          aValue = aStats.fails;
-          bValue = bStats.fails;
-        } else {
-          aValue = aStats.aces;
-          bValue = bStats.aces;
-        }
+      const aStats = getPlayerStats(a.id, gameId, gameType);
+      const bStats = getPlayerStats(b.id, gameId, gameType);
+      
+      if (field === "serves") {
+        aValue = aStats.fails + aStats.aces;
+        bValue = bStats.fails + bStats.aces;
+      } else if (field === "fails") {
+        aValue = aStats.fails;
+        bValue = bStats.fails;
       } else {
-        // Sort based on total stats
-        if (field === "serves") {
-          aValue = a.serves.length;
-          bValue = b.serves.length;
-        } else if (field === "fails") {
-          aValue = a.totalFails;
-          bValue = b.totalFails;
-        } else {
-          aValue = a.totalAces;
-          bValue = b.totalAces;
-        }
+        aValue = aStats.aces;
+        bValue = bStats.aces;
       }
       
       return direction === "asc" ? aValue - bValue : bValue - aValue;
@@ -250,15 +270,18 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     players,
     gameDays,
     currentGameDay,
+    gameTypeFilter,
     addPlayer,
     removePlayer,
     updatePlayerName,
     addGameDay,
     setCurrentGameDay,
+    setGameTypeFilter,
     addServe,
     removeServe,
     getPlayerStats,
     getGameDayServes,
+    getFilteredGameDays,
     sortedPlayers
   };
 
