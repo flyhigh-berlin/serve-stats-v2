@@ -184,17 +184,27 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
-              <span>{player.name}</span>
-              {!isEditing && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 w-8 p-0" 
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              )}
+              <div className="flex items-center gap-2 flex-1">
+                <span>{player.name}</span>
+                {!isEditing && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 p-0" 
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 w-6 p-0" 
+                onClick={onClose}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </DialogTitle>
             
             {/* Updated serve summary - all in one line */}

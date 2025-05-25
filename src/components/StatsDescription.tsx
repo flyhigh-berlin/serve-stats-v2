@@ -29,8 +29,8 @@ export function StatsDescription() {
   };
   
   return (
-    <div className="mb-4 p-3 bg-muted/50 rounded-md">
-      <p className="text-sm text-muted-foreground text-center">
+    <div className="mb-4 p-2 bg-muted/50 rounded-md">
+      <p className="text-xs text-muted-foreground text-center truncate">
         {getDescription()}
       </p>
     </div>

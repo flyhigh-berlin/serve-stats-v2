@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SortField, SortDirection, ServeQuality } from "../types";
+import { Crown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -112,7 +113,7 @@ export function Scoreboard() {
           </TableHeader>
           <TableBody>
             {players.length > 0 ? (
-              players.map(player => {
+              players.map((player, index) => {
                 const stats = getPlayerStats(
                   player.id, 
                   currentGameDay?.id, 
@@ -120,10 +121,16 @@ export function Scoreboard() {
                 );
                 const qualityStats = calculateQualityStats(player.id);
                 const totalServes = stats.fails + stats.aces;
+                const isFirstPlace = index === 0 && totalServes > 0;
                 
                 return (
                   <TableRow key={player.id}>
-                    <TableCell className="font-medium">{player.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {isFirstPlace && <Crown className="h-4 w-4 text-yellow-500" />}
+                        {player.name}
+                      </div>
+                    </TableCell>
                     <TableCell>{totalServes}</TableCell>
                     <TableCell>{stats.fails}</TableCell>
                     <TableCell>{stats.aces}</TableCell>

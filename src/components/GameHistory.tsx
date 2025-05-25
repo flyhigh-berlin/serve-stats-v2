@@ -3,53 +3,59 @@ import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ServeQuality } from "../types";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
 export function GameHistory() {
   const { 
     gameDays, 
-    getGameDayServes, 
     players, 
-    setCurrentGameDay, 
     currentGameDay, 
     gameTypeFilter, 
-    getAllGameTypes 
+    getAllGameTypes,
+    gameTypes 
   } = useVolleyball();
-
+  
   const allGameTypes = getAllGameTypes();
+  
+  // Get games to display based on current context
+  const getDisplayedGames = () => {
+    if (currentGameDay) {
+      // Show all games with the same game type as the selected game
+      return gameDays.filter(game => game.gameType === currentGameDay.gameType);
+    } else if (gameTypeFilter) {
+      // Show games of the filtered game type
+      return gameDays.filter(game => game.gameType === gameTypeFilter);
+    } else {
+      // Show all games
+      return gameDays;
+    }
+  };
 
-  // Helper to get badge color for serve quality
-  const getQualityColor = (quality: ServeQuality) => {
-    switch (quality) {
-      case "good":
-        return "bg-serve-good";
-      case "neutral":
-        return "bg-serve-neutral text-black";
-      case "bad":
-        return "bg-serve-bad";
-      default:
-        return "";
-    }
+  const displayedGames = getDisplayedGames();
+
+  // Sort games by date (newest first)
+  const sortedGames = [...displayedGames].sort((a, b) => 
+    new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+
+  // Calculate game stats
+  const calculateGameStats = (gameId: string) => {
+    let totalServes = 0;
+    let totalFails = 0;
+    let totalAces = 0;
+
+    players.forEach(player => {
+      const gameServes = player.serves.filter(serve => serve.gameId === gameId);
+      gameServes.forEach(serve => {
+        totalServes++;
+        if (serve.type === "fail") totalFails++;
+        if (serve.type === "ace") totalAces++;
+      });
+    });
+
+    return { totalServes, totalFails, totalAces };
   };
-  
-  // Helper to find player name by serve
-  const getPlayerName = (serve: { id: string }) => {
-    for (const player of players) {
-      if (player.serves.some(s => s.id === serve.id)) {
-        return player.name;
-      }
-    }
-    return "Unknown Player";
-  };
-  
+
   // Format game display text
   const formatGameDisplay = (gameDay: any) => {
     const typeLabel = `[${gameDay.gameType}]`;
@@ -58,118 +64,62 @@ export function GameHistory() {
     
     return `${typeLabel} ${titlePart} (${datePart})`;
   };
-  
-  // Get filtered game days
-  const getFilteredGameDays = () => {
-    if (currentGameDay) {
-      // If specific game is selected, show all games with the same game type
-      return gameDays.filter(gameDay => gameDay.gameType === currentGameDay.gameType);
-    } else if (gameTypeFilter) {
-      // If game type filter is applied, show games of that type
-      return gameDays.filter(gameDay => gameDay.gameType === gameTypeFilter);
-    } else {
-      // Show all games
-      return gameDays;
-    }
-  };
-  
-  // Get filtered and sorted game days (latest first)
-  const sortedGameDays = [...getFilteredGameDays()].sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-  
-  // Get header title
-  const getHeaderTitle = () => {
-    if (currentGameDay) {
-      return `Game History - ${allGameTypes[currentGameDay.gameType]} Games`;
-    } else if (gameTypeFilter) {
-      return `Game History - ${allGameTypes[gameTypeFilter]}`;
-    } else {
-      return "Game History";
-    }
-  };
-  
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{getHeaderTitle()}</CardTitle>
+        <CardTitle>Game History</CardTitle>
       </CardHeader>
       <CardContent>
-        {sortedGameDays.length > 0 ? (
-          <Accordion type="single" collapsible className="w-full">
-            {sortedGameDays.map((gameDay) => {
-              const serves = getGameDayServes(gameDay.id);
-              const failCount = serves.filter(s => s.type === "fail").length;
-              const aceCount = serves.filter(s => s.type === "ace").length;
+        {sortedGames.length > 0 ? (
+          <div className="space-y-4">
+            {sortedGames.map(game => {
+              const stats = calculateGameStats(game.id);
+              const isSelected = currentGameDay?.id === game.id;
               
               return (
-                <AccordionItem key={gameDay.id} value={gameDay.id}>
-                  <AccordionTrigger className="hover:bg-muted/50 px-4 rounded-md">
-                    <div className="flex justify-between items-center w-full">
-                      <div className="font-medium">
-                        {formatGameDisplay(gameDay)}
-                      </div>
-                      <div className="flex gap-2 mr-4">
-                        <Badge variant="outline" className="bg-destructive/10">
-                          {failCount} fails
+                <div 
+                  key={game.id} 
+                  className={`p-4 border rounded-lg ${isSelected ? 'bg-muted border-primary' : ''}`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">
+                        [{game.gameType}] {allGameTypes[game.gameType]}
+                      </Badge>
+                      {isSelected && (
+                        <Badge variant="default" className="text-xs">
+                          Selected
                         </Badge>
-                        <Badge variant="outline" className="bg-primary/10">
-                          {aceCount} aces
-                        </Badge>
-                      </div>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4">
-                    <div className="mb-4">
-                      {gameDay.notes && (
-                        <p className="text-sm text-muted-foreground">
-                          Notes: {gameDay.notes}
-                        </p>
                       )}
                     </div>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mb-4"
-                      onClick={() => setCurrentGameDay(gameDay.id)}
-                    >
-                      View Detailed Stats
-                    </Button>
-                    
-                    {serves.length > 0 ? (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-semibold">Serve Records:</h4>
-                        <ul className="space-y-1">
-                          {serves.map(serve => (
-                            <li key={serve.id} className="text-sm flex items-center gap-2">
-                              <Badge variant={serve.type === "fail" ? "destructive" : "default"} className="w-12">
-                                {serve.type === "fail" ? "Fail" : "Ace"}
-                              </Badge>
-                              <Badge className={getQualityColor(serve.quality)}>
-                                {serve.quality}
-                              </Badge>
-                              <span className="text-muted-foreground">
-                                {getPlayerName(serve)}
-                              </span>
-                              <span className="text-xs text-muted-foreground ml-auto">
-                                {format(new Date(serve.timestamp), "p")}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No serve records for this game.</p>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(game.date), "dd.MM.yy")}
+                    </span>
+                  </div>
+                  
+                  <h3 className="font-semibold mb-2">
+                    {game.title || format(new Date(game.date), "EEEE")}
+                  </h3>
+                  
+                  {game.notes && (
+                    <p className="text-sm text-muted-foreground mb-3">
+                      {game.notes}
+                    </p>
+                  )}
+                  
+                  <div className="flex gap-4 text-sm">
+                    <span>Total Serves: <strong>{stats.totalServes}</strong></span>
+                    <span>Fails: <strong>{stats.totalFails}</strong></span>
+                    <span>Aces: <strong>{stats.totalAces}</strong></span>
+                  </div>
+                </div>
               );
             })}
-          </Accordion>
+          </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            No games found for the current filter.
+            No games found for the selected criteria.
           </div>
         )}
       </CardContent>

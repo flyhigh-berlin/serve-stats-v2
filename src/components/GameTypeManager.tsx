@@ -81,9 +81,9 @@ export function GameTypeManager() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Settings className="h-4 w-4 mr-2" />
-          Manage Game Types
+        <Button variant="outline" size="sm" className="px-2 sm:px-3">
+          <Settings className="h-4 w-4" />
+          <span className="hidden sm:inline ml-2">Manage Game Types</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64">

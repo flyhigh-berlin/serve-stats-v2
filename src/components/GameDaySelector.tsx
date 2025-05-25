@@ -1,11 +1,10 @@
 
 import React, { useState } from "react";
-import { format } from "date-fns";
 import { useVolleyball } from "../context/VolleyballContext";
-import { GameType } from "../types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -21,75 +20,69 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GameTypeManager } from "./GameTypeManager";
+import { Plus, Calendar } from "lucide-react";
+import { format, addDays } from "date-fns";
 import { toast } from "sonner";
 
 export function GameDaySelector() {
   const { 
     gameDays, 
-    addGameDay, 
-    setCurrentGameDay, 
     currentGameDay, 
+    selectGameDay, 
+    gameTypeFilter, 
     setGameTypeFilter, 
-    gameTypeFilter,
+    addGameDay, 
     getAllGameTypes 
   } = useVolleyball();
   
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newGameDate, setNewGameDate] = useState<Date>(new Date());
-  const [gameType, setGameType] = useState<GameType>("KL");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [selectedGameType, setSelectedGameType] = useState<string>("");
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
-  
+
   const allGameTypes = getAllGameTypes();
-  
-  // Handle adding a new game day
+
   const handleAddGameDay = () => {
-    if (!newGameDate) {
-      toast.error("Please select a date for the game day");
+    if (!selectedGameType) {
+      toast.error("Please select a game type");
       return;
     }
-    
-    // Use weekday as title if no title provided
-    const finalTitle = title.trim() || format(newGameDate, "EEEE");
-    
-    addGameDay(
-      newGameDate.toISOString(),
-      gameType,
-      finalTitle,
-      notes.trim() || undefined
-    );
+
+    addGameDay(selectedDate, selectedGameType as any, title || undefined, notes || undefined);
     
     // Reset form
-    setGameType("KL");
+    setSelectedDate(format(addDays(new Date(), 1), "yyyy-MM-dd"));
+    setSelectedGameType("");
     setTitle("");
     setNotes("");
-    setIsAddDialogOpen(false);
+    setIsDialogOpen(false);
     
     toast.success("Game day added successfully!");
   };
-  
-  // Handle selecting a game day
-  const handleSelectGameDay = (gameId: string) => {
+
+  const handleGameDaySelect = (gameId: string) => {
     if (gameId === "all") {
-      setCurrentGameDay(null);
-    } else {
-      setCurrentGameDay(gameId);
-      // Clear game type filter when specific game is selected
+      selectGameDay(null);
       setGameTypeFilter(null);
+    } else {
+      const gameDay = gameDays.find(g => g.id === gameId);
+      if (gameDay) {
+        selectGameDay(gameDay);
+        setGameTypeFilter(null); // Clear game type filter when specific game is selected
+      }
     }
   };
 
-  // Handle game type filter change
-  const handleGameTypeFilterChange = (value: string) => {
-    if (value === "all") {
+  const handleGameTypeFilterSelect = (gameType: string) => {
+    if (gameType === "all") {
       setGameTypeFilter(null);
+      selectGameDay(null);
     } else {
-      setGameTypeFilter(value);
-      // Clear specific game selection when game type filter is applied
-      setCurrentGameDay(null);
+      setGameTypeFilter(gameType);
+      selectGameDay(null); // Clear specific game selection when game type filter is applied
     }
   };
 
@@ -99,104 +92,28 @@ export function GameDaySelector() {
     const titlePart = gameDay.title || format(new Date(gameDay.date), "EEEE");
     const datePart = format(new Date(gameDay.date), "dd.MM.yy");
     
-    return (
-      <span>
-        {typeLabel} {titlePart} <span className="text-sm text-muted-foreground">({datePart})</span>
-      </span>
-    );
+    return `${typeLabel} ${titlePart} (${datePart})`;
   };
-  
+
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex justify-between items-center">
-          <span>Game Day</span>
-          <div className="flex gap-2">
-            <GameTypeManager />
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">Add Game</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Game Day</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="flex flex-col items-center gap-4">
-                    <Calendar
-                      mode="single"
-                      selected={newGameDate}
-                      onSelect={(date) => date && setNewGameDate(date)}
-                      className="rounded-md border pointer-events-auto"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="gameType">Game Type</Label>
-                    <Select value={gameType} onValueChange={(value) => setGameType(value as GameType)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(allGameTypes).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>
-                            [{key}] {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Leave blank to use weekday"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Input
-                      id="notes"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Optional notes"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setIsAddDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="button" onClick={handleAddGameDay}>
-                    Add Game Day
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </CardTitle>
+      <CardHeader className="pb-4">
+        <CardTitle>Game Day</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {/* Game selection */}
-        <div>
-          <Label className="text-sm font-medium mb-2 block">Select Game</Label>
+      <CardContent className="space-y-4">
+        {/* Game Day Selection */}
+        <div className="space-y-2">
+          <Label>Select Game Day</Label>
           <Select 
-            onValueChange={handleSelectGameDay}
-            value={currentGameDay?.id || "all"}
+            value={currentGameDay?.id || "all"} 
+            onValueChange={handleGameDaySelect}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select a game day" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">
-                All Games (Total Stats)
-              </SelectItem>
-              {gameDays.map((gameDay) => (
+              <SelectItem value="all">All Games</SelectItem>
+              {gameDays.map(gameDay => (
                 <SelectItem key={gameDay.id} value={gameDay.id}>
                   {formatGameDisplay(gameDay)}
                 </SelectItem>
@@ -205,28 +122,102 @@ export function GameDaySelector() {
           </Select>
         </div>
 
-        {/* Game type filter - only show when no specific game is selected */}
-        {!currentGameDay && (
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Filter by Game Type</Label>
-            <Select 
-              onValueChange={handleGameTypeFilterChange}
-              value={gameTypeFilter || "all"}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Game Types</SelectItem>
-                {Object.entries(allGameTypes).map(([key, label]) => (
-                  <SelectItem key={key} value={key}>
-                    [{key}] {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* Game Type Filter */}
+        <div className="space-y-2">
+          <Label>Filter by Game Type</Label>
+          <Select 
+            value={gameTypeFilter || "all"} 
+            onValueChange={handleGameTypeFilterSelect}
+            disabled={!!currentGameDay} // Disable when specific game is selected
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select game type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Game Types</SelectItem>
+              {Object.entries(allGameTypes).map(([type, name]) => (
+                <SelectItem key={type} value={type}>
+                  [{type}] {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Action buttons - responsive layout */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
+          <div className="flex gap-2 flex-1">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex-1 sm:flex-none">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Game
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Game Day</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="gameType">Game Type</Label>
+                    <Select value={selectedGameType} onValueChange={setSelectedGameType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select game type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(allGameTypes).map(([type, name]) => (
+                          <SelectItem key={type} value={type}>
+                            [{type}] {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="title">Title (optional)</Label>
+                    <Input
+                      id="title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="e.g., Day 1, Match vs Team A"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="notes">Notes (optional)</Label>
+                    <Textarea
+                      id="notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Additional notes about this game"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddGameDay}>Add Game Day</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
-        )}
+          
+          {/* Game Type Manager - icon only on mobile */}
+          <div className="flex justify-end">
+            <GameTypeManager />
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
