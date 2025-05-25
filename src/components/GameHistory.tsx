@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/accordion";
 
 export function GameHistory() {
-  const { gameDays, getGameDayServes, players, setCurrentGameDay } = useVolleyball();
+  const { getFilteredGameDays, getGameDayServes, players, setCurrentGameDay, gameTypeFilter, gameTypes } = useVolleyball();
 
   // Helper to get badge color for serve quality
   const getQualityColor = (quality: ServeQuality) => {
@@ -40,15 +40,31 @@ export function GameHistory() {
     return "Unknown Player";
   };
   
-  // Sort game days by date (latest first)
-  const sortedGameDays = [...gameDays].sort((a, b) => 
+  // Format game display text
+  const formatGameDisplay = (gameDay: any) => {
+    const typeLabel = `[${gameDay.gameType}]`;
+    const titlePart = gameDay.title || format(new Date(gameDay.date), "EEEE");
+    const datePart = format(new Date(gameDay.date), "dd.MM.yy");
+    
+    return `${typeLabel} ${titlePart} (${datePart})`;
+  };
+  
+  // Get filtered game days based on game type filter and sort by date (latest first)
+  const sortedGameDays = [...getFilteredGameDays()].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
   
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Game History</CardTitle>
+        <CardTitle>
+          Game History
+          {gameTypeFilter && (
+            <span className="text-sm font-normal text-muted-foreground ml-2">
+              - {gameTypes[gameTypeFilter]}
+            </span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {sortedGameDays.length > 0 ? (
@@ -63,7 +79,7 @@ export function GameHistory() {
                   <AccordionTrigger className="hover:bg-muted/50 px-4 rounded-md">
                     <div className="flex justify-between items-center w-full">
                       <div className="font-medium">
-                        {format(new Date(gameDay.date), "PPPP")}
+                        {formatGameDisplay(gameDay)}
                       </div>
                       <div className="flex gap-2 mr-4">
                         <Badge variant="outline" className="bg-destructive/10">
@@ -77,11 +93,6 @@ export function GameHistory() {
                   </AccordionTrigger>
                   <AccordionContent className="px-4">
                     <div className="mb-4">
-                      {gameDay.location && (
-                        <p className="text-sm text-muted-foreground">
-                          Location: {gameDay.location}
-                        </p>
-                      )}
                       {gameDay.notes && (
                         <p className="text-sm text-muted-foreground">
                           Notes: {gameDay.notes}
@@ -130,7 +141,10 @@ export function GameHistory() {
           </Accordion>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            No game days recorded yet. Add a game day to get started.
+            {gameTypeFilter 
+              ? `No ${gameTypes[gameTypeFilter]} games recorded yet.`
+              : "No game days recorded yet. Add a game day to get started."
+            }
           </div>
         )}
       </CardContent>

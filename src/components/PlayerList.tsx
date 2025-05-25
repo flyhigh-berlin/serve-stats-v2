@@ -4,18 +4,37 @@ import { useVolleyball } from "../context/VolleyballContext";
 import { PlayerCard } from "./PlayerCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from "date-fns";
 
 export function PlayerList() {
-  const { players, currentGameDay } = useVolleyball();
+  const { players, currentGameDay, gameTypeFilter, gameTypes } = useVolleyball();
+  
+  // Format game display text
+  const formatGameDisplay = (gameDay: any) => {
+    const typeLabel = `[${gameDay.gameType}]`;
+    const titlePart = gameDay.title || format(new Date(gameDay.date), "EEEE");
+    const datePart = format(new Date(gameDay.date), "dd.MM.yy");
+    
+    return `${typeLabel} ${titlePart} (${datePart})`;
+  };
+
+  // Get description based on current context
+  const getDescription = () => {
+    if (currentGameDay) {
+      return `Recording stats for ${formatGameDisplay(currentGameDay)}`;
+    } else if (gameTypeFilter) {
+      return `Stats will be recorded for game type [${gameTypeFilter}] ${gameTypes[gameTypeFilter]}`;
+    } else {
+      return "No game day selected. Stats will be recorded for all games.";
+    }
+  };
   
   return (
     <Card className="w-full">
       <CardHeader className="pb-1 pt-4 px-4">
         <CardTitle>Players</CardTitle>
         <CardDescription className="text-xs sm:text-sm">
-          {currentGameDay 
-            ? `Recording stats for game on ${new Date(currentGameDay.date).toLocaleDateString()}`
-            : "No game day selected. Stats will be recorded for all games."}
+          {getDescription()}
         </CardDescription>
       </CardHeader>
       <CardContent className="px-2 py-2 sm:px-4">

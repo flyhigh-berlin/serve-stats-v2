@@ -13,9 +13,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { format } from "date-fns";
 
 export function Scoreboard() {
-  const { sortedPlayers, getPlayerStats, currentGameDay } = useVolleyball();
+  const { sortedPlayers, getPlayerStats, currentGameDay, gameTypeFilter, gameTypes } = useVolleyball();
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
@@ -31,18 +32,31 @@ export function Scoreboard() {
     }
   };
 
-  // Get the sorted players
-  const players = sortedPlayers(sortField, sortDirection, currentGameDay?.id);
+  // Get the sorted players - use game type filter if no specific game day is selected
+  const players = sortedPlayers(
+    sortField, 
+    sortDirection, 
+    currentGameDay?.id, 
+    !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
+  );
 
   // Calculate quality stats for a player
   const calculateQualityStats = (playerId: string) => {
     const player = players.find(p => p.id === playerId);
     if (!player) return { good: 0, neutral: 0, bad: 0 };
     
-    // Filter serves by game if needed
-    const relevantServes = currentGameDay
-      ? player.serves.filter(s => s.gameId === currentGameDay.id)
-      : player.serves;
+    // Filter serves based on current context
+    let relevantServes = player.serves;
+    
+    if (currentGameDay) {
+      // Specific game day selected
+      relevantServes = player.serves.filter(s => s.gameId === currentGameDay.id);
+    } else if (gameTypeFilter) {
+      // Game type filter applied
+      const { getFilteredGameDays } = useVolleyball();
+      const gameIds = getFilteredGameDays().map(g => g.id);
+      relevantServes = player.serves.filter(s => gameIds.includes(s.gameId));
+    }
       
     const goodServes = relevantServes.filter(s => s.quality === "good").length;
     const neutralServes = relevantServes.filter(s => s.quality === "neutral").length;
@@ -64,15 +78,31 @@ export function Scoreboard() {
         return "";
     }
   };
+
+  // Format game display text
+  const formatGameDisplay = (gameDay: any) => {
+    const typeLabel = `[${gameDay.gameType}]`;
+    const titlePart = gameDay.title || format(new Date(gameDay.date), "EEEE");
+    const datePart = format(new Date(gameDay.date), "dd.MM.yy");
+    
+    return `${typeLabel} ${titlePart} (${datePart})`;
+  };
+  
+  // Get title for scoreboard
+  const getScoreboardTitle = () => {
+    if (currentGameDay) {
+      return `Scoreboard for ${formatGameDisplay(currentGameDay)}`;
+    } else if (gameTypeFilter) {
+      return `Scoreboard for ${gameTypes[gameTypeFilter]} Games`;
+    } else {
+      return "Season Scoreboard";
+    }
+  };
   
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          {currentGameDay
-            ? `Scoreboard for ${new Date(currentGameDay.date).toLocaleDateString()}`
-            : "Season Scoreboard"}
-        </CardTitle>
+        <CardTitle>{getScoreboardTitle()}</CardTitle>
       </CardHeader>
       <CardContent>
         <Table>
@@ -104,7 +134,11 @@ export function Scoreboard() {
           <TableBody>
             {players.length > 0 ? (
               players.map(player => {
-                const stats = getPlayerStats(player.id, currentGameDay?.id);
+                const stats = getPlayerStats(
+                  player.id, 
+                  currentGameDay?.id, 
+                  !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
+                );
                 const qualityStats = calculateQualityStats(player.id);
                 const totalServes = stats.fails + stats.aces;
                 
