@@ -186,24 +186,14 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
             <DialogTitle className="flex items-center justify-between">
               <span>{player.name}</span>
               {!isEditing && (
-                <div className="flex space-x-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0" 
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                    onClick={() => setIsDeletePlayerDialogOpen(true)}
-                  >
-                    <UserX className="h-4 w-4" />
-                  </Button>
-                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0" 
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
               )}
             </DialogTitle>
             
@@ -211,7 +201,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
             <div className="mt-2">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h4 className="text-sm font-medium mb-1">Aces ({serveCounts.ace.total})</h4>
+                  <h4 className="text-sm font-medium mb-1 text-left">Aces ({serveCounts.ace.total})</h4>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                       <SummaryIcon quality="good" type="ace" />
@@ -229,7 +219,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                 </div>
                 
                 <div>
-                  <h4 className="text-sm font-medium mb-1">Fails ({serveCounts.fail.total})</h4>
+                  <h4 className="text-sm font-medium mb-1 text-left">Fails ({serveCounts.fail.total})</h4>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                       <SummaryIcon quality="good" type="fail" />
@@ -265,6 +255,19 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                     className="flex-grow"
                   />
                   <Button onClick={handleSave}>Save</Button>
+                </div>
+                
+                {/* Delete player option in edit menu */}
+                <div className="pt-2">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setIsDeletePlayerDialogOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <UserX className="h-4 w-4" />
+                    Delete Player
+                  </Button>
                 </div>
               </div>
             )}
