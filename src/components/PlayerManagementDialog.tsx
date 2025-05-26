@@ -26,8 +26,9 @@ export function PlayerManagementDialog({ isOpen, onClose }: PlayerManagementDial
   
   const allGameTypes = getAllGameTypes();
   
-  const handleTagChange = (player: Player, tag: GameType | string, checked: boolean) => {
-    if (checked) {
+  const handleTagChange = (player: Player, tag: GameType | string, checked: boolean | string) => {
+    const isChecked = checked === true;
+    if (isChecked) {
       // Add tag
       const newTags = [...player.tags, tag];
       updatePlayerTags(player.id, newTags);
@@ -56,7 +57,7 @@ export function PlayerManagementDialog({ isOpen, onClose }: PlayerManagementDial
             <div key={player.id} className="border rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium">{player.name}</h4>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1 max-w-[200px]">
                   {player.tags.map(tag => (
                     <Badge key={tag} variant="outline" className="text-xs">
                       [{tag}]
@@ -65,7 +66,7 @@ export function PlayerManagementDialog({ isOpen, onClose }: PlayerManagementDial
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {Object.entries(allGameTypes).map(([abbreviation, name]) => {
                   const isChecked = player.tags.includes(abbreviation);
                   const canRemove = canRemoveTagFromPlayer(player.id, abbreviation);
@@ -76,13 +77,13 @@ export function PlayerManagementDialog({ isOpen, onClose }: PlayerManagementDial
                         id={`${player.id}-${abbreviation}`}
                         checked={isChecked}
                         disabled={isChecked && !canRemove}
-                        onCheckedChange={(checked) => handleTagChange(player, abbreviation, checked as boolean)}
+                        onCheckedChange={(checked) => handleTagChange(player, abbreviation, checked)}
                       />
                       <Label 
                         htmlFor={`${player.id}-${abbreviation}`} 
                         className={`text-sm ${isChecked && !canRemove ? 'text-muted-foreground' : ''}`}
                       >
-                        [{abbreviation}] {name}
+                        [{abbreviation}]
                       </Label>
                     </div>
                   );

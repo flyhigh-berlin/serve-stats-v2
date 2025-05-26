@@ -32,11 +32,12 @@ export function AddPlayerForm() {
     }
   }, [isDialogOpen, allGameTypes]);
   
-  const handleTagChange = (tag: GameType | string, checked: boolean) => {
-    if (checked) {
-      setSelectedTags([...selectedTags, tag]);
+  const handleTagChange = (tag: GameType | string, checked: boolean | string) => {
+    const isChecked = checked === true;
+    if (isChecked) {
+      setSelectedTags(prev => [...prev, tag]);
     } else {
-      setSelectedTags(selectedTags.filter(t => t !== tag));
+      setSelectedTags(prev => prev.filter(t => t !== tag));
     }
   };
   
@@ -83,16 +84,16 @@ export function AddPlayerForm() {
           
           <div>
             <Label>Game Type Tags</Label>
-            <div className="grid grid-cols-2 gap-2 mt-2">
+            <div className="grid grid-cols-3 gap-2 mt-2">
               {Object.entries(allGameTypes).map(([abbreviation, name]) => (
                 <div key={abbreviation} className="flex items-center space-x-2">
                   <Checkbox
                     id={abbreviation}
                     checked={selectedTags.includes(abbreviation)}
-                    onCheckedChange={(checked) => handleTagChange(abbreviation, checked as boolean)}
+                    onCheckedChange={(checked) => handleTagChange(abbreviation, checked)}
                   />
                   <Label htmlFor={abbreviation} className="text-sm">
-                    [{abbreviation}] {name}
+                    [{abbreviation}]
                   </Label>
                 </div>
               ))}
