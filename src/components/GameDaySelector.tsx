@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Button } from "@/components/ui/button";
@@ -97,60 +98,15 @@ export function GameDaySelector() {
   return (
     <Card>
       <CardHeader className="pb-4">
-        <CardTitle>Game Day</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Game Day Selection */}
-        <div className="space-y-2">
-          <Label>Select Game Day</Label>
-          <Select 
-            value={currentGameDay?.id || "all"} 
-            onValueChange={handleGameDaySelect}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select a game day" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Games</SelectItem>
-              {gameDays.map(gameDay => (
-                <SelectItem key={gameDay.id} value={gameDay.id}>
-                  {formatGameDisplay(gameDay)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Game Type Filter */}
-        <div className="space-y-2">
-          <Label>Filter by Game Type</Label>
-          <Select 
-            value={gameTypeFilter || "all"} 
-            onValueChange={handleGameTypeFilterSelect}
-            disabled={!!currentGameDay} // Disable when specific game is selected
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select game type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Game Types</SelectItem>
-              {Object.entries(allGameTypes).map(([type, name]) => (
-                <SelectItem key={type} value={type}>
-                  [{type}] {name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Action buttons - responsive layout */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-          <div className="flex gap-2 flex-1">
+        <div className="flex items-center justify-between">
+          <CardTitle>Game Day</CardTitle>
+          <div className="flex items-center gap-2">
+            <GameTypeManager />
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="flex-1 sm:flex-none">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Game
+                <Button size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -211,11 +167,50 @@ export function GameDaySelector() {
               </DialogContent>
             </Dialog>
           </div>
-          
-          {/* Game Type Manager - icon only on mobile */}
-          <div className="flex justify-end">
-            <GameTypeManager />
-          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Game Day Selection */}
+        <div className="space-y-2">
+          <Label>Select Game Day</Label>
+          <Select 
+            value={currentGameDay?.id || "all"} 
+            onValueChange={handleGameDaySelect}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select a game day" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Games</SelectItem>
+              {gameDays.map(gameDay => (
+                <SelectItem key={gameDay.id} value={gameDay.id}>
+                  {formatGameDisplay(gameDay)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Game Type Filter */}
+        <div className="space-y-2">
+          <Label>Filter by Game Type</Label>
+          <Select 
+            value={gameTypeFilter || "all"} 
+            onValueChange={handleGameTypeFilterSelect}
+            disabled={!!currentGameDay} // Disable when specific game is selected
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select game type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Game Types</SelectItem>
+              {Object.entries(allGameTypes).map(([type, name]) => (
+                <SelectItem key={type} value={type}>
+                  [{type}] {name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </CardContent>
     </Card>

@@ -3,12 +3,21 @@ import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
 export function AddPlayerForm() {
   const { addPlayer } = useVolleyball();
   const [playerName, setPlayerName] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,25 +31,37 @@ export function AddPlayerForm() {
     // Add player
     addPlayer(playerName.trim());
     setPlayerName("");
+    setIsDialogOpen(false);
     toast.success(`${playerName} added to the team!`);
   };
   
   return (
-    <Card>
-      <CardHeader className="pb-1 pt-4">
-        <CardTitle className="text-lg">Add Player</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-1 pb-4">
-        <form onSubmit={handleSubmit} className="flex space-x-2">
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm">
+          <Plus className="h-4 w-4 mr-1" />
+          Add
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add New Player</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
             placeholder="Player name"
-            className="flex-1"
+            autoFocus
           />
-          <Button type="submit" className="px-4 text-sm">Add</Button>
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={() => setIsDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Add Player</Button>
+          </DialogFooter>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { X, Trash, Pencil, Square, Plus, Circle, Minus, UserX } from "lucide-react";
+import { Trash, Pencil, Square, Plus, Circle, Minus, UserX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 
@@ -183,28 +183,18 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2 flex-1">
-                <span>{player.name}</span>
-                {!isEditing && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 w-6 p-0" 
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </Button>
-                )}
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-6 w-6 p-0" 
-                onClick={onClose}
-              >
-                <X className="h-4 w-4" />
-              </Button>
+            <DialogTitle className="flex items-center gap-2">
+              <span>{player.name}</span>
+              {!isEditing && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 w-6 p-0" 
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              )}
             </DialogTitle>
             
             {/* Updated serve summary - all in one line */}
