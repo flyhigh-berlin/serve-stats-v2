@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ export function GameDaySelector() {
   const { 
     gameDays, 
     currentGameDay, 
-    selectGameDay, 
+    setCurrentGameDay, 
     gameTypeFilter, 
     setGameTypeFilter, 
     addGameDay, 
@@ -65,12 +64,12 @@ export function GameDaySelector() {
 
   const handleGameDaySelect = (gameId: string) => {
     if (gameId === "all") {
-      selectGameDay(null);
+      setCurrentGameDay(null);
       setGameTypeFilter(null);
     } else {
       const gameDay = gameDays.find(g => g.id === gameId);
       if (gameDay) {
-        selectGameDay(gameDay);
+        setCurrentGameDay(gameDay.id);
         setGameTypeFilter(null); // Clear game type filter when specific game is selected
       }
     }
@@ -79,10 +78,10 @@ export function GameDaySelector() {
   const handleGameTypeFilterSelect = (gameType: string) => {
     if (gameType === "all") {
       setGameTypeFilter(null);
-      selectGameDay(null);
+      setCurrentGameDay(null);
     } else {
       setGameTypeFilter(gameType);
-      selectGameDay(null); // Clear specific game selection when game type filter is applied
+      setCurrentGameDay(null); // Clear specific game selection when game type filter is applied
     }
   };
 
