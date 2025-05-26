@@ -14,9 +14,11 @@ interface VolleyballContextType {
   gameTypeFilter: GameType | string | null;
   
   // Actions
-  addPlayer: (name: string) => void;
+  addPlayer: (name: string, tags?: (GameType | string)[]) => void;
   removePlayer: (id: string) => void;
   updatePlayerName: (playerId: string, newName: string) => void;
+  updatePlayerTags: (playerId: string, tags: (GameType | string)[]) => void;
+  canRemoveTagFromPlayer: (playerId: string, tag: GameType | string) => boolean;
   addGameDay: (date: string, gameType: GameType | string, title?: string, notes?: string) => void;
   setCurrentGameDay: (gameId: string | null) => void;
   setGameTypeFilter: (gameType: GameType | string | null) => void;
@@ -35,6 +37,7 @@ interface VolleyballContextType {
   getPlayerStats: (playerId: string, gameId?: string, gameType?: GameType | string) => { fails: number, aces: number };
   getGameDayServes: (gameId: string) => Serve[];
   getFilteredGameDays: () => GameDay[];
+  getFilteredPlayers: () => Player[];
   
   // Sorting and filtering
   sortedPlayers: (field: SortField, direction: SortDirection, gameId?: string, gameType?: GameType | string) => Player[];
@@ -67,7 +70,13 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     const storedCustomGameTypes = localStorage.getItem(CUSTOM_GAME_TYPES_KEY);
     
     if (storedPlayers) {
-      setPlayers(JSON.parse(storedPlayers));
+      const loadedPlayers = JSON.parse(storedPlayers);
+      // Migrate old players to include tags if they don't have them
+      const migratedPlayers = loadedPlayers.map((player: any) => ({
+        ...player,
+        tags: player.tags || Object.keys(defaultGameTypes) // Default to all game types
+      }));
+      setPlayers(migratedPlayers);
     }
     
     if (storedGameDays) {
@@ -121,13 +130,14 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   };
 
   // Add a new player
-  const addPlayer = (name: string) => {
+  const addPlayer = (name: string, tags: (GameType | string)[] = Object.keys(defaultGameTypes)) => {
     const newPlayer: Player = {
       id: crypto.randomUUID(),
       name,
       totalFails: 0,
       totalAces: 0,
-      serves: []
+      serves: [],
+      tags
     };
     setPlayers([...players, newPlayer]);
   };
@@ -142,6 +152,51 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     setPlayers(players.map(player => 
       player.id === playerId ? { ...player, name: newName } : player
     ));
+  };
+
+  // Update player tags
+  const updatePlayerTags = (playerId: string, tags: (GameType | string)[]) => {
+    setPlayers(players.map(player => 
+      player.id === playerId ? { ...player, tags } : player
+    ));
+  };
+
+  // Check if a tag can be removed from a player (no stats for that game type)
+  const canRemoveTagFromPlayer = (playerId: string, tag: GameType | string) => {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return true;
+    
+    // Get all game days with this game type
+    const gameIdsWithTag = gameDays
+      .filter(gameDay => gameDay.gameType === tag)
+      .map(gameDay => gameDay.id);
+    
+    // Check if player has any serves for games with this tag
+    const hasStatsForTag = player.serves.some(serve => 
+      gameIdsWithTag.includes(serve.gameId)
+    );
+    
+    return !hasStatsForTag;
+  };
+
+  // Get filtered players based on current game day or game type filter
+  const getFilteredPlayers = () => {
+    let targetGameType: GameType | string | null = null;
+    
+    // Determine the game type to filter by
+    if (currentGameDay) {
+      targetGameType = currentGameDay.gameType;
+    } else if (gameTypeFilter) {
+      targetGameType = gameTypeFilter;
+    }
+    
+    // If no game type is selected, return all players
+    if (!targetGameType) {
+      return players;
+    }
+    
+    // Filter players who have the target game type in their tags
+    return players.filter(player => player.tags.includes(targetGameType));
   };
 
   // Add a new game day
@@ -323,6 +378,8 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     addPlayer,
     removePlayer,
     updatePlayerName,
+    updatePlayerTags,
+    canRemoveTagFromPlayer,
     addGameDay,
     setCurrentGameDay,
     setGameTypeFilter,
@@ -335,6 +392,7 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
     getPlayerStats,
     getGameDayServes,
     getFilteredGameDays,
+    getFilteredPlayers,
     sortedPlayers
   };
 

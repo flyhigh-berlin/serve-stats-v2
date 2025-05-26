@@ -3,7 +3,6 @@ import React from "react";
 import { VolleyballProvider } from "../context/VolleyballContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PlayerList } from "@/components/PlayerList";
-import { AddPlayerForm } from "@/components/AddPlayerForm";
 import { GameDaySelector } from "@/components/GameDaySelector";
 import { Scoreboard } from "@/components/Scoreboard";
 import { GameHistory } from "@/components/GameHistory";
@@ -18,13 +17,8 @@ const Index = () => {
           <p className="text-muted-foreground">Track serves, fails, and aces for your volleyball team</p>
         </header>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <div className="lg:col-span-2">
-            <GameDaySelector />
-          </div>
-          <div>
-            <AddPlayerForm />
-          </div>
+        <div className="mb-6">
+          <GameDaySelector />
         </div>
         
         <Tabs defaultValue="players" className="w-full">

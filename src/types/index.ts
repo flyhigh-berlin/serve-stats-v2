@@ -20,6 +20,7 @@ export interface Player {
   totalFails: number;
   totalAces: number;
   serves: Serve[];
+  tags: (GameType | string)[]; // Tags are game types
 }
 
 // Serve record

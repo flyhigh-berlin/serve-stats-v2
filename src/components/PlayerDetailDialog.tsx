@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
-import { Serve, ServeQuality } from "../types";
+import { Serve, ServeQuality, GameType } from "../types";
 import { format } from "date-fns";
 import { 
   Dialog,
@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trash, Pencil, Square, Plus, Circle, Minus, UserX } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -37,7 +38,16 @@ interface PlayerDetailDialogProps {
 }
 
 export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDialogProps) {
-  const { players, removeServe, currentGameDay, updatePlayerName, removePlayer } = useVolleyball();
+  const { 
+    players, 
+    removeServe, 
+    currentGameDay, 
+    updatePlayerName, 
+    removePlayer,
+    getAllGameTypes,
+    updatePlayerTags,
+    canRemoveTagFromPlayer
+  } = useVolleyball();
   const { toast } = useToast();
   
   // Find the player by id
@@ -51,6 +61,8 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   const [isDeleteServeDialogOpen, setIsDeleteServeDialogOpen] = useState(false);
   const [isDeletePlayerDialogOpen, setIsDeletePlayerDialogOpen] = useState(false);
   const [serveToDelete, setServeToDelete] = useState<string | null>(null);
+  
+  const allGameTypes = getAllGameTypes();
   
   // Get the serves to display (filtered by current game day if one is selected)
   const serves = currentGameDay 
@@ -151,6 +163,34 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     setIsEditing(false);
   };
   
+  const handleTagChange = (tag: GameType | string, checked: boolean) => {
+    if (checked) {
+      // Add tag
+      const newTags = [...player.tags, tag];
+      updatePlayerTags(player.id, newTags);
+      toast({
+        title: "Tag added",
+        description: `Added [${tag}] tag to ${player.name}`,
+      });
+    } else {
+      // Remove tag - check if allowed
+      if (!canRemoveTagFromPlayer(player.id, tag)) {
+        toast({
+          title: "Cannot remove tag",
+          description: `Cannot remove [${tag}] tag - player has recorded stats for this game type`,
+          variant: "destructive",
+        });
+        return;
+      }
+      const newTags = player.tags.filter(t => t !== tag);
+      updatePlayerTags(player.id, newTags);
+      toast({
+        title: "Tag removed",
+        description: `Removed [${tag}] tag from ${player.name}`,
+      });
+    }
+  };
+  
   const handleDeleteServeClick = (serveId: string) => {
     setServeToDelete(serveId);
     setIsDeleteServeDialogOpen(true);
@@ -197,6 +237,15 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
               )}
             </DialogTitle>
             
+            {/* Player tags */}
+            <div className="flex gap-1 flex-wrap">
+              {player.tags.map(tag => (
+                <Badge key={tag} variant="outline" className="text-xs">
+                  [{tag}]
+                </Badge>
+              ))}
+            </div>
+            
             {/* Updated serve summary - all in one line */}
             <div className="mt-2">
               <div className="grid grid-cols-2 gap-4">
@@ -242,19 +291,49 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            {/* Edit player name (only shown when isEditing is true) */}
+            {/* Edit player name and tags (only shown when isEditing is true) */}
             {isEditing && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Player Name</Label>
-                <div className="flex space-x-2">
-                  <Input
-                    id="name"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    placeholder="Enter player name"
-                    className="flex-grow"
-                  />
-                  <Button onClick={handleSave}>Save</Button>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Player Name</Label>
+                  <div className="flex space-x-2">
+                    <Input
+                      id="name"
+                      value={editedName}
+                      onChange={(e) => setEditedName(e.target.value)}
+                      placeholder="Enter player name"
+                      className="flex-grow"
+                    />
+                    <Button onClick={handleSave}>Save</Button>
+                  </div>
+                </div>
+                
+                {/* Tag management */}
+                <div className="space-y-2">
+                  <Label>Game Type Tags</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(allGameTypes).map(([abbreviation, name]) => {
+                      const isChecked = player.tags.includes(abbreviation);
+                      const canRemove = canRemoveTagFromPlayer(player.id, abbreviation);
+                      
+                      return (
+                        <div key={abbreviation} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`edit-${abbreviation}`}
+                            checked={isChecked}
+                            disabled={isChecked && !canRemove}
+                            onCheckedChange={(checked) => handleTagChange(abbreviation, checked as boolean)}
+                          />
+                          <Label 
+                            htmlFor={`edit-${abbreviation}`} 
+                            className={`text-sm ${isChecked && !canRemove ? 'text-muted-foreground' : ''}`}
+                          >
+                            [{abbreviation}] {name}
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 
                 {/* Delete player option in edit menu */}
