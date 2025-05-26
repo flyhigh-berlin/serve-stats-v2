@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Button } from "@/components/ui/button";
@@ -101,13 +100,7 @@ export function GameDaySelector() {
         <div className="flex items-center justify-between">
           <CardTitle>Game Day</CardTitle>
           <div className="flex items-center gap-2">
-            <GameTypeManager 
-              trigger={
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              }
-            />
+            <GameTypeManager />
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm">
