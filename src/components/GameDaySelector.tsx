@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GameTypeManager } from "./GameTypeManager";
-import { Plus, Calendar } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { toast } from "sonner";
 

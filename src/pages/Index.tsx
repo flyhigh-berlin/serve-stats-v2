@@ -14,7 +14,6 @@ const Index = () => {
       <div className="container py-6 max-w-5xl">
         <header className="mb-6">
           <h1 className="text-3xl font-bold text-team-primary">Volleyball Team Stats</h1>
-          <p className="text-muted-foreground">Track serves, fails, and aces for your volleyball team</p>
         </header>
         
         <div className="mb-6">
