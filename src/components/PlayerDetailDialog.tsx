@@ -237,14 +237,16 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
               )}
             </DialogTitle>
             
-            {/* Player tags */}
-            <div className="flex gap-1 flex-wrap">
-              {player.tags.map(tag => (
-                <Badge key={tag} variant="outline" className="text-xs">
-                  [{tag}]
-                </Badge>
-              ))}
-            </div>
+            {/* Show player tags only when editing */}
+            {isEditing && (
+              <div className="flex gap-1 flex-wrap">
+                {player.tags.map(tag => (
+                  <Badge key={tag} variant="outline" className="text-xs">
+                    [{tag}]
+                  </Badge>
+                ))}
+              </div>
+            )}
             
             {/* Updated serve summary - all in one line */}
             <div className="mt-2">

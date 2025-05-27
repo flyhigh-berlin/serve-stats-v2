@@ -28,16 +28,18 @@ export function AddPlayerForm() {
   // Initialize with all tags selected when dialog opens
   React.useEffect(() => {
     if (isDialogOpen) {
-      setSelectedTags(Object.keys(allGameTypes) as (GameType | string)[]);
+      setSelectedTags([...Object.keys(allGameTypes)]);
     }
-  }, [isDialogOpen, allGameTypes]);
+  }, [isDialogOpen]);
   
   const handleTagChange = (tag: GameType | string, checked: boolean) => {
-    if (checked) {
-      setSelectedTags(prev => [...prev, tag]);
-    } else {
-      setSelectedTags(prev => prev.filter(t => t !== tag));
-    }
+    setSelectedTags(prev => {
+      if (checked) {
+        return [...prev, tag];
+      } else {
+        return prev.filter(t => t !== tag);
+      }
+    });
   };
   
   const handleSubmit = (e: React.FormEvent) => {
