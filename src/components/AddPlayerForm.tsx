@@ -32,9 +32,8 @@ export function AddPlayerForm() {
     }
   }, [isDialogOpen, allGameTypes]);
   
-  const handleTagChange = (tag: GameType | string, checked: boolean | "indeterminate") => {
-    const isChecked = checked === true;
-    if (isChecked) {
+  const handleTagChange = (tag: GameType | string, checked: boolean) => {
+    if (checked) {
       setSelectedTags(prev => [...prev, tag]);
     } else {
       setSelectedTags(prev => prev.filter(t => t !== tag));
@@ -90,7 +89,7 @@ export function AddPlayerForm() {
                   <Checkbox
                     id={abbreviation}
                     checked={selectedTags.includes(abbreviation)}
-                    onCheckedChange={(checked) => handleTagChange(abbreviation, checked)}
+                    onCheckedChange={(checked) => handleTagChange(abbreviation, checked === true)}
                   />
                   <Label htmlFor={abbreviation} className="text-sm">
                     [{abbreviation}]
