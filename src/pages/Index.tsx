@@ -12,8 +12,15 @@ const Index = () => {
   return (
     <VolleyballProvider>
       <div className="container py-6 max-w-5xl">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold text-team-primary">Volleyball Team Stats</h1>
+        <header className="mb-6 text-center">
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <img 
+              src="/lovable-uploads/9d00919c-607d-49af-87e1-11c7dc280cba.png" 
+              alt="Serve Stats Logo" 
+              className="h-12 w-auto"
+            />
+            <h1 className="text-3xl font-bold text-team-primary">Serve Stats</h1>
+          </div>
         </header>
         
         <div className="mb-6">
