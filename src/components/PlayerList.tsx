@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { AddPlayerForm } from "./AddPlayerForm";
 import { PlayerManagementDialog } from "./PlayerManagementDialog";
-import { Settings } from "lucide-react";
+import { Settings, Plus } from "lucide-react";
 
 export function PlayerList() {
   const { getFilteredPlayers, currentGameDay, gameTypeFilter } = useVolleyball();
@@ -19,13 +19,14 @@ export function PlayerList() {
   return (
     <>
       <Card className="w-full">
-        <CardHeader className="pb-1 pt-4 px-4">
+        <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle>Players</CardTitle>
             <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
                 size="sm"
+                className="h-9 w-9 p-0"
                 onClick={() => setIsManagementDialogOpen(true)}
               >
                 <Settings className="h-4 w-4" />

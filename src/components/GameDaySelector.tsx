@@ -100,10 +100,12 @@ export function GameDaySelector() {
         <div className="flex items-center justify-between">
           <CardTitle>Game Day</CardTitle>
           <div className="flex items-center gap-2">
-            <GameTypeManager />
+            <Button variant="outline" size="sm" className="h-9 w-9 p-0">
+              <Settings className="h-4 w-4" />
+            </Button>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" className="h-9 px-3">
                   <Plus className="h-4 w-4 mr-1" />
                   Add
                 </Button>
