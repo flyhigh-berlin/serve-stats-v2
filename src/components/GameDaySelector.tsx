@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GameTypeManager } from "./GameTypeManager";
-import { Plus, Settings } from "lucide-react";
+import { Plus } from "lucide-react";
 import { format, addDays } from "date-fns";
 import { toast } from "sonner";
 
@@ -100,9 +100,7 @@ export function GameDaySelector() {
         <div className="flex items-center justify-between">
           <CardTitle>Game Day</CardTitle>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-9 w-9 p-0">
-              <Settings className="h-4 w-4" />
-            </Button>
+            <GameTypeManager />
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="h-9 px-3">

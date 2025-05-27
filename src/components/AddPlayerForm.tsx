@@ -32,7 +32,7 @@ export function AddPlayerForm() {
     }
   }, [isDialogOpen, allGameTypes]);
   
-  const handleTagChange = (tag: GameType | string, checked: boolean | string) => {
+  const handleTagChange = (tag: GameType | string, checked: boolean | "indeterminate") => {
     const isChecked = checked === true;
     if (isChecked) {
       setSelectedTags(prev => [...prev, tag]);
@@ -61,7 +61,7 @@ export function AddPlayerForm() {
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" className="h-9 px-3">
           <Plus className="h-4 w-4 mr-1" />
           Add
         </Button>

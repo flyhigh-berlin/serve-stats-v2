@@ -3,14 +3,15 @@
 export type ServeQuality = "good" | "neutral" | "bad";
 
 // Game types
-export type GameType = "KL" | "MX" | "TN" | "TG" | "FH";
+export type GameType = "KL" | "MX" | "TN" | "TG" | "FH" | "PG";
 
 export const gameTypes: Record<GameType, string> = {
   "KL": "Liga",
   "MX": "Mixed", 
   "TN": "Tournament",
   "TG": "Test Game",
-  "FH": "Fly High Training"
+  "FH": "Fly High Training",
+  "PG": "Practice Game"
 };
 
 // Player model

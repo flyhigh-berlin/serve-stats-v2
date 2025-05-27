@@ -57,13 +57,6 @@ export function PlayerManagementDialog({ isOpen, onClose }: PlayerManagementDial
             <div key={player.id} className="border rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium">{player.name}</h4>
-                <div className="flex flex-wrap gap-1 max-w-[200px]">
-                  {player.tags.map(tag => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      [{tag}]
-                    </Badge>
-                  ))}
-                </div>
               </div>
               
               <div className="grid grid-cols-3 gap-2">
