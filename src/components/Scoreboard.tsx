@@ -88,19 +88,14 @@ export function Scoreboard() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px] cursor-pointer" onClick={() => handleSort("name")}>
+              <TableHead className="w-[140px] cursor-pointer" onClick={() => handleSort("name")}>
                 <Button variant="ghost" size="sm" className="p-0">
                   Name {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
                 </Button>
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("serves")}>
-                <Button variant="ghost" size="sm" className="p-0">
-                  Serves {sortField === "serves" && (sortDirection === "asc" ? "↑" : "↓")}
-                </Button>
-              </TableHead>
               <TableHead className="cursor-pointer" onClick={() => handleSort("fails")}>
                 <Button variant="ghost" size="sm" className="p-0">
-                  Fails {sortField === "fails" && (sortDirection === "asc" ? "↑" : "↓")}
+                  Errors {sortField === "fails" && (sortDirection === "asc" ? "↑" : "↓")}
                 </Button>
               </TableHead>
               <TableHead className="cursor-pointer" onClick={() => handleSort("aces")}>
@@ -126,12 +121,13 @@ export function Scoreboard() {
                 return (
                   <TableRow key={player.id}>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {isFirstPlace && <Crown className="h-4 w-4 text-yellow-500" />}
-                        {player.name}
+                      <div className="flex items-center">
+                        <div className="w-6 flex justify-center mr-2">
+                          {isFirstPlace && <Crown className="h-4 w-4 text-yellow-500" />}
+                        </div>
+                        <span>{player.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{totalServes}</TableCell>
                     <TableCell>{stats.fails}</TableCell>
                     <TableCell>{stats.aces}</TableCell>
                     <TableCell>
@@ -158,7 +154,7 @@ export function Scoreboard() {
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
                   No player data available
                 </TableCell>
               </TableRow>

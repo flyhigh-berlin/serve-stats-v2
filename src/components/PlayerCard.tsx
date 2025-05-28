@@ -69,7 +69,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
             <div className="flex items-center mr-2 flex-shrink-0">
               <div className="flex flex-col items-end">
                 <span className="text-xs">
-                  <span className="text-muted-foreground">F:</span>
+                  <span className="text-muted-foreground">E:</span>
                   <span className={`font-medium ${animatingFail ? "stat-change" : ""}`}>{stats.fails}</span>
                 </span>
                 <span className="text-xs">
@@ -88,7 +88,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
                   className="h-7 w-10 px-1 text-xs"
                   onClick={() => setActiveType("fail")}
                 >
-                  +F
+                  +E
                 </Button>
                 <Button 
                   variant="default" 
