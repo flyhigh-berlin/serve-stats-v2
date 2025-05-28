@@ -1,9 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { GameServeHistoryDialog } from "./GameServeHistoryDialog";
 
 export function GameHistory() {
   const { 
@@ -14,6 +15,8 @@ export function GameHistory() {
     getAllGameTypes,
     gameTypes 
   } = useVolleyball();
+  
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   
   const allGameTypes = getAllGameTypes();
   
@@ -56,73 +59,73 @@ export function GameHistory() {
     return { totalServes, totalFails, totalAces };
   };
 
-  // Format game display text
-  const formatGameDisplay = (gameDay: any) => {
-    const typeLabel = `[${gameDay.gameType}]`;
-    const titlePart = gameDay.title || format(new Date(gameDay.date), "EEEE");
-    const datePart = format(new Date(gameDay.date), "dd.MM.yy");
-    
-    return `${typeLabel} ${titlePart} (${datePart})`;
-  };
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Game History</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {sortedGames.length > 0 ? (
-          <div className="space-y-4">
-            {sortedGames.map(game => {
-              const stats = calculateGameStats(game.id);
-              const isSelected = currentGameDay?.id === game.id;
-              
-              return (
-                <div 
-                  key={game.id} 
-                  className={`p-4 border rounded-lg ${isSelected ? 'bg-muted border-primary' : ''}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">
-                        [{game.gameType}] {allGameTypes[game.gameType]}
-                      </Badge>
-                      {isSelected && (
-                        <Badge variant="default" className="text-xs">
-                          Selected
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Game History</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {sortedGames.length > 0 ? (
+            <div className="space-y-4">
+              {sortedGames.map(game => {
+                const stats = calculateGameStats(game.id);
+                const isSelected = currentGameDay?.id === game.id;
+                
+                return (
+                  <div 
+                    key={game.id} 
+                    className={`p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${isSelected ? 'bg-muted border-primary' : ''}`}
+                    onClick={() => setSelectedGameId(game.id)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">
+                          [{game.gameType}] {allGameTypes[game.gameType]}
                         </Badge>
-                      )}
+                        {isSelected && (
+                          <Badge variant="default" className="text-xs">
+                            Selected
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {format(new Date(game.date), "dd.MM.yy")}
+                      </span>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {format(new Date(game.date), "dd.MM.yy")}
-                    </span>
+                    
+                    <h3 className="font-semibold mb-2">
+                      {game.title || format(new Date(game.date), "EEEE")}
+                    </h3>
+                    
+                    {game.notes && (
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {game.notes}
+                      </p>
+                    )}
+                    
+                    <div className="flex gap-4 text-sm">
+                      <span>Total Serves: <strong>{stats.totalServes}</strong></span>
+                      <span>Errors: <strong>{stats.totalFails}</strong></span>
+                      <span>Aces: <strong>{stats.totalAces}</strong></span>
+                    </div>
                   </div>
-                  
-                  <h3 className="font-semibold mb-2">
-                    {game.title || format(new Date(game.date), "EEEE")}
-                  </h3>
-                  
-                  {game.notes && (
-                    <p className="text-sm text-muted-foreground mb-3">
-                      {game.notes}
-                    </p>
-                  )}
-                  
-                  <div className="flex gap-4 text-sm">
-                    <span>Total Serves: <strong>{stats.totalServes}</strong></span>
-                    <span>Fails: <strong>{stats.totalFails}</strong></span>
-                    <span>Aces: <strong>{stats.totalAces}</strong></span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            No games found for the selected criteria.
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              No games found for the selected criteria.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      <GameServeHistoryDialog
+        gameId={selectedGameId}
+        isOpen={!!selectedGameId}
+        onClose={() => setSelectedGameId(null)}
+      />
+    </>
   );
 }
