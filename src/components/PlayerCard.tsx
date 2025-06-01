@@ -235,7 +235,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"
             }`}
           >
-            <Circle className={`h-0.5 w-0.5 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 0, fill: 'white' }} />
+            <Circle className={`h-1 w-1 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 0, fill: 'white' }} />
           </div>
           <span className={type === "error" ? "ml-1" : ""}>Neutral</span>
           <TooltipProvider>
