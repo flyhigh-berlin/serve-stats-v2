@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -46,23 +45,14 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
   
-  // Helper to get quality color
-  const getQualityColor = (quality: ServeQuality) => {
-    switch (quality) {
-      case "good":
-        return "bg-serve-good";
-      case "neutral":
-        return "bg-serve-neutral text-black";
-      case "bad":
-        return "bg-serve-bad";
-      default:
-        return "";
-    }
+  // Helper to get quality color - updated to use button colors
+  const getQualityColor = (type: "fail" | "ace") => {
+    return type === "ace" ? "bg-primary" : "bg-destructive";
   };
   
   // Get quality icon based on quality and type
   const QualityIcon = ({ quality, type }: { quality: ServeQuality, type: "fail" | "ace" }) => {
-    const isCircle = type === "fail";
+    const isCircle = type === "ace"; // aces are circles
     
     let Icon = Circle;
     if (quality === "good") Icon = Plus;
@@ -71,9 +61,9 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     return (
       <div className="flex items-center justify-center w-8">
         <div 
-          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-90'} ${getQualityColor(quality)}`}
+          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-90'} ${getQualityColor(type)}`}
         >
-          <Icon className={`h-3 w-3 absolute ${!isCircle ? "transform -rotate-45" : ""}`} />
+          <Icon className={`h-3 w-3 absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`} />
         </div>
       </div>
     );

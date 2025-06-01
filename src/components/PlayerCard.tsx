@@ -21,7 +21,8 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   const [animatingError, setAnimatingError] = useState(false);
   const [animatingAce, setAnimatingAce] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [acePopoverOpen, setAcePopoverOpen] = useState(false);
+  const [errorPopoverOpen, setErrorPopoverOpen] = useState(false);
   
   // Get the player's stats for the current game or all games
   const stats = getPlayerStats(player.id, gameId);
@@ -39,20 +40,34 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       setTimeout(() => setAnimatingAce(false), 500);
     }
     
-    // Reset the active type and close popover
+    // Close the specific popover
+    if (type === "ace") {
+      setAcePopoverOpen(false);
+    } else {
+      setErrorPopoverOpen(false);
+    }
     setActiveType(null);
-    setIsPopoverOpen(false);
   };
 
   // Handle button click to open popover
   const handleButtonClick = (type: "error" | "ace") => {
     setActiveType(type);
-    setIsPopoverOpen(true);
+    if (type === "ace") {
+      setAcePopoverOpen(true);
+      setErrorPopoverOpen(false);
+    } else {
+      setErrorPopoverOpen(true);
+      setAcePopoverOpen(false);
+    }
   };
 
   // Close popover
-  const closePopover = () => {
-    setIsPopoverOpen(false);
+  const closePopover = (type: "error" | "ace") => {
+    if (type === "ace") {
+      setAcePopoverOpen(false);
+    } else {
+      setErrorPopoverOpen(false);
+    }
     setActiveType(null);
   };
 
@@ -74,50 +89,55 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   };
 
   // Quality selection content
-  const QualitySelectionContent = () => (
+  const QualitySelectionContent = ({ type }: { type: "ace" | "error" }) => (
     <div className="space-y-2 p-2 relative">
       {/* Close button */}
       <Button
         variant="ghost"
         size="icon"
         className="absolute top-0 right-0 h-6 w-6"
-        onClick={closePopover}
+        onClick={() => closePopover(type)}
       >
         <X className="h-4 w-4" />
       </Button>
 
       <div className="text-sm font-medium mb-3 pr-8">
-        Select {activeType === "ace" ? "Ace" : "Error"} Quality
+        Select {type === "ace" ? "Ace" : "Error"} Quality
       </div>
       
       {/* Good quality */}
       <Button
         variant="outline"
         className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
-        onClick={() => handleServeClick(activeType!, "good")}
+        onClick={() => handleServeClick(type, "good")}
       >
         <div className="flex items-center gap-2 flex-1">
           <div 
-            className={`flex items-center justify-center w-6 h-6 ${
-              activeType === "ace" ? "bg-blue-500" : "bg-red-500"
+            className={`flex items-center justify-center w-7 h-7 ${
+              type === "ace" ? "bg-primary" : "bg-destructive"
             }`}
             style={{ 
-              borderRadius: activeType === "ace" ? '50%' : '0',
-              transform: activeType === "ace" ? 'none' : 'rotate(45deg)'
+              borderRadius: type === "ace" ? '50%' : '0',
+              transform: type === "ace" ? 'none' : 'rotate(45deg)'
             }}
           >
-            <Plus className={`h-3 w-3 text-white ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
+            <Plus className={`h-3 w-3 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} />
           </div>
           <span>Good</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-4 w-4 ml-auto">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-4 w-4 ml-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Info className="h-3 w-3" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="max-w-xs">{getQualityExplanation("good", activeType!)}</p>
+                <p className="max-w-xs">{getQualityExplanation("good", type)}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -128,30 +148,35 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       <Button
         variant="outline"
         className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
-        onClick={() => handleServeClick(activeType!, "neutral")}
+        onClick={() => handleServeClick(type, "neutral")}
       >
         <div className="flex items-center gap-2 flex-1">
           <div 
-            className={`flex items-center justify-center w-6 h-6 ${
-              activeType === "ace" ? "bg-blue-500" : "bg-red-500"
+            className={`flex items-center justify-center w-7 h-7 ${
+              type === "ace" ? "bg-primary" : "bg-destructive"
             }`}
             style={{ 
-              borderRadius: activeType === "ace" ? '50%' : '0',
-              transform: activeType === "ace" ? 'none' : 'rotate(45deg)'
+              borderRadius: type === "ace" ? '50%' : '0',
+              transform: type === "ace" ? 'none' : 'rotate(45deg)'
             }}
           >
-            <Circle className={`h-3 w-3 text-white ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
+            <Circle className={`h-3 w-3 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} />
           </div>
           <span>Neutral</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-4 w-4 ml-auto">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-4 w-4 ml-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Info className="h-3 w-3" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="max-w-xs">{getQualityExplanation("neutral", activeType!)}</p>
+                <p className="max-w-xs">{getQualityExplanation("neutral", type)}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -162,30 +187,35 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       <Button
         variant="outline"
         className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
-        onClick={() => handleServeClick(activeType!, "bad")}
+        onClick={() => handleServeClick(type, "bad")}
       >
         <div className="flex items-center gap-2 flex-1">
           <div 
-            className={`flex items-center justify-center w-6 h-6 ${
-              activeType === "ace" ? "bg-blue-500" : "bg-red-500"
+            className={`flex items-center justify-center w-7 h-7 ${
+              type === "ace" ? "bg-primary" : "bg-destructive"
             }`}
             style={{ 
-              borderRadius: activeType === "ace" ? '50%' : '0',
-              transform: activeType === "ace" ? 'none' : 'rotate(45deg)'
+              borderRadius: type === "ace" ? '50%' : '0',
+              transform: type === "ace" ? 'none' : 'rotate(45deg)'
             }}
           >
-            <Minus className={`h-3 w-3 text-white ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
+            <Minus className={`h-3 w-3 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} />
           </div>
           <span>Bad</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-4 w-4 ml-auto">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-4 w-4 ml-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <Info className="h-3 w-3" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p className="max-w-xs">{getQualityExplanation("bad", activeType!)}</p>
+                <p className="max-w-xs">{getQualityExplanation("bad", type)}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -220,12 +250,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
           
           {/* Line 2: Action buttons */}
           <div className="flex gap-2">
-            <Popover open={isPopoverOpen && activeType === "ace"} onOpenChange={(open) => {
-              if (!open) {
-                setIsPopoverOpen(false);
-                setActiveType(null);
-              }
-            }}>
+            <Popover open={acePopoverOpen} onOpenChange={setAcePopoverOpen}>
               <PopoverTrigger asChild>
                 <Button 
                   variant="default" 
@@ -237,16 +262,11 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-60" align="start">
-                <QualitySelectionContent />
+                <QualitySelectionContent type="ace" />
               </PopoverContent>
             </Popover>
 
-            <Popover open={isPopoverOpen && activeType === "error"} onOpenChange={(open) => {
-              if (!open) {
-                setIsPopoverOpen(false);
-                setActiveType(null);
-              }
-            }}>
+            <Popover open={errorPopoverOpen} onOpenChange={setErrorPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button 
                   variant="destructive" 
@@ -258,7 +278,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-60" align="start">
-                <QualitySelectionContent />
+                <QualitySelectionContent type="error" />
               </PopoverContent>
             </Popover>
           </div>

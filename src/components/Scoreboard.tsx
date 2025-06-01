@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,37 +74,28 @@ export function Scoreboard() {
     return qualityStats;
   };
   
-  // Helper to get badge color for serve quality
-  const getQualityColor = (quality: ServeQuality) => {
-    switch (quality) {
-      case "good":
-        return "bg-serve-good";
-      case "neutral":
-        return "bg-serve-neutral text-black";
-      case "bad":
-        return "bg-serve-bad";
-      default:
-        return "";
-    }
+  // Helper to get badge color for serve quality - updated to use button colors
+  const getQualityColor = (type: "error" | "ace") => {
+    return type === "ace" ? "bg-primary" : "bg-destructive";
   };
 
-  // Quality icon component - SWAPPED: aces are circles, errors are diamonds
+  // Quality icon component - aces are circles, errors are diamonds
   const QualityIcon = ({ quality, type, count }: { quality: ServeQuality, type: "error" | "ace", count: number }) => {
     if (count === 0) return null;
     
-    const isCircle = type === "ace"; // Swapped: aces are now circles
+    const isCircle = type === "ace"; // aces are circles
     const Icon = isCircle ? Circle : Square;
 
     return (
       <div className="flex items-center gap-1">
         <div 
-          className={`flex items-center justify-center w-4 h-4 ${getQualityColor(quality)}`}
+          className={`flex items-center justify-center w-4 h-4 ${getQualityColor(type)}`}
           style={{ 
             borderRadius: isCircle ? '50%' : '0',
             transform: isCircle ? 'none' : 'rotate(45deg)'
           }}
         >
-          <Icon className={`h-2 w-2 ${!isCircle ? "transform -rotate-45" : ""}`} />
+          <Icon className={`h-2 w-2 text-white ${!isCircle ? "transform -rotate-45" : ""}`} />
         </div>
         <span className="text-xs">{count}</span>
       </div>

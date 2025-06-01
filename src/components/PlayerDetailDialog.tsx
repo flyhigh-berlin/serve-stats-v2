@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Serve, ServeQuality, GameType } from "../types";
@@ -96,23 +95,15 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     serveCounts[serve.type].total++;
   });
   
-  // Helper to get quality color
-  const getQualityColor = (quality: ServeQuality) => {
-    switch (quality) {
-      case "good":
-        return "bg-serve-good";
-      case "neutral":
-        return "bg-serve-neutral text-black";
-      case "bad":
-        return "bg-serve-bad";
-      default:
-        return "";
-    }
+  // Helper to get quality color - updated to use button colors
+  const getQualityColor = (quality: ServeQuality, type: "fail" | "ace") => {
+    // Use consistent colors: blue for aces, red for errors
+    return type === "ace" ? "bg-primary" : "bg-destructive";
   };
   
   // Get quality icon based on quality and type
   const QualityIcon = ({ quality, type }: { quality: ServeQuality, type: "fail" | "ace" }) => {
-    const isCircle = type === "fail";
+    const isCircle = type === "ace"; // Swapped: aces are circles, errors are diamonds
     
     // Define the icon based on quality
     let Icon = Circle;
@@ -122,9 +113,9 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     return (
       <div className="flex items-center justify-center w-8">
         <div 
-          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-90'} ${getQualityColor(quality)}`}
+          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-90'} ${getQualityColor(quality, type)}`}
         >
-          <Icon className={`h-3 w-3 absolute ${!isCircle ? "transform -rotate-45" : ""}`} />
+          <Icon className={`h-3 w-3 absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`} />
         </div>
       </div>
     );
@@ -132,7 +123,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   
   // Small version of icon for the summary
   const SummaryIcon = ({ quality, type }: { quality: ServeQuality, type: "fail" | "ace" }) => {
-    const isCircle = type === "fail";
+    const isCircle = type === "ace"; // Swapped: aces are circles, errors are diamonds
     
     // Define the icon based on quality
     let Icon = Circle;
@@ -142,9 +133,9 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     return (
       <div className="flex items-center justify-center w-5">
         <div 
-          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-5 w-5' : 'rounded-none transform rotate-45 h-4 w-4 scale-90'} ${getQualityColor(quality)}`}
+          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-5 w-5' : 'rounded-none transform rotate-45 h-4 w-4 scale-90'} ${getQualityColor(quality, type)}`}
         >
-          <Icon className={`h-2 w-2 absolute ${!isCircle ? "transform -rotate-45" : ""}`} />
+          <Icon className={`h-2 w-2 absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`} />
         </div>
       </div>
     );
