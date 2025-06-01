@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Player, ServeQuality } from "../types";
 import { useVolleyball } from "../context/VolleyballContext";
@@ -9,28 +8,32 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PlayerDetailDialog } from "./PlayerDetailDialog";
 import { Plus, Minus, X, Circle, Info } from "lucide-react";
-
 interface PlayerCardProps {
   player: Player;
   gameId?: string;
 }
-
-export function PlayerCard({ player, gameId }: PlayerCardProps) {
-  const { addServe, getPlayerStats } = useVolleyball();
+export function PlayerCard({
+  player,
+  gameId
+}: PlayerCardProps) {
+  const {
+    addServe,
+    getPlayerStats
+  } = useVolleyball();
   const [activeType, setActiveType] = useState<"error" | "ace" | null>(null);
   const [animatingError, setAnimatingError] = useState(false);
   const [animatingAce, setAnimatingAce] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [acePopoverOpen, setAcePopoverOpen] = useState(false);
   const [errorPopoverOpen, setErrorPopoverOpen] = useState(false);
-  
+
   // Get the player's stats for the current game or all games
   const stats = getPlayerStats(player.id, gameId);
-  
+
   // Handle adding a serve
   const handleServeClick = (type: "error" | "ace", quality: ServeQuality) => {
     addServe(player.id, type === "error" ? "fail" : "ace", quality);
-    
+
     // Animate the stat change
     if (type === "error") {
       setAnimatingError(true);
@@ -39,7 +42,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       setAnimatingAce(true);
       setTimeout(() => setAnimatingAce(false), 500);
     }
-    
+
     // Close the specific popover
     if (type === "ace") {
       setAcePopoverOpen(false);
@@ -75,15 +78,21 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   const getQualityExplanation = (quality: ServeQuality, type: "ace" | "error") => {
     if (type === "ace") {
       switch (quality) {
-        case "good": return "Well placed serve, clean execution.";
-        case "neutral": return "The serve wasn't great, but the opponent made a mistake.";
-        case "bad": return "Ace due to opponent error, not your serve quality";
+        case "good":
+          return "Well placed serve, clean execution.";
+        case "neutral":
+          return "The serve wasn't great, but the opponent made a mistake.";
+        case "bad":
+          return "Ace due to opponent error, not your serve quality";
       }
     } else {
       switch (quality) {
-        case "good": return "Very good serve attempt, but just out or net";
-        case "neutral": return "Mediocre execution, average fail";
-        case "bad": return "Poorly executed serve, not close";
+        case "good":
+          return "Very good serve attempt, but just out or net";
+        case "neutral":
+          return "Mediocre execution, average fail";
+        case "bad":
+          return "Poorly executed serve, not close";
       }
     }
   };
@@ -91,22 +100,41 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   // Calculate quality stats for the player
   const calculateQualityStats = (playerId: string) => {
     const player = players.find(p => p.id === playerId);
-    if (!player) return { good: { aces: 0, errors: 0 }, neutral: { aces: 0, errors: 0 }, bad: { aces: 0, errors: 0 } };
-    
+    if (!player) return {
+      good: {
+        aces: 0,
+        errors: 0
+      },
+      neutral: {
+        aces: 0,
+        errors: 0
+      },
+      bad: {
+        aces: 0,
+        errors: 0
+      }
+    };
+
     // Filter serves based on current context
     let relevantServes = player.serves;
-    
     if (gameId) {
       // Specific game day selected
       relevantServes = player.serves.filter(s => s.gameId === gameId);
     }
-      
     const qualityStats = {
-      good: { aces: 0, errors: 0 },
-      neutral: { aces: 0, errors: 0 },
-      bad: { aces: 0, errors: 0 }
+      good: {
+        aces: 0,
+        errors: 0
+      },
+      neutral: {
+        aces: 0,
+        errors: 0
+      },
+      bad: {
+        aces: 0,
+        errors: 0
+      }
     };
-    
     relevantServes.forEach(serve => {
       if (serve.type === "ace") {
         qualityStats[serve.quality].aces++;
@@ -114,7 +142,6 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         qualityStats[serve.quality].errors++;
       }
     });
-    
     return qualityStats;
   };
 
@@ -124,55 +151,63 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   };
 
   // Quality icon component for overview stats - consistent sizing
-  const OverviewQualityIcon = ({ quality, type, count }: { quality: ServeQuality, type: "error" | "ace", count: number }) => {
+  const OverviewQualityIcon = ({
+    quality,
+    type,
+    count
+  }: {
+    quality: ServeQuality;
+    type: "error" | "ace";
+    count: number;
+  }) => {
     if (count === 0) return null;
-    
     const isCircle = type === "ace"; // aces are circles
-    
+
     // Define the icon based on quality - using consistent sizes
     let Icon = Circle;
-    let iconStyle = { strokeWidth: 5, fill: quality === "neutral" ? 'white' : 'none' };
+    let iconStyle = {
+      strokeWidth: 5,
+      fill: quality === "neutral" ? 'white' : 'none'
+    };
     let iconSize = "h-2 w-2";
-    
     if (quality === "good") {
       Icon = Plus;
-      iconStyle = { strokeWidth: 5, fill: 'none' };
+      iconStyle = {
+        strokeWidth: 5,
+        fill: 'none'
+      };
       iconSize = "h-2 w-2";
     } else if (quality === "bad") {
       Icon = Minus;
-      iconStyle = { strokeWidth: 5, fill: 'none' };
+      iconStyle = {
+        strokeWidth: 5,
+        fill: 'none'
+      };
       iconSize = "h-2 w-2";
     } else {
       // neutral - filled dot
       iconSize = "h-1 w-1";
-      iconStyle = { strokeWidth: 0, fill: 'white' };
+      iconStyle = {
+        strokeWidth: 0,
+        fill: 'white'
+      };
     }
-
-    return (
-      <div className="flex items-center gap-1">
-        <div 
-          className={`flex items-center justify-center ${isCircle ? 'w-5 h-5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)} ${!isCircle ? 'mr-1' : ''}`}
-        >
-          <Icon 
-            className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`}
-            style={iconStyle}
-          />
+    return <div className="flex items-center gap-1">
+        <div className={`flex items-center justify-center ${isCircle ? 'w-5 h-5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)} ${!isCircle ? 'mr-1' : ''}`}>
+          <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium">{count}</span>
-      </div>
-    );
+      </div>;
   };
 
   // Quality selection content - using smaller symbols for popover
-  const QualitySelectionContent = ({ type }: { type: "ace" | "error" }) => (
-    <div className="space-y-3 p-3 relative w-full max-w-[260px] sm:max-w-[280px]">
+  const QualitySelectionContent = ({
+    type
+  }: {
+    type: "ace" | "error";
+  }) => <div className="space-y-3 p-3 relative w-full max-w-[260px] sm:max-w-[280px]">
       {/* Close button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-1 right-1 h-6 w-6 z-10"
-        onClick={() => closePopover(type)}
-      >
+      <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 z-10" onClick={() => closePopover(type)}>
         <X className="h-4 w-4" />
       </Button>
 
@@ -181,36 +216,22 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       </div>
       
       {/* Good quality */}
-      <Button
-        variant="outline"
-        className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
-        onClick={() => handleServeClick(type, "good")}
-      >
+      <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent" onClick={() => handleServeClick(type, "good")}>
         <div className="flex items-center gap-3 flex-1">
-          <div 
-            className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"
-            }`}
-          >
-            <Plus className={`h-3 w-3 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 5 }} />
+          <div className={`flex items-center justify-center ${type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"}`}>
+            <Plus className={`h-3 w-3 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{
+            strokeWidth: 5
+          }} />
           </div>
           <span className={type === "error" ? "ml-1" : ""}>Good</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="ml-auto flex-shrink-0">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 hover:bg-muted/50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    type="button"
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50" onClick={e => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }} onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()} type="button">
                     <Info className="h-4 w-4" />
                   </Button>
                 </div>
@@ -224,36 +245,23 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       </Button>
 
       {/* Neutral quality */}
-      <Button
-        variant="outline"
-        className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
-        onClick={() => handleServeClick(type, "neutral")}
-      >
+      <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent" onClick={() => handleServeClick(type, "neutral")}>
         <div className="flex items-center gap-3 flex-1">
-          <div 
-            className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"
-            }`}
-          >
-            <Circle className={`h-1 w-1 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 0, fill: 'white' }} />
+          <div className={`flex items-center justify-center ${type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"}`}>
+            <Circle className={`h-1 w-1 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{
+            strokeWidth: 0,
+            fill: 'white'
+          }} />
           </div>
           <span className={type === "error" ? "ml-1" : ""}>Neutral</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="ml-auto flex-shrink-0">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 hover:bg-muted/50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    type="button"
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50" onClick={e => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }} onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()} type="button">
                     <Info className="h-4 w-4" />
                   </Button>
                 </div>
@@ -267,36 +275,22 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       </Button>
 
       {/* Bad quality */}
-      <Button
-        variant="outline"
-        className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
-        onClick={() => handleServeClick(type, "bad")}
-      >
+      <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent" onClick={() => handleServeClick(type, "bad")}>
         <div className="flex items-center gap-3 flex-1">
-          <div 
-            className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"
-            }`}
-          >
-            <Minus className={`h-3 w-3 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 5 }} />
+          <div className={`flex items-center justify-center ${type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"}`}>
+            <Minus className={`h-3 w-3 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{
+            strokeWidth: 5
+          }} />
           </div>
           <span className={type === "error" ? "ml-1" : ""}>Bad</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="ml-auto flex-shrink-0">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 hover:bg-muted/50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
-                    type="button"
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50" onClick={e => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }} onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()} type="button">
                     <Info className="h-4 w-4" />
                   </Button>
                 </div>
@@ -308,21 +302,16 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
           </TooltipProvider>
         </div>
       </Button>
-    </div>
-  );
-
-  const { players } = useVolleyball();
+    </div>;
+  const {
+    players
+  } = useVolleyball();
   const qualityStats = calculateQualityStats(player.id);
-  
-  return (
-    <>
+  return <>
       <Card className="w-full">
         <CardContent className="p-3">
           {/* Line 1: Player name, # of aces, # of errors */}
-          <div 
-            className="flex items-center justify-between mb-3 cursor-pointer hover:text-primary"
-            onClick={() => setIsDialogOpen(true)}
-          >
+          <div className="flex items-center justify-between mb-3 cursor-pointer hover:text-primary" onClick={() => setIsDialogOpen(true)}>
             <span className="font-semibold truncate flex-grow mr-4">
               {player.name}
             </span>
@@ -333,7 +322,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               </span>
               <div className="w-px h-4 bg-border"></div>
               <span className="text-sm flex items-center gap-1.5">
-                <span className="text-muted-foreground font-medium">E:</span>
+                <span className="font-medium text-xl text-rose-500">E:</span>
                 <span className={`font-bold text-destructive ${animatingError ? "stat-change" : ""}`}>{stats.fails}</span>
               </span>
             </div>
@@ -355,12 +344,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
           <div className="flex gap-2">
             <Popover open={acePopoverOpen} onOpenChange={setAcePopoverOpen}>
               <PopoverTrigger asChild>
-                <Button 
-                  variant="default" 
-                  size="lg"
-                  className="flex-1 h-12"
-                  onClick={() => handleButtonClick("ace")}
-                >
+                <Button variant="default" size="lg" className="flex-1 h-12" onClick={() => handleButtonClick("ace")}>
                   + Ace
                 </Button>
               </PopoverTrigger>
@@ -371,12 +355,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
 
             <Popover open={errorPopoverOpen} onOpenChange={setErrorPopoverOpen}>
               <PopoverTrigger asChild>
-                <Button 
-                  variant="destructive" 
-                  size="lg"
-                  className="flex-1 h-12"
-                  onClick={() => handleButtonClick("error")}
-                >
+                <Button variant="destructive" size="lg" className="flex-1 h-12" onClick={() => handleButtonClick("error")}>
                   + Error
                 </Button>
               </PopoverTrigger>
@@ -389,11 +368,6 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       </Card>
       
       {/* Player detail dialog */}
-      <PlayerDetailDialog
-        playerId={player.id}
-        isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
-      />
-    </>
-  );
+      <PlayerDetailDialog playerId={player.id} isOpen={isDialogOpen} onClose={() => setIsDialogOpen(false)} />
+    </>;
 }
