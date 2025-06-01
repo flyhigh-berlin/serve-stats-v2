@@ -129,29 +129,29 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
     
     const isCircle = type === "ace"; // aces are circles
     
-    // Define the icon based on quality - using consistent sizes matching player popup
+    // Define the icon based on quality - using consistent sizes
     let Icon = Circle;
     let iconStyle = { strokeWidth: 5, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-1.5 w-1.5"; // smaller size for + and -
+    let iconSize = "h-2 w-2";
     
     if (quality === "good") {
       Icon = Plus;
       iconStyle = { strokeWidth: 5, fill: 'none' };
-      iconSize = "h-1.5 w-1.5";
+      iconSize = "h-2 w-2";
     } else if (quality === "bad") {
       Icon = Minus;
       iconStyle = { strokeWidth: 5, fill: 'none' };
-      iconSize = "h-1.5 w-1.5";
+      iconSize = "h-2 w-2";
     } else {
-      // neutral - filled dot, even smaller to match proportions from player popup
-      iconSize = "h-0.5 w-0.5";
+      // neutral - filled dot
+      iconSize = "h-1 w-1";
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
       <div className="flex items-center gap-1">
         <div 
-          className={`flex items-center justify-center ${isCircle ? 'w-5 h-5 rounded-full' : 'w-4 h-4 transform rotate-45 mr-1'} ${getQualityColor(type)}`}
+          className={`flex items-center justify-center ${isCircle ? 'w-5 h-5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)} ${!isCircle ? 'mr-1' : ''}`}
         >
           <Icon 
             className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`}
@@ -235,7 +235,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"
             }`}
           >
-            <Circle className={`h-0.5 w-0.5 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 0, fill: 'white' }} />
+            <Circle className={`h-1 w-1 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 0, fill: 'white' }} />
           </div>
           <span className={type === "error" ? "ml-1" : ""}>Neutral</span>
           <TooltipProvider>
