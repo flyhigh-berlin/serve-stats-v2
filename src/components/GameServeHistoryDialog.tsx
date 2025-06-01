@@ -57,7 +57,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     
     // Define the icon based on quality
     let Icon = Circle;
-    let iconStyle = { strokeWidth: 4, fill: 'none' };
+    let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
     let iconSize = "h-3 w-3";
     
     if (quality === "good") {
@@ -69,9 +69,9 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
       iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-3 w-3";
     } else {
-      // neutral - smaller hollow circle, but bolder
+      // neutral - filled circle/dot
       iconSize = "h-1.5 w-1.5";
-      iconStyle = { strokeWidth: 4, fill: 'none' };
+      iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (

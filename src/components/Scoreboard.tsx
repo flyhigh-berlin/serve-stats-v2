@@ -88,7 +88,7 @@ export function Scoreboard() {
     
     // Define the icon based on quality
     let Icon = Circle;
-    let iconStyle = { strokeWidth: 4, fill: 'none' };
+    let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
     let iconSize = "h-2 w-2";
     
     if (quality === "good") {
@@ -100,9 +100,9 @@ export function Scoreboard() {
       iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-2 w-2";
     } else {
-      // neutral - smaller hollow circle, but bolder
+      // neutral - filled circle/dot
       iconSize = "h-1 w-1";
-      iconStyle = { strokeWidth: 4, fill: 'none' };
+      iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
@@ -164,12 +164,12 @@ export function Scoreboard() {
                   const isFirstPlace = index === 0 && (stats.fails + stats.aces) > 0;
                   
                   return (
-                    <TableRow key={player.id} className="relative">
-                      {/* Crown positioned absolutely to the left of the table */}
-                      {isFirstPlace && (
-                        <Crown className="absolute left-[-28px] top-1/2 transform -translate-y-1/2 h-4 w-4 text-yellow-500" />
-                      )}
-                      <TableCell className="font-medium">
+                    <TableRow key={player.id}>
+                      <TableCell className="font-medium relative">
+                        {/* Crown positioned absolutely to the left of the player name */}
+                        {isFirstPlace && (
+                          <Crown className="absolute left-[-24px] top-1/2 transform -translate-y-1/2 h-4 w-4 text-yellow-500" />
+                        )}
                         <span>{player.name}</span>
                       </TableCell>
                       <TableCell>{stats.aces}</TableCell>
