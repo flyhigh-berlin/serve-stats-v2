@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PlayerDetailDialog } from "./PlayerDetailDialog";
-import { Triangle, Plus, Minus, X, Circle, Square } from "lucide-react";
+import { Triangle, Plus, Minus, X, Circle, Square, Info } from "lucide-react";
 
 interface PlayerCardProps {
   player: Player;
@@ -42,16 +43,6 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
     setActiveType(null);
     setIsPopoverOpen(false);
   };
-  
-  // Get color based on quality
-  const getQualityColor = (quality: ServeQuality) => {
-    switch (quality) {
-      case "good": return "bg-serve-good hover:bg-serve-good/80";
-      case "neutral": return "bg-serve-neutral hover:bg-serve-neutral/80";
-      case "bad": return "bg-serve-bad hover:bg-serve-bad/80";
-      default: return "";
-    }
-  };
 
   // Handle button click to open popover
   const handleButtonClick = (type: "error" | "ace") => {
@@ -59,10 +50,43 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
     setIsPopoverOpen(true);
   };
 
+  // Close popover
+  const closePopover = () => {
+    setIsPopoverOpen(false);
+    setActiveType(null);
+  };
+
+  // Get quality explanations
+  const getQualityExplanation = (quality: ServeQuality, type: "ace" | "error") => {
+    if (type === "ace") {
+      switch (quality) {
+        case "good": return "Well placed serve, clean execution.";
+        case "neutral": return "The serve wasn't great, but the opponent made a mistake.";
+        case "bad": return "Ace due to opponent error, not your serve quality";
+      }
+    } else {
+      switch (quality) {
+        case "good": return "Very good serve attempt, but just out or net";
+        case "neutral": return "Mediocre execution, average fail";
+        case "bad": return "Poorly executed serve, not close";
+      }
+    }
+  };
+
   // Quality selection content
   const QualitySelectionContent = () => (
-    <div className="space-y-2 p-2">
-      <div className="text-sm font-medium mb-3">
+    <div className="space-y-2 p-2 relative">
+      {/* Close button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-0 right-0 h-6 w-6"
+        onClick={closePopover}
+      >
+        <X className="h-4 w-4" />
+      </Button>
+
+      <div className="text-sm font-medium mb-3 pr-8">
         Select {activeType === "ace" ? "Ace" : "Error"} Quality
       </div>
       
@@ -72,17 +96,31 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
         onClick={() => handleServeClick(activeType!, "good")}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
           <div 
-            className={`flex items-center justify-center w-6 h-6 ${getQualityColor("good")}`}
+            className={`flex items-center justify-center w-6 h-6 ${
+              activeType === "ace" ? "bg-blue-500" : "bg-red-500"
+            }`}
             style={{ 
               borderRadius: activeType === "ace" ? '50%' : '0',
               transform: activeType === "ace" ? 'none' : 'rotate(45deg)'
             }}
           >
-            <Plus className={`h-3 w-3 ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
+            <Plus className={`h-3 w-3 text-white ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
           </div>
           <span>Good</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-4 w-4 ml-auto">
+                  <Info className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{getQualityExplanation("good", activeType!)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </Button>
 
@@ -92,17 +130,31 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
         onClick={() => handleServeClick(activeType!, "neutral")}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
           <div 
-            className={`flex items-center justify-center w-6 h-6 ${getQualityColor("neutral")}`}
+            className={`flex items-center justify-center w-6 h-6 ${
+              activeType === "ace" ? "bg-blue-500" : "bg-red-500"
+            }`}
             style={{ 
               borderRadius: activeType === "ace" ? '50%' : '0',
               transform: activeType === "ace" ? 'none' : 'rotate(45deg)'
             }}
           >
-            <Circle className={`h-3 w-3 ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
+            <Circle className={`h-3 w-3 text-white ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
           </div>
           <span>Neutral</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-4 w-4 ml-auto">
+                  <Info className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{getQualityExplanation("neutral", activeType!)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </Button>
 
@@ -112,17 +164,31 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
         onClick={() => handleServeClick(activeType!, "bad")}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
           <div 
-            className={`flex items-center justify-center w-6 h-6 ${getQualityColor("bad")}`}
+            className={`flex items-center justify-center w-6 h-6 ${
+              activeType === "ace" ? "bg-blue-500" : "bg-red-500"
+            }`}
             style={{ 
               borderRadius: activeType === "ace" ? '50%' : '0',
               transform: activeType === "ace" ? 'none' : 'rotate(45deg)'
             }}
           >
-            <Minus className={`h-3 w-3 ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
+            <Minus className={`h-3 w-3 text-white ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
           </div>
           <span>Bad</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-4 w-4 ml-auto">
+                  <Info className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs">{getQualityExplanation("bad", activeType!)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </Button>
     </div>
