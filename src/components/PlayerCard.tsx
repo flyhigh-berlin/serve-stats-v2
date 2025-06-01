@@ -88,6 +88,85 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
     }
   };
 
+  // Calculate quality stats for the player
+  const calculateQualityStats = (playerId: string) => {
+    const player = players.find(p => p.id === playerId);
+    if (!player) return { good: { aces: 0, errors: 0 }, neutral: { aces: 0, errors: 0 }, bad: { aces: 0, errors: 0 } };
+    
+    // Filter serves based on current context
+    let relevantServes = player.serves;
+    
+    if (gameId) {
+      // Specific game day selected
+      relevantServes = player.serves.filter(s => s.gameId === gameId);
+    }
+      
+    const qualityStats = {
+      good: { aces: 0, errors: 0 },
+      neutral: { aces: 0, errors: 0 },
+      bad: { aces: 0, errors: 0 }
+    };
+    
+    relevantServes.forEach(serve => {
+      if (serve.type === "ace") {
+        qualityStats[serve.quality].aces++;
+      } else {
+        qualityStats[serve.quality].errors++;
+      }
+    });
+    
+    return qualityStats;
+  };
+
+  // Helper to get badge color for serve quality
+  const getQualityColor = (type: "error" | "ace") => {
+    return type === "ace" ? "bg-primary" : "bg-destructive";
+  };
+
+  // Quality icon component for overview stats - larger size
+  const OverviewQualityIcon = ({ quality, type, count }: { quality: ServeQuality, type: "error" | "ace", count: number }) => {
+    if (count === 0) return null;
+    
+    const isCircle = type === "ace"; // aces are circles
+    
+    // Define the icon based on quality
+    let Icon = Circle;
+    let iconStyle = { strokeWidth: 3, fill: 'none' };
+    let iconSize = "h-3 w-3";
+    
+    if (quality === "good") {
+      Icon = Plus;
+      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconSize = "h-3 w-3";
+    } else if (quality === "bad") {
+      Icon = Minus;
+      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconSize = "h-3 w-3";
+    } else {
+      // neutral - smaller hollow circle, but bolder
+      iconSize = "h-1.5 w-1.5";
+      iconStyle = { strokeWidth: 3, fill: 'none' };
+    }
+
+    return (
+      <div className="flex items-center gap-1">
+        <div 
+          className={`flex items-center justify-center w-6 h-6 ${getQualityColor(type)}`}
+          style={{ 
+            borderRadius: isCircle ? '50%' : '0',
+            transform: isCircle ? 'none' : 'rotate(45deg)'
+          }}
+        >
+          <Icon 
+            className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`}
+            style={iconStyle}
+          />
+        </div>
+        <span className="text-xs font-medium">{count}</span>
+      </div>
+    );
+  };
+
   // Quality selection content
   const QualitySelectionContent = ({ type }: { type: "ace" | "error" }) => (
     <div className="space-y-3 p-3 relative w-full max-w-[280px] sm:max-w-[320px]">
@@ -117,24 +196,27 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               type === "ace" ? "bg-primary w-10 h-10 rounded-full" : "bg-destructive w-10 h-10 transform rotate-45"
             }`}
           >
-            <Plus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4 }} />
+            <Plus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 3 }} />
           </div>
           <span className={type === "error" ? "ml-2" : ""}>Good</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 ml-auto hover:bg-muted/50 flex-shrink-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-                  onTouchStart={(e) => e.stopPropagation()}
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
+                <div className="ml-auto flex-shrink-0">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 hover:bg-muted/50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    type="button"
+                  >
+                    <Info className="h-4 w-4" />
+                  </Button>
+                </div>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
                 <p>{getQualityExplanation("good", type)}</p>
@@ -156,24 +238,27 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               type === "ace" ? "bg-primary w-10 h-10 rounded-full" : "bg-destructive w-10 h-10 transform rotate-45"
             }`}
           >
-            <Circle className={`h-2 w-2 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4, fill: 'none' }} />
+            <Circle className={`h-2.5 w-2.5 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 3, fill: 'none' }} />
           </div>
           <span className={type === "error" ? "ml-2" : ""}>Neutral</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 ml-auto hover:bg-muted/50 flex-shrink-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-                  onTouchStart={(e) => e.stopPropagation()}
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
+                <div className="ml-auto flex-shrink-0">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 hover:bg-muted/50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    type="button"
+                  >
+                    <Info className="h-4 w-4" />
+                  </Button>
+                </div>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
                 <p>{getQualityExplanation("neutral", type)}</p>
@@ -195,24 +280,27 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
               type === "ace" ? "bg-primary w-10 h-10 rounded-full" : "bg-destructive w-10 h-10 transform rotate-45"
             }`}
           >
-            <Minus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4 }} />
+            <Minus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 3 }} />
           </div>
           <span className={type === "error" ? "ml-2" : ""}>Bad</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 ml-auto hover:bg-muted/50 flex-shrink-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-                  onTouchStart={(e) => e.stopPropagation()}
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
+                <div className="ml-auto flex-shrink-0">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 hover:bg-muted/50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    type="button"
+                  >
+                    <Info className="h-4 w-4" />
+                  </Button>
+                </div>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
                 <p>{getQualityExplanation("bad", type)}</p>
@@ -223,6 +311,9 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       </Button>
     </div>
   );
+
+  const { players } = useVolleyball();
+  const qualityStats = calculateQualityStats(player.id);
   
   return (
     <>
@@ -236,16 +327,28 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
             <span className="font-semibold truncate flex-grow mr-4">
               {player.name}
             </span>
-            <div className="flex items-center gap-3 flex-shrink-0 bg-muted/50 rounded-md px-2 py-1">
-              <span className="text-sm flex items-center gap-1">
-                <span className="text-muted-foreground">A:</span>
-                <span className={`font-medium ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
+            <div className="flex items-center gap-3 flex-shrink-0 bg-muted/50 rounded-lg px-3 py-2 border">
+              <span className="text-sm flex items-center gap-1.5">
+                <span className="text-muted-foreground font-medium">A:</span>
+                <span className={`font-bold text-primary ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
               </span>
-              <span className="text-muted-foreground">|</span>
-              <span className="text-sm flex items-center gap-1">
-                <span className="text-muted-foreground">E:</span>
-                <span className={`font-medium ${animatingError ? "stat-change" : ""}`}>{stats.fails}</span>
+              <div className="w-px h-4 bg-border"></div>
+              <span className="text-sm flex items-center gap-1.5">
+                <span className="text-muted-foreground font-medium">E:</span>
+                <span className={`font-bold text-destructive ${animatingError ? "stat-change" : ""}`}>{stats.fails}</span>
               </span>
+            </div>
+          </div>
+
+          {/* Quality overview stats */}
+          <div className="mb-3">
+            <div className="flex flex-wrap gap-2 items-center justify-center">
+              <OverviewQualityIcon quality="good" type="ace" count={qualityStats.good.aces} />
+              <OverviewQualityIcon quality="neutral" type="ace" count={qualityStats.neutral.aces} />
+              <OverviewQualityIcon quality="bad" type="ace" count={qualityStats.bad.aces} />
+              <OverviewQualityIcon quality="good" type="error" count={qualityStats.good.errors} />
+              <OverviewQualityIcon quality="neutral" type="error" count={qualityStats.neutral.errors} />
+              <OverviewQualityIcon quality="bad" type="error" count={qualityStats.bad.errors} />
             </div>
           </div>
           
