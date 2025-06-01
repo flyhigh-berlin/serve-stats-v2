@@ -103,19 +103,35 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   
   // Get quality icon based on quality and type
   const QualityIcon = ({ quality, type }: { quality: ServeQuality, type: "fail" | "ace" }) => {
-    const isCircle = type === "ace"; // Swapped: aces are circles, errors are diamonds
+    const isCircle = type === "ace"; // aces are circles, errors are diamonds
     
     // Define the icon based on quality
     let Icon = Circle;
-    if (quality === "good") Icon = Plus;
-    else if (quality === "bad") Icon = Minus;
+    let iconStyle = { strokeWidth: 3, fill: 'none' };
+    let iconSize = "h-3 w-3";
+    
+    if (quality === "good") {
+      Icon = Plus;
+      iconStyle = { strokeWidth: 3 };
+      iconSize = "h-3 w-3";
+    } else if (quality === "bad") {
+      Icon = Minus;
+      iconStyle = { strokeWidth: 3 };
+      iconSize = "h-3 w-3";
+    } else {
+      // neutral - smaller circle
+      iconSize = "h-2 w-2";
+    }
 
     return (
-      <div className="flex items-center justify-center w-8">
+      <div className="flex items-center justify-center w-8 h-8">
         <div 
-          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-90'} ${getQualityColor(quality, type)}`}
+          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7'} ${getQualityColor(quality, type)}`}
         >
-          <Icon className={`h-3 w-3 absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`} />
+          <Icon 
+            className={`${iconSize} absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`} 
+            style={iconStyle}
+          />
         </div>
       </div>
     );
@@ -123,19 +139,35 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   
   // Small version of icon for the summary
   const SummaryIcon = ({ quality, type }: { quality: ServeQuality, type: "fail" | "ace" }) => {
-    const isCircle = type === "ace"; // Swapped: aces are circles, errors are diamonds
+    const isCircle = type === "ace"; // aces are circles, errors are diamonds
     
     // Define the icon based on quality
     let Icon = Circle;
-    if (quality === "good") Icon = Plus;
-    else if (quality === "bad") Icon = Minus;
+    let iconStyle = { strokeWidth: 3, fill: 'none' };
+    let iconSize = "h-2 w-2";
+    
+    if (quality === "good") {
+      Icon = Plus;
+      iconStyle = { strokeWidth: 3 };
+      iconSize = "h-2 w-2";
+    } else if (quality === "bad") {
+      Icon = Minus;
+      iconStyle = { strokeWidth: 3 };
+      iconSize = "h-2 w-2";
+    } else {
+      // neutral - smaller circle
+      iconSize = "h-1.5 w-1.5";
+    }
 
     return (
-      <div className="flex items-center justify-center w-5">
+      <div className="flex items-center justify-center w-5 h-5">
         <div 
-          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-5 w-5' : 'rounded-none transform rotate-45 h-4 w-4 scale-90'} ${getQualityColor(quality, type)}`}
+          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-5 w-5' : 'rounded-none transform rotate-45 h-4 w-4'} ${getQualityColor(quality, type)}`}
         >
-          <Icon className={`h-2 w-2 absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`} />
+          <Icon 
+            className={`${iconSize} absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`}
+            style={iconStyle}
+          />
         </div>
       </div>
     );

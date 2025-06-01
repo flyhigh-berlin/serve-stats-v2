@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -54,16 +55,33 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
   const QualityIcon = ({ quality, type }: { quality: ServeQuality, type: "fail" | "ace" }) => {
     const isCircle = type === "ace"; // aces are circles
     
+    // Define the icon based on quality
     let Icon = Circle;
-    if (quality === "good") Icon = Plus;
-    else if (quality === "bad") Icon = Minus;
+    let iconStyle = { strokeWidth: 3, fill: 'none' };
+    let iconSize = "h-3 w-3";
+    
+    if (quality === "good") {
+      Icon = Plus;
+      iconStyle = { strokeWidth: 3 };
+      iconSize = "h-3 w-3";
+    } else if (quality === "bad") {
+      Icon = Minus;
+      iconStyle = { strokeWidth: 3 };
+      iconSize = "h-3 w-3";
+    } else {
+      // neutral - smaller circle
+      iconSize = "h-2 w-2";
+    }
 
     return (
       <div className="flex items-center justify-center w-8">
         <div 
           className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-90'} ${getQualityColor(type)}`}
         >
-          <Icon className={`h-3 w-3 absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`} />
+          <Icon 
+            className={`${iconSize} absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`} 
+            style={iconStyle}
+          />
         </div>
       </div>
     );

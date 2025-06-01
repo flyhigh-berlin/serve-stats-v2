@@ -1,10 +1,11 @@
+
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SortField, SortDirection, ServeQuality } from "../types";
-import { Crown, Square, Circle } from "lucide-react";
+import { Crown, Square, Circle, Plus, Minus } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -84,7 +85,24 @@ export function Scoreboard() {
     if (count === 0) return null;
     
     const isCircle = type === "ace"; // aces are circles
-    const Icon = isCircle ? Circle : Square;
+    
+    // Define the icon based on quality
+    let Icon = Circle;
+    let iconStyle = { strokeWidth: 3, fill: 'none' };
+    let iconSize = "h-2 w-2";
+    
+    if (quality === "good") {
+      Icon = Plus;
+      iconStyle = { strokeWidth: 3 };
+      iconSize = "h-2 w-2";
+    } else if (quality === "bad") {
+      Icon = Minus;
+      iconStyle = { strokeWidth: 3 };
+      iconSize = "h-2 w-2";
+    } else {
+      // neutral - smaller circle
+      iconSize = "h-1.5 w-1.5";
+    }
 
     return (
       <div className="flex items-center gap-1">
@@ -95,7 +113,10 @@ export function Scoreboard() {
             transform: isCircle ? 'none' : 'rotate(45deg)'
           }}
         >
-          <Icon className={`h-2 w-2 text-white ${!isCircle ? "transform -rotate-45" : ""}`} />
+          <Icon 
+            className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`}
+            style={iconStyle}
+          />
         </div>
         <span className="text-xs">{count}</span>
       </div>
@@ -167,7 +188,7 @@ export function Scoreboard() {
                       <TableCell>{stats.fails}</TableCell>
                       <TableCell>{stats.aces}</TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 items-center">
                           <QualityIcon quality="good" type="ace" count={qualityStats.good.aces} />
                           <QualityIcon quality="neutral" type="ace" count={qualityStats.neutral.aces} />
                           <QualityIcon quality="bad" type="ace" count={qualityStats.bad.aces} />
