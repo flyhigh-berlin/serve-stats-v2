@@ -89,11 +89,11 @@ export function Scoreboard() {
     }
   };
 
-  // Quality icon component
+  // Quality icon component - SWAPPED: aces are circles, errors are diamonds
   const QualityIcon = ({ quality, type, count }: { quality: ServeQuality, type: "error" | "ace", count: number }) => {
     if (count === 0) return null;
     
-    const isCircle = type === "error";
+    const isCircle = type === "ace"; // Swapped: aces are now circles
     const Icon = isCircle ? Circle : Square;
 
     return (
@@ -119,6 +119,21 @@ export function Scoreboard() {
       </CardHeader>
       <CardContent>
         <div className="relative">
+          {/* Crown container positioned absolutely above the table */}
+          <div className="absolute left-0 top-0 w-6 h-12 flex items-center justify-center z-10">
+            {players.length > 0 && players[0] && (getPlayerStats(
+              players[0].id, 
+              currentGameDay?.id, 
+              !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
+            ).fails + getPlayerStats(
+              players[0].id, 
+              currentGameDay?.id, 
+              !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
+            ).aces) > 0 && (
+              <Crown className="h-4 w-4 text-yellow-500" />
+            )}
+          </div>
+          
           <Table>
             <TableHeader>
               <TableRow>
@@ -150,13 +165,11 @@ export function Scoreboard() {
                     !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
                   );
                   const qualityStats = calculateQualityStats(player.id);
-                  const totalServes = stats.fails + stats.aces;
-                  const isFirstPlace = index === 0 && totalServes > 0;
                   
                   return (
                     <TableRow key={player.id}>
                       <TableCell className="w-6 p-2">
-                        {isFirstPlace && <Crown className="h-4 w-4 text-yellow-500" />}
+                        {/* Empty cell for spacing */}
                       </TableCell>
                       <TableCell className="font-medium">
                         {player.name}

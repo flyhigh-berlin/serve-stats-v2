@@ -15,8 +15,8 @@ interface PlayerCardProps {
 
 export function PlayerCard({ player, gameId }: PlayerCardProps) {
   const { addServe, getPlayerStats } = useVolleyball();
-  const [activeType, setActiveType] = useState<"fail" | "ace" | null>(null);
-  const [animatingFail, setAnimatingFail] = useState(false);
+  const [activeType, setActiveType] = useState<"error" | "ace" | null>(null);
+  const [animatingError, setAnimatingError] = useState(false);
   const [animatingAce, setAnimatingAce] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
@@ -24,13 +24,13 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   const stats = getPlayerStats(player.id, gameId);
   
   // Handle adding a serve
-  const handleServeClick = (type: "fail" | "ace", quality: ServeQuality) => {
-    addServe(player.id, type, quality);
+  const handleServeClick = (type: "error" | "ace", quality: ServeQuality) => {
+    addServe(player.id, type === "error" ? "fail" : "ace", quality);
     
     // Animate the stat change
-    if (type === "fail") {
-      setAnimatingFail(true);
-      setTimeout(() => setAnimatingFail(false), 500);
+    if (type === "error") {
+      setAnimatingError(true);
+      setTimeout(() => setAnimatingError(false), 500);
     } else {
       setAnimatingAce(true);
       setTimeout(() => setAnimatingAce(false), 500);
@@ -54,89 +54,83 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
     <>
       <Card className="w-full">
         <CardContent className="p-3">
-          <div className="flex items-center justify-between">
-            {/* Player name section - clickable to open dialog */}
-            <div 
-              className="flex-grow mr-2 overflow-hidden cursor-pointer hover:text-primary"
-              onClick={() => setIsDialogOpen(true)}
-            >
-              <span className="font-semibold truncate block max-w-full">
-                {player.name}
+          {/* Line 1: Player name, # of aces, # of errors */}
+          <div 
+            className="flex items-center justify-between mb-3 cursor-pointer hover:text-primary"
+            onClick={() => setIsDialogOpen(true)}
+          >
+            <span className="font-semibold truncate flex-grow mr-4">
+              {player.name}
+            </span>
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <span className="text-sm">
+                <span className="text-muted-foreground">A:</span>
+                <span className={`font-medium ml-1 ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
+              </span>
+              <span className="text-sm">
+                <span className="text-muted-foreground">E:</span>
+                <span className={`font-medium ml-1 ${animatingError ? "stat-change" : ""}`}>{stats.fails}</span>
               </span>
             </div>
-            
-            {/* Stats section - always positioned to the right */}
-            <div className="flex items-center mr-2 flex-shrink-0">
-              <div className="flex flex-col items-end">
-                <span className="text-xs">
-                  <span className="text-muted-foreground">E:</span>
-                  <span className={`font-medium ${animatingFail ? "stat-change" : ""}`}>{stats.fails}</span>
-                </span>
-                <span className="text-xs">
-                  <span className="text-muted-foreground">A:</span>
-                  <span className={`font-medium ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
-                </span>
-              </div>
-            </div>
-            
-            {/* Action buttons section */}
-            {!activeType ? (
-              <div className="flex space-x-1 flex-shrink-0">
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  className="h-7 w-10 px-1 text-xs"
-                  onClick={() => setActiveType("fail")}
-                >
-                  +E
-                </Button>
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  className="h-7 w-10 px-1 text-xs"
-                  onClick={() => setActiveType("ace")}
-                >
-                  +A
-                </Button>
-              </div>
-            ) : (
-              <div className="flex space-x-1 flex-shrink-0">
-                {/* Quality buttons - circle for fail, diamond for ace, with symbols inside */}
-                <Button 
-                  variant="outline"
-                  size="icon"
-                  className={`h-9 w-9 ${activeType === "fail" ? 'rounded-full' : 'rounded-none transform rotate-45 scale-75'} p-0 ${getQualityColor("good")}`}
-                  onClick={() => handleServeClick(activeType, "good")}
-                >
-                  <Plus className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
-                </Button>
-                <Button 
-                  variant="outline"
-                  size="icon"
-                  className={`h-9 w-9 ${activeType === "fail" ? 'rounded-full' : 'rounded-none transform rotate-45 scale-75'} p-0 ${getQualityColor("neutral")}`}
-                  onClick={() => handleServeClick(activeType, "neutral")}
-                >
-                  <Circle className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
-                </Button>
-                <Button 
-                  variant="outline"
-                  size="icon"
-                  className={`h-9 w-9 ${activeType === "fail" ? 'rounded-full' : 'rounded-none transform rotate-45 scale-75'} p-0 ${getQualityColor("bad")}`}
-                  onClick={() => handleServeClick(activeType, "bad")}
-                >
-                  <Minus className={`h-4 w-4 ${activeType === "ace" ? "transform -rotate-45" : ""}`} />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  className="h-9 w-9 rounded-full p-0"
-                  onClick={() => setActiveType(null)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
           </div>
+          
+          {/* Line 2: Action buttons */}
+          {!activeType ? (
+            <div className="flex gap-2">
+              <Button 
+                variant="default" 
+                size="lg"
+                className="flex-1 h-12"
+                onClick={() => setActiveType("ace")}
+              >
+                +A
+              </Button>
+              <Button 
+                variant="destructive" 
+                size="lg"
+                className="flex-1 h-12"
+                onClick={() => setActiveType("error")}
+              >
+                +E
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              {/* Quality buttons - circles for aces, diamonds for errors */}
+              <Button 
+                variant="outline"
+                size="lg"
+                className={`flex-1 h-12 ${activeType === "ace" ? 'rounded-full' : 'rounded-none transform rotate-45'} ${getQualityColor("good")}`}
+                onClick={() => handleServeClick(activeType, "good")}
+              >
+                <Plus className={`h-5 w-5 ${activeType === "error" ? "transform -rotate-45" : ""}`} />
+              </Button>
+              <Button 
+                variant="outline"
+                size="lg"
+                className={`flex-1 h-12 ${activeType === "ace" ? 'rounded-full' : 'rounded-none transform rotate-45'} ${getQualityColor("neutral")}`}
+                onClick={() => handleServeClick(activeType, "neutral")}
+              >
+                <Circle className={`h-5 w-5 ${activeType === "error" ? "transform -rotate-45" : ""}`} />
+              </Button>
+              <Button 
+                variant="outline"
+                size="lg"
+                className={`flex-1 h-12 ${activeType === "ace" ? 'rounded-full' : 'rounded-none transform rotate-45'} ${getQualityColor("bad")}`}
+                onClick={() => handleServeClick(activeType, "bad")}
+              >
+                <Minus className={`h-5 w-5 ${activeType === "error" ? "transform -rotate-45" : ""}`} />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="flex-1 h-12"
+                onClick={() => setActiveType(null)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
       
