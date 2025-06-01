@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SortField, SortDirection, ServeQuality } from "../types";
-import { Crown, Square, Circle, Plus, Minus } from "lucide-react";
+import { Crown, Circle, Plus, Minus } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -88,20 +88,21 @@ export function Scoreboard() {
     
     // Define the icon based on quality
     let Icon = Circle;
-    let iconStyle = { strokeWidth: 3, fill: 'none' };
+    let iconStyle = { strokeWidth: 4, fill: 'none' };
     let iconSize = "h-2 w-2";
     
     if (quality === "good") {
       Icon = Plus;
-      iconStyle = { strokeWidth: 3 };
+      iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-2 w-2";
     } else if (quality === "bad") {
       Icon = Minus;
-      iconStyle = { strokeWidth: 3 };
+      iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-2 w-2";
     } else {
-      // neutral - smaller circle
-      iconSize = "h-1.5 w-1.5";
+      // neutral - smaller hollow circle
+      iconSize = "h-1 w-1";
+      iconStyle = { strokeWidth: 4, fill: 'none' };
     }
 
     return (
@@ -129,9 +130,9 @@ export function Scoreboard() {
         <CardTitle>Scoreboard</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="relative">
-          {/* Crown container positioned absolutely above the table */}
-          <div className="absolute left-0 top-0 w-6 h-12 flex items-center justify-center z-10">
+        <div className="relative flex items-start gap-4">
+          {/* Crown positioned to the left of the table */}
+          <div className="flex items-center justify-center w-6 h-12 pt-8">
             {players.length > 0 && players[0] && (getPlayerStats(
               players[0].id, 
               currentGameDay?.id, 
@@ -145,70 +146,68 @@ export function Scoreboard() {
             )}
           </div>
           
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-6"></TableHead>
-                <TableHead className="w-[140px] cursor-pointer" onClick={() => handleSort("name")}>
-                  <Button variant="ghost" size="sm" className="p-0">
-                    Name {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
-                  </Button>
-                </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort("fails")}>
-                  <Button variant="ghost" size="sm" className="p-0">
-                    Errors {sortField === "fails" && (sortDirection === "asc" ? "↑" : "↓")}
-                  </Button>
-                </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort("aces")}>
-                  <Button variant="ghost" size="sm" className="p-0">
-                    Aces {sortField === "aces" && (sortDirection === "asc" ? "↑" : "↓")}
-                  </Button>
-                </TableHead>
-                <TableHead>Quality</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {players.length > 0 ? (
-                players.map((player, index) => {
-                  const stats = getPlayerStats(
-                    player.id, 
-                    currentGameDay?.id, 
-                    !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
-                  );
-                  const qualityStats = calculateQualityStats(player.id);
-                  
-                  return (
-                    <TableRow key={player.id}>
-                      <TableCell className="w-6 p-2">
-                        {/* Empty cell for spacing */}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {player.name}
-                      </TableCell>
-                      <TableCell>{stats.fails}</TableCell>
-                      <TableCell>{stats.aces}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-2 items-center">
-                          <QualityIcon quality="good" type="ace" count={qualityStats.good.aces} />
-                          <QualityIcon quality="neutral" type="ace" count={qualityStats.neutral.aces} />
-                          <QualityIcon quality="bad" type="ace" count={qualityStats.bad.aces} />
-                          <QualityIcon quality="good" type="error" count={qualityStats.good.errors} />
-                          <QualityIcon quality="neutral" type="error" count={qualityStats.neutral.errors} />
-                          <QualityIcon quality="bad" type="error" count={qualityStats.bad.errors} />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              ) : (
+          <div className="flex-1">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
-                    No player data available
-                  </TableCell>
+                  <TableHead className="w-[140px] cursor-pointer" onClick={() => handleSort("name")}>
+                    <Button variant="ghost" size="sm" className="p-0">
+                      Name {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort("fails")}>
+                    <Button variant="ghost" size="sm" className="p-0">
+                      Errors {sortField === "fails" && (sortDirection === "asc" ? "↑" : "↓")}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="cursor-pointer" onClick={() => handleSort("aces")}>
+                    <Button variant="ghost" size="sm" className="p-0">
+                      Aces {sortField === "aces" && (sortDirection === "asc" ? "↑" : "↓")}
+                    </Button>
+                  </TableHead>
+                  <TableHead>Quality</TableHead>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {players.length > 0 ? (
+                  players.map((player, index) => {
+                    const stats = getPlayerStats(
+                      player.id, 
+                      currentGameDay?.id, 
+                      !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
+                    );
+                    const qualityStats = calculateQualityStats(player.id);
+                    
+                    return (
+                      <TableRow key={player.id}>
+                        <TableCell className="font-medium">
+                          {player.name}
+                        </TableCell>
+                        <TableCell>{stats.fails}</TableCell>
+                        <TableCell>{stats.aces}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-2 items-center">
+                            <QualityIcon quality="good" type="ace" count={qualityStats.good.aces} />
+                            <QualityIcon quality="neutral" type="ace" count={qualityStats.neutral.aces} />
+                            <QualityIcon quality="bad" type="ace" count={qualityStats.bad.aces} />
+                            <QualityIcon quality="good" type="error" count={qualityStats.good.errors} />
+                            <QualityIcon quality="neutral" type="error" count={qualityStats.neutral.errors} />
+                            <QualityIcon quality="bad" type="error" count={qualityStats.bad.errors} />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                      No player data available
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </CardContent>
     </Card>

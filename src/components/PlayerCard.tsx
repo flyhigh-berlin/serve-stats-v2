@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PlayerDetailDialog } from "./PlayerDetailDialog";
-import { Triangle, Plus, Minus, X, Circle, Square, Info } from "lucide-react";
+import { Plus, Minus, X, Circle, Info } from "lucide-react";
 
 interface PlayerCardProps {
   player: Player;
@@ -90,7 +90,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
 
   // Quality selection content
   const QualitySelectionContent = ({ type }: { type: "ace" | "error" }) => (
-    <div className="space-y-3 p-3 relative min-w-[200px]">
+    <div className="space-y-3 p-3 relative w-full max-w-[280px] sm:max-w-[320px]">
       {/* Close button */}
       <Button
         variant="ghost"
@@ -114,26 +114,26 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         <div className="flex items-center gap-3 flex-1">
           <div 
             className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-9 h-9 rounded-full" : "bg-destructive w-8 h-8 transform rotate-45"
+              type === "ace" ? "bg-primary w-10 h-10 rounded-full" : "bg-destructive w-10 h-10 transform rotate-45"
             }`}
           >
-            <Plus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 3 }} />
+            <Plus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4 }} />
           </div>
-          <span>Good</span>
+          <span className={type === "error" ? "ml-2" : ""}>Good</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-5 w-5 ml-auto hover:bg-muted/50 flex-shrink-0"
+                  className="h-8 w-8 ml-auto hover:bg-muted/50 flex-shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
                   }}
                   onTouchStart={(e) => e.stopPropagation()}
                 >
-                  <Info className="h-3 w-3" />
+                  <Info className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
@@ -153,26 +153,26 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         <div className="flex items-center gap-3 flex-1">
           <div 
             className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-9 h-9 rounded-full" : "bg-destructive w-8 h-8 transform rotate-45"
+              type === "ace" ? "bg-primary w-10 h-10 rounded-full" : "bg-destructive w-10 h-10 transform rotate-45"
             }`}
           >
-            <Circle className={`h-2.5 w-2.5 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 3, fill: 'none' }} />
+            <Circle className={`h-2 w-2 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4, fill: 'none' }} />
           </div>
-          <span>Neutral</span>
+          <span className={type === "error" ? "ml-2" : ""}>Neutral</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-5 w-5 ml-auto hover:bg-muted/50 flex-shrink-0"
+                  className="h-8 w-8 ml-auto hover:bg-muted/50 flex-shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
                   }}
                   onTouchStart={(e) => e.stopPropagation()}
                 >
-                  <Info className="h-3 w-3" />
+                  <Info className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
@@ -192,26 +192,26 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         <div className="flex items-center gap-3 flex-1">
           <div 
             className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-9 h-9 rounded-full" : "bg-destructive w-8 h-8 transform rotate-45"
+              type === "ace" ? "bg-primary w-10 h-10 rounded-full" : "bg-destructive w-10 h-10 transform rotate-45"
             }`}
           >
-            <Minus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 3 }} />
+            <Minus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4 }} />
           </div>
-          <span>Bad</span>
+          <span className={type === "error" ? "ml-2" : ""}>Bad</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-5 w-5 ml-auto hover:bg-muted/50 flex-shrink-0"
+                  className="h-8 w-8 ml-auto hover:bg-muted/50 flex-shrink-0"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
                   }}
                   onTouchStart={(e) => e.stopPropagation()}
                 >
-                  <Info className="h-3 w-3" />
+                  <Info className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="left" className="max-w-xs">
@@ -236,14 +236,15 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
             <span className="font-semibold truncate flex-grow mr-4">
               {player.name}
             </span>
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <span className="text-sm">
+            <div className="flex items-center gap-3 flex-shrink-0 bg-muted/50 rounded-md px-2 py-1">
+              <span className="text-sm flex items-center gap-1">
                 <span className="text-muted-foreground">A:</span>
-                <span className={`font-medium ml-1 ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
+                <span className={`font-medium ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
               </span>
-              <span className="text-sm">
+              <span className="text-muted-foreground">|</span>
+              <span className="text-sm flex items-center gap-1">
                 <span className="text-muted-foreground">E:</span>
-                <span className={`font-medium ml-1 ${animatingError ? "stat-change" : ""}`}>{stats.fails}</span>
+                <span className={`font-medium ${animatingError ? "stat-change" : ""}`}>{stats.fails}</span>
               </span>
             </div>
           </div>
