@@ -107,21 +107,21 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     
     // Define the icon based on quality
     let Icon = Circle;
-    let iconStyle = { strokeWidth: 3, fill: 'none' };
+    let iconStyle = { strokeWidth: 4, fill: 'none' };
     let iconSize = "h-3 w-3";
     
     if (quality === "good") {
       Icon = Plus;
-      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-3 w-3";
     } else if (quality === "bad") {
       Icon = Minus;
-      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-3 w-3";
     } else {
       // neutral - smaller hollow circle, but bolder
       iconSize = "h-1.5 w-1.5";
-      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconStyle = { strokeWidth: 4, fill: 'none' };
     }
 
     return (
@@ -144,21 +144,21 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     
     // Define the icon based on quality
     let Icon = Circle;
-    let iconStyle = { strokeWidth: 3, fill: 'none' };
+    let iconStyle = { strokeWidth: 4, fill: 'none' };
     let iconSize = "h-2 w-2";
     
     if (quality === "good") {
       Icon = Plus;
-      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-2 w-2";
     } else if (quality === "bad") {
       Icon = Minus;
-      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-2 w-2";
     } else {
       // neutral - smaller hollow circle, but bolder
       iconSize = "h-1 w-1";
-      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconStyle = { strokeWidth: 5, fill: 'none' };
     }
 
     return (

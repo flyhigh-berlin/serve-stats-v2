@@ -131,31 +131,27 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
     
     // Define the icon based on quality
     let Icon = Circle;
-    let iconStyle = { strokeWidth: 3, fill: 'none' };
+    let iconStyle = { strokeWidth: 4, fill: 'none' };
     let iconSize = "h-3 w-3";
     
     if (quality === "good") {
       Icon = Plus;
-      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-3 w-3";
     } else if (quality === "bad") {
       Icon = Minus;
-      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-3 w-3";
     } else {
       // neutral - smaller hollow circle, but bolder
       iconSize = "h-1.5 w-1.5";
-      iconStyle = { strokeWidth: 3, fill: 'none' };
+      iconStyle = { strokeWidth: 4, fill: 'none' };
     }
 
     return (
       <div className="flex items-center gap-1">
         <div 
-          className={`flex items-center justify-center w-6 h-6 ${getQualityColor(type)}`}
-          style={{ 
-            borderRadius: isCircle ? '50%' : '0',
-            transform: isCircle ? 'none' : 'rotate(45deg)'
-          }}
+          className={`flex items-center justify-center ${isCircle ? 'w-5 h-5 rounded-full' : 'w-5 h-5 transform rotate-45'} ${getQualityColor(type)}`}
         >
           <Icon 
             className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`}
@@ -169,7 +165,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
 
   // Quality selection content
   const QualitySelectionContent = ({ type }: { type: "ace" | "error" }) => (
-    <div className="space-y-3 p-3 relative w-full max-w-[280px] sm:max-w-[320px]">
+    <div className="space-y-3 p-3 relative w-full max-w-[260px] sm:max-w-[280px]">
       {/* Close button */}
       <Button
         variant="ghost"
@@ -193,12 +189,12 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         <div className="flex items-center gap-3 flex-1">
           <div 
             className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-10 h-10 rounded-full" : "bg-destructive w-10 h-10 transform rotate-45"
+              type === "ace" ? "bg-primary w-9 h-9 rounded-full" : "bg-destructive w-8 h-8 transform rotate-45"
             }`}
           >
-            <Plus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 3 }} />
+            <Plus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4 }} />
           </div>
-          <span className={type === "error" ? "ml-2" : ""}>Good</span>
+          <span className={type === "error" ? "ml-3" : ""}>Good</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -235,12 +231,12 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         <div className="flex items-center gap-3 flex-1">
           <div 
             className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-10 h-10 rounded-full" : "bg-destructive w-10 h-10 transform rotate-45"
+              type === "ace" ? "bg-primary w-9 h-9 rounded-full" : "bg-destructive w-8 h-8 transform rotate-45"
             }`}
           >
-            <Circle className={`h-2.5 w-2.5 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 3, fill: 'none' }} />
+            <Circle className={`h-2 w-2 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4, fill: 'none' }} />
           </div>
-          <span className={type === "error" ? "ml-2" : ""}>Neutral</span>
+          <span className={type === "error" ? "ml-3" : ""}>Neutral</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -277,12 +273,12 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         <div className="flex items-center gap-3 flex-1">
           <div 
             className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-10 h-10 rounded-full" : "bg-destructive w-10 h-10 transform rotate-45"
+              type === "ace" ? "bg-primary w-9 h-9 rounded-full" : "bg-destructive w-8 h-8 transform rotate-45"
             }`}
           >
-            <Minus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 3 }} />
+            <Minus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4 }} />
           </div>
-          <span className={type === "error" ? "ml-2" : ""}>Bad</span>
+          <span className={type === "error" ? "ml-3" : ""}>Bad</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -327,7 +323,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
             <span className="font-semibold truncate flex-grow mr-4">
               {player.name}
             </span>
-            <div className="flex items-center gap-3 flex-shrink-0 bg-muted/50 rounded-lg px-3 py-2 border">
+            <div className="flex items-center gap-3 flex-shrink-0 bg-gradient-to-r from-muted/30 to-muted/60 rounded-lg px-3 py-2 border shadow-sm">
               <span className="text-sm flex items-center gap-1.5">
                 <span className="text-muted-foreground font-medium">A:</span>
                 <span className={`font-bold text-primary ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
