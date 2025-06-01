@@ -47,7 +47,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   const getQualityColor = (quality: ServeQuality) => {
     switch (quality) {
       case "good": return "bg-serve-good hover:bg-serve-good/80";
-      case "neutral": return "bg-serve-neutral hover:bg-serve-neutral/80 text-black";
+      case "neutral": return "bg-serve-neutral hover:bg-serve-neutral/80";
       case "bad": return "bg-serve-bad hover:bg-serve-bad/80";
       default: return "";
     }
@@ -69,52 +69,61 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
       {/* Good quality */}
       <Button
         variant="outline"
-        className={`w-full justify-start gap-3 h-auto py-3 ${getQualityColor("good")}`}
+        className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
         onClick={() => handleServeClick(activeType!, "good")}
       >
         <div className="flex items-center gap-2">
-          {activeType === "ace" ? (
-            <Circle className="h-4 w-4 fill-current" />
-          ) : (
-            <Square className="h-4 w-4 fill-current" />
-          )}
-          <Plus className="h-4 w-4" />
+          <div 
+            className={`flex items-center justify-center w-6 h-6 ${getQualityColor("good")}`}
+            style={{ 
+              borderRadius: activeType === "ace" ? '50%' : '0',
+              transform: activeType === "ace" ? 'none' : 'rotate(45deg)'
+            }}
+          >
+            <Plus className={`h-3 w-3 ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
+          </div>
+          <span>Good</span>
         </div>
-        <span>Good {activeType}</span>
       </Button>
 
       {/* Neutral quality */}
       <Button
         variant="outline"
-        className={`w-full justify-start gap-3 h-auto py-3 ${getQualityColor("neutral")}`}
+        className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
         onClick={() => handleServeClick(activeType!, "neutral")}
       >
         <div className="flex items-center gap-2">
-          {activeType === "ace" ? (
-            <Circle className="h-4 w-4" />
-          ) : (
-            <Square className="h-4 w-4" />
-          )}
-          <Circle className="h-4 w-4" />
+          <div 
+            className={`flex items-center justify-center w-6 h-6 ${getQualityColor("neutral")}`}
+            style={{ 
+              borderRadius: activeType === "ace" ? '50%' : '0',
+              transform: activeType === "ace" ? 'none' : 'rotate(45deg)'
+            }}
+          >
+            <Circle className={`h-3 w-3 ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
+          </div>
+          <span>Neutral</span>
         </div>
-        <span>Neutral {activeType}</span>
       </Button>
 
       {/* Bad quality */}
       <Button
         variant="outline"
-        className={`w-full justify-start gap-3 h-auto py-3 ${getQualityColor("bad")}`}
+        className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent"
         onClick={() => handleServeClick(activeType!, "bad")}
       >
         <div className="flex items-center gap-2">
-          {activeType === "ace" ? (
-            <Circle className="h-4 w-4 fill-current" />
-          ) : (
-            <Square className="h-4 w-4 fill-current" />
-          )}
-          <Minus className="h-4 w-4" />
+          <div 
+            className={`flex items-center justify-center w-6 h-6 ${getQualityColor("bad")}`}
+            style={{ 
+              borderRadius: activeType === "ace" ? '50%' : '0',
+              transform: activeType === "ace" ? 'none' : 'rotate(45deg)'
+            }}
+          >
+            <Minus className={`h-3 w-3 ${activeType === "ace" ? "" : "transform -rotate-45"}`} />
+          </div>
+          <span>Bad</span>
         </div>
-        <span>Bad {activeType}</span>
       </Button>
     </div>
   );
