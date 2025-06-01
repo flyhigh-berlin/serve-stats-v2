@@ -123,35 +123,35 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
     return type === "ace" ? "bg-primary" : "bg-destructive";
   };
 
-  // Quality icon component for overview stats - larger size
+  // Quality icon component for overview stats - consistent sizing
   const OverviewQualityIcon = ({ quality, type, count }: { quality: ServeQuality, type: "error" | "ace", count: number }) => {
     if (count === 0) return null;
     
     const isCircle = type === "ace"; // aces are circles
     
-    // Define the icon based on quality
+    // Define the icon based on quality - using consistent sizes
     let Icon = Circle;
-    let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-3 w-3";
+    let iconStyle = { strokeWidth: 5, fill: quality === "neutral" ? 'white' : 'none' };
+    let iconSize = "h-2 w-2";
     
     if (quality === "good") {
       Icon = Plus;
-      iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-3 w-3";
+      iconStyle = { strokeWidth: 5, fill: 'none' };
+      iconSize = "h-2 w-2";
     } else if (quality === "bad") {
       Icon = Minus;
-      iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-3 w-3";
-    } else {
-      // neutral - filled circle/dot
+      iconStyle = { strokeWidth: 5, fill: 'none' };
       iconSize = "h-2 w-2";
+    } else {
+      // neutral - filled dot
+      iconSize = "h-1 w-1";
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
       <div className="flex items-center gap-1">
         <div 
-          className={`flex items-center justify-center ${isCircle ? 'w-5 h-5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)} mr-1`}
+          className={`flex items-center justify-center ${isCircle ? 'w-5 h-5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)} ${!isCircle ? 'mr-1' : ''}`}
         >
           <Icon 
             className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`}
@@ -163,7 +163,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
     );
   };
 
-  // Quality selection content
+  // Quality selection content - using smaller symbols for popover
   const QualitySelectionContent = ({ type }: { type: "ace" | "error" }) => (
     <div className="space-y-3 p-3 relative w-full max-w-[260px] sm:max-w-[280px]">
       {/* Close button */}
@@ -189,12 +189,12 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         <div className="flex items-center gap-3 flex-1">
           <div 
             className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-9 h-9 rounded-full" : "bg-destructive w-7 h-7 transform rotate-45"
+              type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"
             }`}
           >
-            <Plus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4 }} />
+            <Plus className={`h-3 w-3 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 5 }} />
           </div>
-          <span className={type === "error" ? "ml-2" : ""}>Good</span>
+          <span className={type === "error" ? "ml-1" : ""}>Good</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -232,12 +232,12 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         <div className="flex items-center gap-3 flex-1">
           <div 
             className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-9 h-9 rounded-full" : "bg-destructive w-7 h-7 transform rotate-45"
+              type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"
             }`}
           >
-            <Circle className={`h-1.5 w-1.5 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 0, fill: 'white' }} />
+            <Circle className={`h-1 w-1 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 0, fill: 'white' }} />
           </div>
-          <span className={type === "error" ? "ml-2" : ""}>Neutral</span>
+          <span className={type === "error" ? "ml-1" : ""}>Neutral</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -275,12 +275,12 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
         <div className="flex items-center gap-3 flex-1">
           <div 
             className={`flex items-center justify-center ${
-              type === "ace" ? "bg-primary w-9 h-9 rounded-full" : "bg-destructive w-7 h-7 transform rotate-45"
+              type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"
             }`}
           >
-            <Minus className={`h-4 w-4 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 4 }} />
+            <Minus className={`h-3 w-3 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{ strokeWidth: 5 }} />
           </div>
-          <span className={type === "error" ? "ml-2" : ""}>Bad</span>
+          <span className={type === "error" ? "ml-1" : ""}>Bad</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
