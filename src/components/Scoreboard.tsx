@@ -74,6 +74,72 @@ export function Scoreboard() {
     
     return qualityStats;
   };
+
+  // Calculate A/E Ratio
+  const calculateAERatio = (aces: number, errors: number) => {
+    if (errors === 0) return aces;
+    return aces / errors;
+  };
+
+  // Calculate Quality Score
+  const calculateQualityScore = (playerId: string) => {
+    const qualityStats = calculateQualityStats(playerId);
+    const totalServes = Object.values(qualityStats).reduce((sum, quality) => 
+      sum + quality.aces + quality.errors, 0
+    );
+    
+    if (totalServes === 0) return 0;
+    
+    const score = (qualityStats.good.aces + qualityStats.good.errors) * 1 +
+                  (qualityStats.neutral.aces + qualityStats.neutral.errors) * 0 +
+                  (qualityStats.bad.aces + qualityStats.bad.errors) * (-1);
+    
+    return score / totalServes;
+  };
+
+  // Get color for A/E ratio
+  const getAERatioColor = (ratio: number) => {
+    if (ratio > 1) return "text-sky-600"; // Same as ace button color
+    if (ratio < 1) return "text-destructive"; // Same as error button color
+    return "text-muted-foreground"; // Grey for ratio = 1
+  };
+
+  // Get color for Quality Score
+  const getQualityScoreColor = (score: number) => {
+    if (score > 0) return "text-sky-600"; // Same as ace button color
+    if (score < 0) return "text-destructive"; // Same as error button color
+    return "text-muted-foreground"; // Grey for score = 0
+  };
+
+  // Calculate average stats for all players
+  const calculateAverageStats = () => {
+    if (players.length === 0) return { totalPlayers: 0, avgQualityScore: 0, topAERatio: 0 };
+    
+    let totalQualityScore = 0;
+    let topAERatio = 0;
+    
+    players.forEach(player => {
+      const stats = getPlayerStats(
+        player.id, 
+        currentGameDay?.id, 
+        !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
+      );
+      
+      const qualityScore = calculateQualityScore(player.id);
+      totalQualityScore += qualityScore;
+      
+      const aeRatio = calculateAERatio(stats.aces, stats.fails);
+      if (aeRatio > topAERatio) {
+        topAERatio = aeRatio;
+      }
+    });
+    
+    return {
+      totalPlayers: players.length,
+      avgQualityScore: totalQualityScore / players.length,
+      topAERatio: topAERatio
+    };
+  };
   
   // Helper to get badge color for serve quality
   const getQualityColor = (type: "error" | "ace") => {
@@ -123,6 +189,8 @@ export function Scoreboard() {
       </div>
     );
   };
+
+  const averageStats = calculateAverageStats();
   
   return (
     <Card>
@@ -149,6 +217,8 @@ export function Scoreboard() {
                     E {sortField === "fails" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
+                <TableHead>A/E</TableHead>
+                <TableHead>QS</TableHead>
                 <TableHead>Quality</TableHead>
               </TableRow>
             </TableHeader>
@@ -162,6 +232,8 @@ export function Scoreboard() {
                   );
                   const qualityStats = calculateQualityStats(player.id);
                   const isFirstPlace = index === 0 && (stats.fails + stats.aces) > 0;
+                  const aeRatio = calculateAERatio(stats.aces, stats.fails);
+                  const qualityScore = calculateQualityScore(player.id);
                   
                   return (
                     <TableRow key={player.id}>
@@ -174,6 +246,16 @@ export function Scoreboard() {
                       </TableCell>
                       <TableCell>{stats.aces}</TableCell>
                       <TableCell>{stats.fails}</TableCell>
+                      <TableCell>
+                        <span className={`font-medium ${getAERatioColor(aeRatio)}`}>
+                          {aeRatio.toFixed(2)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`font-medium ${getQualityScoreColor(qualityScore)}`}>
+                          {qualityScore >= 0 ? '+' : ''}{qualityScore.toFixed(1)}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-2 items-center">
                           <QualityIcon quality="good" type="ace" count={qualityStats.good.aces} />
@@ -189,13 +271,35 @@ export function Scoreboard() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
                     No player data available
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
+
+          {/* Average Stats Summary */}
+          {players.length > 0 && (
+            <div className="mt-6 flex justify-center gap-8 text-center">
+              <div>
+                <div className="text-sm text-muted-foreground">Total Players:</div>
+                <div className="text-2xl font-bold">{averageStats.totalPlayers}</div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Avg Quality Score:</div>
+                <div className={`text-2xl font-bold ${getQualityScoreColor(averageStats.avgQualityScore)}`}>
+                  {averageStats.avgQualityScore >= 0 ? '+' : ''}{averageStats.avgQualityScore.toFixed(1)}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Top A/E Ratio:</div>
+                <div className={`text-2xl font-bold ${getAERatioColor(averageStats.topAERatio)}`}>
+                  {averageStats.topAERatio.toFixed(2)}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
