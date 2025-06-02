@@ -17,8 +17,8 @@ import {
 
 export function Scoreboard() {
   const { sortedPlayers, getPlayerStats, currentGameDay, gameTypeFilter } = useVolleyball();
-  const [sortField, setSortField] = useState<SortField>("name");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortField, setSortField] = useState<SortField>("aeRatio");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   // Handle sort click
   const handleSort = (field: SortField) => {
@@ -99,6 +99,7 @@ export function Scoreboard() {
 
   // Get color for A/E ratio
   const getAERatioColor = (ratio: number) => {
+    if (ratio === 0) return "text-muted-foreground";
     if (ratio > 1) return "text-sky-600"; // Same as ace button color
     if (ratio < 1) return "text-destructive"; // Same as error button color
     return "text-muted-foreground"; // Grey for ratio = 1
@@ -106,6 +107,7 @@ export function Scoreboard() {
 
   // Get color for Quality Score
   const getQualityScoreColor = (score: number) => {
+    if (score === 0) return "text-muted-foreground";
     if (score > 0) return "text-sky-600"; // Same as ace button color
     if (score < 0) return "text-destructive"; // Same as error button color
     return "text-muted-foreground"; // Grey for score = 0
@@ -113,28 +115,34 @@ export function Scoreboard() {
 
   // Get color for aces (sky blue unless 0)
   const getAceColor = (aces: number) => {
-    return aces > 0 ? "text-sky-600" : "";
+    return aces > 0 ? "text-sky-600" : "text-muted-foreground";
   };
 
   // Get color for errors (destructive unless 0)
   const getErrorColor = (errors: number) => {
-    return errors > 0 ? "text-destructive" : "";
+    return errors > 0 ? "text-destructive" : "text-muted-foreground";
   };
 
-  // Calculate average stats for all players
-  const calculateAverageStats = () => {
+  // Format value with proper sign display
+  const formatValue = (value: number, showSign: boolean = false) => {
+    if (value === 0) return "0";
+    if (showSign && value > 0) return `+${value.toFixed(1)}`;
+    return value.toFixed(showSign ? 1 : 2);
+  };
+
+  // Calculate total stats for all players
+  const calculateTotalStats = () => {
     if (players.length === 0) return { 
-      totalPlayers: 0, 
-      avgAces: 0, 
-      avgErrors: 0, 
+      totalAces: 0, 
+      totalErrors: 0, 
       avgAERatio: 0, 
       avgQualityScore: 0 
     };
     
     let totalAces = 0;
     let totalErrors = 0;
-    let totalQualityScore = 0;
-    let totalAERatio = 0;
+    let totalQualityValue = 0;
+    let totalServes = 0;
     
     players.forEach(player => {
       const stats = getPlayerStats(
@@ -146,23 +154,31 @@ export function Scoreboard() {
       totalAces += stats.aces;
       totalErrors += stats.fails;
       
-      const qualityScore = calculateQualityScore(player.id);
-      totalQualityScore += qualityScore;
+      // Calculate quality values for this player
+      const qualityStats = calculateQualityStats(player.id);
+      const playerQualityValue = (qualityStats.good.aces + qualityStats.good.errors) * 1 +
+                                (qualityStats.neutral.aces + qualityStats.neutral.errors) * 0 +
+                                (qualityStats.bad.aces + qualityStats.bad.errors) * (-1);
+      const playerTotalServes = Object.values(qualityStats).reduce((sum, quality) => 
+        sum + quality.aces + quality.errors, 0
+      );
       
-      const aeRatio = calculateAERatio(stats.aces, stats.fails);
-      totalAERatio += aeRatio;
+      totalQualityValue += playerQualityValue;
+      totalServes += playerTotalServes;
     });
     
+    const avgAERatio = totalErrors === 0 ? totalAces : totalAces / totalErrors;
+    const avgQualityScore = totalServes === 0 ? 0 : totalQualityValue / totalServes;
+    
     return {
-      totalPlayers: players.length,
-      avgAces: totalAces / players.length,
-      avgErrors: totalErrors / players.length,
-      avgAERatio: totalAERatio / players.length,
-      avgQualityScore: totalQualityScore / players.length
+      totalAces,
+      totalErrors,
+      avgAERatio,
+      avgQualityScore
     };
   };
 
-  const averageStats = calculateAverageStats();
+  const totalStats = calculateTotalStats();
   
   return (
     <Card>
@@ -229,13 +245,13 @@ export function Scoreboard() {
                         {stats.fails}
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className={`font-medium ${getAERatioColor(aeRatio)}`}>
-                          {aeRatio.toFixed(2)}
+                        <span className={getAERatioColor(aeRatio)}>
+                          {formatValue(aeRatio)}
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className={`font-medium ${getQualityScoreColor(qualityScore)}`}>
-                          {qualityScore >= 0 ? '+' : ''}{qualityScore.toFixed(1)}
+                        <span className={getQualityScoreColor(qualityScore)}>
+                          {formatValue(qualityScore, true)}
                         </span>
                       </TableCell>
                     </TableRow>
@@ -251,35 +267,31 @@ export function Scoreboard() {
             </TableBody>
           </Table>
 
-          {/* Average Stats Summary */}
+          {/* Total Stats Summary */}
           {players.length > 0 && (
             <div className="mt-6 flex justify-center gap-8 text-center">
               <div>
-                <div className="text-sm text-muted-foreground">Players:</div>
-                <div className="text-2xl font-bold">{averageStats.totalPlayers}</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Ø A:</div>
-                <div className={`text-2xl font-bold ${getAceColor(Math.round(averageStats.avgAces))}`}>
-                  {averageStats.avgAces.toFixed(1)}
+                <div className="text-sm text-muted-foreground">Total A</div>
+                <div className={`text-2xl font-bold ${getAceColor(totalStats.totalAces)}`}>
+                  {totalStats.totalAces}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Ø E:</div>
-                <div className={`text-2xl font-bold ${getErrorColor(Math.round(averageStats.avgErrors))}`}>
-                  {averageStats.avgErrors.toFixed(1)}
+                <div className="text-sm text-muted-foreground">Total E</div>
+                <div className={`text-2xl font-bold ${getErrorColor(totalStats.totalErrors)}`}>
+                  {totalStats.totalErrors}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Ø A/E:</div>
-                <div className={`text-2xl font-bold ${getAERatioColor(averageStats.avgAERatio)}`}>
-                  {averageStats.avgAERatio.toFixed(2)}
+                <div className="text-sm text-muted-foreground">Ø A/E</div>
+                <div className={`text-2xl font-bold ${getAERatioColor(totalStats.avgAERatio)}`}>
+                  {formatValue(totalStats.avgAERatio)}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Ø QS:</div>
-                <div className={`text-2xl font-bold ${getQualityScoreColor(averageStats.avgQualityScore)}`}>
-                  {averageStats.avgQualityScore >= 0 ? '+' : ''}{averageStats.avgQualityScore.toFixed(1)}
+                <div className="text-sm text-muted-foreground">Ø QS</div>
+                <div className={`text-2xl font-bold ${getQualityScoreColor(totalStats.avgQualityScore)}`}>
+                  {formatValue(totalStats.avgQualityScore, true)}
                 </div>
               </div>
             </div>

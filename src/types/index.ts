@@ -43,5 +43,5 @@ export interface GameDay {
 }
 
 // Types for filtering and sorting the scoreboard
-export type SortField = "name" | "serves" | "fails" | "aces";
+export type SortField = "name" | "serves" | "fails" | "aces" | "aeRatio" | "qualityScore";
 export type SortDirection = "asc" | "desc";
