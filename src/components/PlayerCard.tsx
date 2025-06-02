@@ -344,7 +344,7 @@ export function PlayerCard({
           <div className="flex gap-2">
             <Popover open={acePopoverOpen} onOpenChange={setAcePopoverOpen}>
               <PopoverTrigger asChild>
-                <Button variant="default" size="lg" className="flex-1 h-12" onClick={() => handleButtonClick("ace")}>
+                <Button variant="default" size="lg" onClick={() => handleButtonClick("ace")} className="flex-1 h-12 bg-sky-600 hover:bg-sky-500">
                   + Ace
                 </Button>
               </PopoverTrigger>
