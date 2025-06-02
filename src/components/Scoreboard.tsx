@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -182,36 +181,36 @@ export function Scoreboard() {
   
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Scoreboard</CardTitle>
+      <CardHeader className="pb-3 px-3 sm:px-6">
+        <CardTitle className="text-lg sm:text-xl">Scoreboard</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="relative">
+      <CardContent className="px-2 sm:px-4">
+        <div className="w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>
-                  <Button variant="ghost" size="sm" className="p-0">
+                <TableHead className="cursor-pointer w-[30%] min-w-[80px] px-1 sm:px-4" onClick={() => handleSort("name")}>
+                  <Button variant="ghost" size="sm" className="p-0 text-xs sm:text-sm h-auto">
                     Name {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer text-center" onClick={() => handleSort("aces")}>
-                  <Button variant="ghost" size="sm" className="p-0">
+                <TableHead className="cursor-pointer text-center w-[15%] px-1 sm:px-4" onClick={() => handleSort("aces")}>
+                  <Button variant="ghost" size="sm" className="p-0 text-xs sm:text-sm h-auto">
                     A {sortField === "aces" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer text-center" onClick={() => handleSort("fails")}>
-                  <Button variant="ghost" size="sm" className="p-0">
+                <TableHead className="cursor-pointer text-center w-[15%] px-1 sm:px-4" onClick={() => handleSort("fails")}>
+                  <Button variant="ghost" size="sm" className="p-0 text-xs sm:text-sm h-auto">
                     E {sortField === "fails" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer text-center" onClick={() => handleSort("aeRatio")}>
-                  <Button variant="ghost" size="sm" className="p-0">
+                <TableHead className="cursor-pointer text-center w-[20%] px-1 sm:px-4" onClick={() => handleSort("aeRatio")}>
+                  <Button variant="ghost" size="sm" className="p-0 text-xs sm:text-sm h-auto">
                     A/E {sortField === "aeRatio" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer text-center" onClick={() => handleSort("qualityScore")}>
-                  <Button variant="ghost" size="sm" className="p-0">
+                <TableHead className="cursor-pointer text-center w-[20%] px-1 sm:px-4" onClick={() => handleSort("qualityScore")}>
+                  <Button variant="ghost" size="sm" className="p-0 text-xs sm:text-sm h-auto">
                     QS {sortField === "qualityScore" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
@@ -231,25 +230,24 @@ export function Scoreboard() {
                   
                   return (
                     <TableRow key={player.id}>
-                      <TableCell className="font-medium relative">
-                        {/* Crown positioned absolutely to the left of the player name */}
+                      <TableCell className="font-medium relative px-1 sm:px-4 text-xs sm:text-sm">
                         {isFirstPlace && (
-                          <Crown className="absolute left-[-24px] top-1/2 transform -translate-y-1/2 h-4 w-4 text-yellow-500" />
+                          <Crown className="absolute left-[-20px] sm:left-[-24px] top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
                         )}
-                        <span>{player.name}</span>
+                        <span className="truncate block">{player.name}</span>
                       </TableCell>
-                      <TableCell className={`text-center ${getAceColor(stats.aces)}`}>
+                      <TableCell className={`text-center px-1 sm:px-4 text-xs sm:text-sm ${getAceColor(stats.aces)}`}>
                         {stats.aces}
                       </TableCell>
-                      <TableCell className={`text-center ${getErrorColor(stats.fails)}`}>
+                      <TableCell className={`text-center px-1 sm:px-4 text-xs sm:text-sm ${getErrorColor(stats.fails)}`}>
                         {stats.fails}
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center px-1 sm:px-4 text-xs sm:text-sm">
                         <span className={getAERatioColor(aeRatio)}>
                           {formatValue(aeRatio)}
                         </span>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center px-1 sm:px-4 text-xs sm:text-sm">
                         <span className={getQualityScoreColor(qualityScore)}>
                           {formatValue(qualityScore, true)}
                         </span>
@@ -259,44 +257,44 @@ export function Scoreboard() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-4 text-muted-foreground text-xs sm:text-sm">
                     No player data available
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
+        </div>
 
-          {/* Total Stats Summary */}
-          {players.length > 0 && (
-            <div className="mt-6 flex justify-center gap-8 text-center">
-              <div>
-                <div className="text-sm text-muted-foreground">Total A</div>
-                <div className={`text-2xl font-bold ${getAceColor(totalStats.totalAces)}`}>
-                  {totalStats.totalAces}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Total E</div>
-                <div className={`text-2xl font-bold ${getErrorColor(totalStats.totalErrors)}`}>
-                  {totalStats.totalErrors}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Ø A/E</div>
-                <div className={`text-2xl font-bold ${getAERatioColor(totalStats.avgAERatio)}`}>
-                  {formatValue(totalStats.avgAERatio)}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Ø QS</div>
-                <div className={`text-2xl font-bold ${getQualityScoreColor(totalStats.avgQualityScore)}`}>
-                  {formatValue(totalStats.avgQualityScore, true)}
-                </div>
+        {/* Total Stats Summary */}
+        {players.length > 0 && (
+          <div className="mt-4 sm:mt-6 grid grid-cols-4 gap-2 sm:gap-8 text-center">
+            <div>
+              <div className="text-xs text-muted-foreground">Ø A</div>
+              <div className={`text-lg sm:text-2xl font-bold ${getAceColor(totalStats.totalAces)}`}>
+                {totalStats.totalAces}
               </div>
             </div>
-          )}
-        </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Ø E</div>
+              <div className={`text-lg sm:text-2xl font-bold ${getErrorColor(totalStats.totalErrors)}`}>
+                {totalStats.totalErrors}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Ø A/E</div>
+              <div className={`text-lg sm:text-2xl font-bold ${getAERatioColor(totalStats.avgAERatio)}`}>
+                {formatValue(totalStats.avgAERatio)}
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Ø QS</div>
+              <div className={`text-lg sm:text-2xl font-bold ${getQualityScoreColor(totalStats.avgQualityScore)}`}>
+                {formatValue(totalStats.avgQualityScore, true)}
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
