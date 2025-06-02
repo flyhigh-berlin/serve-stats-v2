@@ -111,12 +111,30 @@ export function Scoreboard() {
     return "text-muted-foreground"; // Grey for score = 0
   };
 
+  // Get color for aces (sky blue unless 0)
+  const getAceColor = (aces: number) => {
+    return aces > 0 ? "text-sky-600" : "";
+  };
+
+  // Get color for errors (destructive unless 0)
+  const getErrorColor = (errors: number) => {
+    return errors > 0 ? "text-destructive" : "";
+  };
+
   // Calculate average stats for all players
   const calculateAverageStats = () => {
-    if (players.length === 0) return { totalPlayers: 0, avgQualityScore: 0, topAERatio: 0 };
+    if (players.length === 0) return { 
+      totalPlayers: 0, 
+      avgAces: 0, 
+      avgErrors: 0, 
+      avgAERatio: 0, 
+      avgQualityScore: 0 
+    };
     
+    let totalAces = 0;
+    let totalErrors = 0;
     let totalQualityScore = 0;
-    let topAERatio = 0;
+    let totalAERatio = 0;
     
     players.forEach(player => {
       const stats = getPlayerStats(
@@ -125,69 +143,23 @@ export function Scoreboard() {
         !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
       );
       
+      totalAces += stats.aces;
+      totalErrors += stats.fails;
+      
       const qualityScore = calculateQualityScore(player.id);
       totalQualityScore += qualityScore;
       
       const aeRatio = calculateAERatio(stats.aces, stats.fails);
-      if (aeRatio > topAERatio) {
-        topAERatio = aeRatio;
-      }
+      totalAERatio += aeRatio;
     });
     
     return {
       totalPlayers: players.length,
-      avgQualityScore: totalQualityScore / players.length,
-      topAERatio: topAERatio
+      avgAces: totalAces / players.length,
+      avgErrors: totalErrors / players.length,
+      avgAERatio: totalAERatio / players.length,
+      avgQualityScore: totalQualityScore / players.length
     };
-  };
-  
-  // Helper to get badge color for serve quality
-  const getQualityColor = (type: "error" | "ace") => {
-    return type === "ace" ? "bg-primary" : "bg-destructive";
-  };
-
-  // Quality icon component - aces are circles, errors are diamonds
-  const QualityIcon = ({ quality, type, count }: { quality: ServeQuality, type: "error" | "ace", count: number }) => {
-    if (count === 0) return null;
-    
-    const isCircle = type === "ace"; // aces are circles
-    
-    // Define the icon based on quality
-    let Icon = Circle;
-    let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-2 w-2";
-    
-    if (quality === "good") {
-      Icon = Plus;
-      iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2 w-2";
-    } else if (quality === "bad") {
-      Icon = Minus;
-      iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2 w-2";
-    } else {
-      // neutral - filled circle/dot
-      iconSize = "h-1 w-1";
-      iconStyle = { strokeWidth: 0, fill: 'white' };
-    }
-
-    return (
-      <div className="flex items-center gap-1">
-        <div 
-          className={`flex items-center justify-center w-4 h-4 ${getQualityColor(type)}`}
-          style={{ 
-            borderRadius: isCircle ? '50%' : '0',
-            transform: isCircle ? 'none' : 'rotate(45deg)'
-          }}
-        >
-          <Icon 
-            className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`}
-            style={iconStyle}
-          />
-        </div>
-        <span className="text-xs">{count}</span>
-      </div>
-    );
   };
 
   const averageStats = calculateAverageStats();
@@ -202,24 +174,31 @@ export function Scoreboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[140px] cursor-pointer" onClick={() => handleSort("name")}>
+                <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>
                   <Button variant="ghost" size="sm" className="p-0">
                     Name {sortField === "name" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort("aces")}>
+                <TableHead className="cursor-pointer text-center" onClick={() => handleSort("aces")}>
                   <Button variant="ghost" size="sm" className="p-0">
                     A {sortField === "aces" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => handleSort("fails")}>
+                <TableHead className="cursor-pointer text-center" onClick={() => handleSort("fails")}>
                   <Button variant="ghost" size="sm" className="p-0">
                     E {sortField === "fails" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
-                <TableHead>A/E</TableHead>
-                <TableHead>QS</TableHead>
-                <TableHead>Quality</TableHead>
+                <TableHead className="cursor-pointer text-center" onClick={() => handleSort("aeRatio")}>
+                  <Button variant="ghost" size="sm" className="p-0">
+                    A/E {sortField === "aeRatio" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </Button>
+                </TableHead>
+                <TableHead className="cursor-pointer text-center" onClick={() => handleSort("qualityScore")}>
+                  <Button variant="ghost" size="sm" className="p-0">
+                    QS {sortField === "qualityScore" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </Button>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -230,7 +209,6 @@ export function Scoreboard() {
                     currentGameDay?.id, 
                     !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
                   );
-                  const qualityStats = calculateQualityStats(player.id);
                   const isFirstPlace = index === 0 && (stats.fails + stats.aces) > 0;
                   const aeRatio = calculateAERatio(stats.aces, stats.fails);
                   const qualityScore = calculateQualityScore(player.id);
@@ -244,34 +222,28 @@ export function Scoreboard() {
                         )}
                         <span>{player.name}</span>
                       </TableCell>
-                      <TableCell>{stats.aces}</TableCell>
-                      <TableCell>{stats.fails}</TableCell>
-                      <TableCell>
+                      <TableCell className={`text-center ${getAceColor(stats.aces)}`}>
+                        {stats.aces}
+                      </TableCell>
+                      <TableCell className={`text-center ${getErrorColor(stats.fails)}`}>
+                        {stats.fails}
+                      </TableCell>
+                      <TableCell className="text-center">
                         <span className={`font-medium ${getAERatioColor(aeRatio)}`}>
                           {aeRatio.toFixed(2)}
                         </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">
                         <span className={`font-medium ${getQualityScoreColor(qualityScore)}`}>
                           {qualityScore >= 0 ? '+' : ''}{qualityScore.toFixed(1)}
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-2 items-center">
-                          <QualityIcon quality="good" type="ace" count={qualityStats.good.aces} />
-                          <QualityIcon quality="neutral" type="ace" count={qualityStats.neutral.aces} />
-                          <QualityIcon quality="bad" type="ace" count={qualityStats.bad.aces} />
-                          <QualityIcon quality="good" type="error" count={qualityStats.good.errors} />
-                          <QualityIcon quality="neutral" type="error" count={qualityStats.neutral.errors} />
-                          <QualityIcon quality="bad" type="error" count={qualityStats.bad.errors} />
-                        </div>
                       </TableCell>
                     </TableRow>
                   );
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
                     No player data available
                   </TableCell>
                 </TableRow>
@@ -283,19 +255,31 @@ export function Scoreboard() {
           {players.length > 0 && (
             <div className="mt-6 flex justify-center gap-8 text-center">
               <div>
-                <div className="text-sm text-muted-foreground">Total Players:</div>
+                <div className="text-sm text-muted-foreground">Players:</div>
                 <div className="text-2xl font-bold">{averageStats.totalPlayers}</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Avg Quality Score:</div>
-                <div className={`text-2xl font-bold ${getQualityScoreColor(averageStats.avgQualityScore)}`}>
-                  {averageStats.avgQualityScore >= 0 ? '+' : ''}{averageStats.avgQualityScore.toFixed(1)}
+                <div className="text-sm text-muted-foreground">Ø A:</div>
+                <div className={`text-2xl font-bold ${getAceColor(Math.round(averageStats.avgAces))}`}>
+                  {averageStats.avgAces.toFixed(1)}
                 </div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Top A/E Ratio:</div>
-                <div className={`text-2xl font-bold ${getAERatioColor(averageStats.topAERatio)}`}>
-                  {averageStats.topAERatio.toFixed(2)}
+                <div className="text-sm text-muted-foreground">Ø E:</div>
+                <div className={`text-2xl font-bold ${getErrorColor(Math.round(averageStats.avgErrors))}`}>
+                  {averageStats.avgErrors.toFixed(1)}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Ø A/E:</div>
+                <div className={`text-2xl font-bold ${getAERatioColor(averageStats.avgAERatio)}`}>
+                  {averageStats.avgAERatio.toFixed(2)}
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-muted-foreground">Ø QS:</div>
+                <div className={`text-2xl font-bold ${getQualityScoreColor(averageStats.avgQualityScore)}`}>
+                  {averageStats.avgQualityScore >= 0 ? '+' : ''}{averageStats.avgQualityScore.toFixed(1)}
                 </div>
               </div>
             </div>
