@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { Player, GameDay, Serve, ServeQuality, SortField, SortDirection, GameType, gameTypes as defaultGameTypes } from "../types";
 
@@ -354,11 +353,11 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
       const bStats = getPlayerStats(b.id, gameId, gameType);
       
       if (field === "serves") {
-        aValue = aStats.fails + aStats.aces;
-        bValue = bStats.fails + bStats.aces;
-      } else if (field === "fails") {
-        aValue = aStats.fails;
-        bValue = bStats.fails;
+        aValue = aStats.errors + aStats.aces;
+        bValue = bStats.errors + bStats.aces;
+      } else if (field === "errors") {
+        aValue = aStats.errors;
+        bValue = bStats.errors;
       } else {
         aValue = aStats.aces;
         bValue = bStats.aces;
