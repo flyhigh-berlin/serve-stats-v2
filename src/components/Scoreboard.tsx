@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -105,27 +104,27 @@ export function Scoreboard() {
   // Get color for A/E ratio
   const getAERatioColor = (ratio: number) => {
     if (ratio === 0) return "text-muted-foreground";
-    if (ratio > 1) return "ace-text";
-    if (ratio < 1) return "error-text";
+    if (ratio > 1) return "text-sky-600";
+    if (ratio < 1) return "text-destructive";
     return "text-muted-foreground";
   };
 
   // Get color for Quality Score
   const getQualityScoreColor = (score: number) => {
     if (score === 0) return "text-muted-foreground";
-    if (score > 0) return "ace-text";
-    if (score < 0) return "error-text";
+    if (score > 0) return "text-sky-600";
+    if (score < 0) return "text-destructive";
     return "text-muted-foreground";
   };
 
   // Get color for aces
   const getAceColor = (aces: number) => {
-    return aces > 0 ? "ace-text" : "text-muted-foreground";
+    return aces > 0 ? "text-sky-600" : "text-muted-foreground";
   };
 
   // Get color for errors
   const getErrorColor = (errors: number) => {
-    return errors > 0 ? "error-text" : "text-muted-foreground";
+    return errors > 0 ? "text-destructive" : "text-muted-foreground";
   };
 
   // Format value with proper sign display
@@ -157,7 +156,7 @@ export function Scoreboard() {
       );
       
       totalAces += stats.aces;
-      totalErrors += stats.fails;
+      totalErrors += stats.errors;
       
       // Calculate quality values for this player
       const qualityStats = calculateQualityStats(player.id);
@@ -255,8 +254,8 @@ export function Scoreboard() {
                     currentGameDay?.id, 
                     !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
                   );
-                  const isFirstPlace = index === 0 && (stats.fails + stats.aces) > 0;
-                  const aeRatio = calculateAERatio(stats.aces, stats.fails);
+                  const isFirstPlace = index === 0 && (stats.errors + stats.aces) > 0;
+                  const aeRatio = calculateAERatio(stats.aces, stats.errors);
                   const qualityScore = calculateQualityScore(player.id);
                   
                   return (
@@ -273,8 +272,8 @@ export function Scoreboard() {
                       <TableCell className={`text-center px-1 sm:px-4 text-xs sm:text-sm ${getAceColor(stats.aces)} ${getSortedColumnClass("aces")}`}>
                         {stats.aces}
                       </TableCell>
-                      <TableCell className={`text-center px-1 sm:px-4 text-xs sm:text-sm ${getErrorColor(stats.fails)} ${getSortedColumnClass("errors")}`}>
-                        {stats.fails}
+                      <TableCell className={`text-center px-1 sm:px-4 text-xs sm:text-sm ${getErrorColor(stats.errors)} ${getSortedColumnClass("errors")}`}>
+                        {stats.errors}
                       </TableCell>
                       <TableCell className={`text-center px-1 sm:px-4 text-xs sm:text-sm ${getSortedColumnClass("aeRatio")}`}>
                         <span className={getAERatioColor(aeRatio)}>

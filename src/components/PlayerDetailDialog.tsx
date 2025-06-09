@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Serve, ServeQuality, GameType } from "../types";
@@ -130,7 +131,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   
   // Helper to get quality color - use global ace/error colors
   const getQualityColor = (quality: ServeQuality, type: "fail" | "ace") => {
-    return type === "ace" ? "ace-bg" : "error-bg";
+    return type === "ace" ? "bg-sky-600" : "bg-destructive";
   };
   
   // Get quality icon based on quality and type
@@ -210,15 +211,15 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   // Color helpers for stats
   const getAERatioColor = (ratio: number) => {
     if (ratio === 0) return "text-muted-foreground";
-    if (ratio > 1) return "ace-text";
-    if (ratio < 1) return "error-text";
+    if (ratio > 1) return "text-sky-600";
+    if (ratio < 1) return "text-destructive";
     return "text-muted-foreground";
   };
   
   const getQualityScoreColor = (score: number) => {
     if (score === 0) return "text-muted-foreground";
-    if (score > 0) return "ace-text";
-    if (score < 0) return "error-text";
+    if (score > 0) return "text-sky-600";
+    if (score < 0) return "text-destructive";
     return "text-muted-foreground";
   };
   

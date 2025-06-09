@@ -48,7 +48,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
   
   // Helper to get quality color - use global ace/error colors
   const getQualityColor = (type: "fail" | "ace") => {
-    return type === "ace" ? "ace-bg" : "error-bg";
+    return type === "ace" ? "bg-sky-600" : "bg-destructive";
   };
   
   // Get quality icon based on quality and type
@@ -143,15 +143,15 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
   // Color helpers for stats
   const getAERatioColor = (ratio: number) => {
     if (ratio === 0) return "text-muted-foreground";
-    if (ratio > 1) return "ace-text";
-    if (ratio < 1) return "error-text";
+    if (ratio > 1) return "text-sky-600";
+    if (ratio < 1) return "text-destructive";
     return "text-muted-foreground";
   };
   
   const getQualityScoreColor = (score: number) => {
     if (score === 0) return "text-muted-foreground";
-    if (score > 0) return "ace-text";
-    if (score < 0) return "error-text";
+    if (score > 0) return "text-sky-600";
+    if (score < 0) return "text-destructive";
     return "text-muted-foreground";
   };
   
@@ -184,11 +184,11 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
               <div className="text-center">
                 <div className="font-medium text-muted-foreground">Total Aces</div>
-                <div className="text-lg font-bold ace-text">{totalAces}</div>
+                <div className="text-lg font-bold text-sky-600">{totalAces}</div>
               </div>
               <div className="text-center">
                 <div className="font-medium text-muted-foreground">Total Errors</div>
-                <div className="text-lg font-bold error-text">{totalErrors}</div>
+                <div className="text-lg font-bold text-destructive">{totalErrors}</div>
               </div>
             </div>
             
