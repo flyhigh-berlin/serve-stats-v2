@@ -46,9 +46,9 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
   
-  // Helper to get quality color - updated to use button colors
+  // Helper to get quality color - use global ace/error colors
   const getQualityColor = (type: "fail" | "ace") => {
-    return type === "ace" ? "bg-primary" : "bg-destructive";
+    return type === "ace" ? "ace-bg" : "error-bg";
   };
   
   // Get quality icon based on quality and type

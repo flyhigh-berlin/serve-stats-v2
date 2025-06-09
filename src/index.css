@@ -43,6 +43,12 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Global ace and error colors */
+    --ace-color: var(--primary);
+    --ace-foreground: var(--primary-foreground);
+    --error-color: var(--destructive);
+    --error-foreground: var(--destructive-foreground);
   }
 
   .dark {
@@ -81,6 +87,12 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Global ace and error colors for dark mode */
+    --ace-color: var(--primary);
+    --ace-foreground: var(--primary-foreground);
+    --error-color: var(--destructive);
+    --error-foreground: var(--destructive-foreground);
   }
 }
 
@@ -97,5 +109,22 @@
   /* Custom styles for stats display */
   .stat-change {
     @apply animate-pulse-score;
+  }
+
+  /* Global ace and error color utilities */
+  .ace-bg {
+    background-color: hsl(var(--ace-color));
+  }
+  
+  .ace-text {
+    color: hsl(var(--ace-color));
+  }
+  
+  .error-bg {
+    background-color: hsl(var(--error-color));
+  }
+  
+  .error-text {
+    color: hsl(var(--error-color));
   }
 }

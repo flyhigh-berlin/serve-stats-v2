@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Serve, ServeQuality, GameType } from "../types";
@@ -45,7 +46,9 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     removePlayer,
     getAllGameTypes,
     updatePlayerTags,
-    canRemoveTagFromPlayer
+    canRemoveTagFromPlayer,
+    getPlayerStats,
+    gameTypeFilter
   } = useVolleyball();
   const { toast } = useToast();
   
@@ -95,10 +98,40 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     serveCounts[serve.type].total++;
   });
   
-  // Helper to get quality color - updated to use button colors
+  // Get player stats for A/E ratio and quality score
+  const stats = getPlayerStats(
+    player.id, 
+    currentGameDay?.id, 
+    !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
+  );
+  
+  // Calculate A/E Ratio
+  const calculateAERatio = (aces: number, errors: number) => {
+    if (errors === 0) return aces;
+    return aces / errors;
+  };
+  
+  // Calculate Quality Score
+  const calculateQualityScore = () => {
+    const totalServes = Object.values(serveCounts).reduce((sum, type) => 
+      sum + type.good + type.neutral + type.bad, 0
+    );
+    
+    if (totalServes === 0) return 0;
+    
+    const score = (serveCounts.ace.good + serveCounts.fail.good) * 1 +
+                  (serveCounts.ace.neutral + serveCounts.fail.neutral) * 0 +
+                  (serveCounts.ace.bad + serveCounts.fail.bad) * (-1);
+    
+    return score / totalServes;
+  };
+  
+  const aeRatio = calculateAERatio(stats.aces, stats.fails);
+  const qualityScore = calculateQualityScore();
+  
+  // Helper to get quality color - use global ace/error colors
   const getQualityColor = (quality: ServeQuality, type: "fail" | "ace") => {
-    // Use consistent colors: blue for aces, red for errors
-    return type === "ace" ? "bg-primary" : "bg-destructive";
+    return type === "ace" ? "ace-bg" : "error-bg";
   };
   
   // Get quality icon based on quality and type
@@ -173,6 +206,27 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
         </div>
       </div>
     );
+  };
+  
+  // Color helpers for stats
+  const getAERatioColor = (ratio: number) => {
+    if (ratio === 0) return "text-muted-foreground";
+    if (ratio > 1) return "ace-text";
+    if (ratio < 1) return "error-text";
+    return "text-muted-foreground";
+  };
+  
+  const getQualityScoreColor = (score: number) => {
+    if (score === 0) return "text-muted-foreground";
+    if (score > 0) return "ace-text";
+    if (score < 0) return "error-text";
+    return "text-muted-foreground";
+  };
+  
+  const formatValue = (value: number, showSign: boolean = false) => {
+    if (value === 0) return "0";
+    if (showSign && value > 0) return `+${value.toFixed(1)}`;
+    return value.toFixed(showSign ? 1 : 2);
   };
   
   const handleSave = () => {
@@ -295,7 +349,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                 </div>
                 
                 <div>
-                  <h4 className="text-sm font-medium mb-1 text-left">Fails ({serveCounts.fail.total})</h4>
+                  <h4 className="text-sm font-medium mb-1 text-left">Errors ({serveCounts.fail.total})</h4>
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                       <SummaryIcon quality="good" type="fail" />
@@ -309,6 +363,23 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                       <SummaryIcon quality="bad" type="fail" />
                       <span className="text-sm">{serveCounts.fail.bad}</span>
                     </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* A/E Ratio and Quality Score */}
+              <div className="grid grid-cols-2 gap-4 mt-3">
+                <div>
+                  <h4 className="text-sm font-medium mb-1 text-left">A/E Ratio</h4>
+                  <div className={`text-lg font-bold ${getAERatioColor(aeRatio)}`}>
+                    {formatValue(aeRatio)}
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium mb-1 text-left">Quality Score</h4>
+                  <div className={`text-lg font-bold ${getQualityScoreColor(qualityScore)}`}>
+                    {formatValue(qualityScore, true)}
                   </div>
                 </div>
               </div>
@@ -397,7 +468,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                         <TableRow key={serve.id}>
                           <TableCell>
                             <Badge variant={serve.type === "fail" ? "destructive" : "default"}>
-                              {serve.type === "fail" ? "Fail" : "Ace"}
+                              {serve.type === "fail" ? "Error" : "Ace"}
                             </Badge>
                           </TableCell>
                           <TableCell>

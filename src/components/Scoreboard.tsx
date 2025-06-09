@@ -105,27 +105,27 @@ export function Scoreboard() {
   // Get color for A/E ratio
   const getAERatioColor = (ratio: number) => {
     if (ratio === 0) return "text-muted-foreground";
-    if (ratio > 1) return "text-sky-600"; // Same as ace button color
-    if (ratio < 1) return "text-destructive"; // Same as error button color
-    return "text-muted-foreground"; // Grey for ratio = 1
+    if (ratio > 1) return "ace-text";
+    if (ratio < 1) return "error-text";
+    return "text-muted-foreground";
   };
 
   // Get color for Quality Score
   const getQualityScoreColor = (score: number) => {
     if (score === 0) return "text-muted-foreground";
-    if (score > 0) return "text-sky-600"; // Same as ace button color
-    if (score < 0) return "text-destructive"; // Same as error button color
-    return "text-muted-foreground"; // Grey for score = 0
+    if (score > 0) return "ace-text";
+    if (score < 0) return "error-text";
+    return "text-muted-foreground";
   };
 
-  // Get color for aces (sky blue unless 0)
+  // Get color for aces
   const getAceColor = (aces: number) => {
-    return aces > 0 ? "text-sky-600" : "text-muted-foreground";
+    return aces > 0 ? "ace-text" : "text-muted-foreground";
   };
 
-  // Get color for errors (destructive unless 0)
+  // Get color for errors
   const getErrorColor = (errors: number) => {
-    return errors > 0 ? "text-destructive" : "text-muted-foreground";
+    return errors > 0 ? "error-text" : "text-muted-foreground";
   };
 
   // Format value with proper sign display
@@ -230,9 +230,9 @@ export function Scoreboard() {
                     A {sortField === "aces" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
-                <TableHead className="cursor-pointer text-center w-[15%] px-1 sm:px-4" onClick={() => handleSort("fails")}>
-                  <Button variant="ghost" size="sm" className={`p-0 text-xs sm:text-sm h-auto ${getSortedColumnClass("fails")}`}>
-                    E {sortField === "fails" && (sortDirection === "asc" ? "↑" : "↓")}
+                <TableHead className="cursor-pointer text-center w-[15%] px-1 sm:px-4" onClick={() => handleSort("errors")}>
+                  <Button variant="ghost" size="sm" className={`p-0 text-xs sm:text-sm h-auto ${getSortedColumnClass("errors")}`}>
+                    E {sortField === "errors" && (sortDirection === "asc" ? "↑" : "↓")}
                   </Button>
                 </TableHead>
                 <TableHead className="cursor-pointer text-center w-[17.5%] px-1 sm:px-4" onClick={() => handleSort("aeRatio")}>
@@ -273,7 +273,7 @@ export function Scoreboard() {
                       <TableCell className={`text-center px-1 sm:px-4 text-xs sm:text-sm ${getAceColor(stats.aces)} ${getSortedColumnClass("aces")}`}>
                         {stats.aces}
                       </TableCell>
-                      <TableCell className={`text-center px-1 sm:px-4 text-xs sm:text-sm ${getErrorColor(stats.fails)} ${getSortedColumnClass("fails")}`}>
+                      <TableCell className={`text-center px-1 sm:px-4 text-xs sm:text-sm ${getErrorColor(stats.fails)} ${getSortedColumnClass("errors")}`}>
                         {stats.fails}
                       </TableCell>
                       <TableCell className={`text-center px-1 sm:px-4 text-xs sm:text-sm ${getSortedColumnClass("aeRatio")}`}>
