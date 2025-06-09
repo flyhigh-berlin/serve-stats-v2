@@ -44,9 +44,9 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Global ace and error colors */
-    --ace-color: var(--primary);
-    --ace-foreground: var(--primary-foreground);
+    /* Global ace and error colors - using sky-600 for aces and destructive for errors */
+    --ace-color: 208 100% 47%;
+    --ace-foreground: 210 40% 98%;
     --error-color: var(--destructive);
     --error-foreground: var(--destructive-foreground);
   }
@@ -89,8 +89,8 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
 
     /* Global ace and error colors for dark mode */
-    --ace-color: var(--primary);
-    --ace-foreground: var(--primary-foreground);
+    --ace-color: 208 100% 47%;
+    --ace-foreground: 210 40% 98%;
     --error-color: var(--destructive);
     --error-foreground: var(--destructive-foreground);
   }

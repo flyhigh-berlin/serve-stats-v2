@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Serve, ServeQuality, GameType } from "../types";
@@ -126,7 +125,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     return score / totalServes;
   };
   
-  const aeRatio = calculateAERatio(stats.aces, stats.fails);
+  const aeRatio = calculateAERatio(stats.aces, stats.errors);
   const qualityScore = calculateQualityScore();
   
   // Helper to get quality color - use global ace/error colors

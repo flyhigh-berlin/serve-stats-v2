@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Player, ServeQuality } from "../types";
 import { useVolleyball } from "../context/VolleyballContext";
@@ -8,17 +9,20 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PlayerDetailDialog } from "./PlayerDetailDialog";
 import { Plus, Minus, X, Circle, Info } from "lucide-react";
+
 interface PlayerCardProps {
   player: Player;
   gameId?: string;
 }
+
 export function PlayerCard({
   player,
   gameId
 }: PlayerCardProps) {
   const {
     addServe,
-    getPlayerStats
+    getPlayerStats,
+    players
   } = useVolleyball();
   const [activeType, setActiveType] = useState<"error" | "ace" | null>(null);
   const [animatingError, setAnimatingError] = useState(false);
@@ -147,7 +151,7 @@ export function PlayerCard({
 
   // Helper to get badge color for serve quality
   const getQualityColor = (type: "error" | "ace") => {
-    return type === "ace" ? "bg-primary" : "bg-destructive";
+    return type === "ace" ? "ace-bg" : "error-bg";
   };
 
   // Quality icon component for overview stats - consistent sizing
@@ -218,7 +222,7 @@ export function PlayerCard({
       {/* Good quality */}
       <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent" onClick={() => handleServeClick(type, "good")}>
         <div className="flex items-center gap-3 flex-1">
-          <div className={`flex items-center justify-center ${type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"}`}>
+          <div className={`flex items-center justify-center ${type === "ace" ? "ace-bg w-8 h-8 rounded-full" : "error-bg w-6 h-6 transform rotate-45"}`}>
             <Plus className={`h-3 w-3 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{
             strokeWidth: 5
           }} />
@@ -247,7 +251,7 @@ export function PlayerCard({
       {/* Neutral quality */}
       <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent" onClick={() => handleServeClick(type, "neutral")}>
         <div className="flex items-center gap-3 flex-1">
-          <div className={`flex items-center justify-center ${type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"}`}>
+          <div className={`flex items-center justify-center ${type === "ace" ? "ace-bg w-8 h-8 rounded-full" : "error-bg w-6 h-6 transform rotate-45"}`}>
             <Circle className={`h-1 w-1 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{
             strokeWidth: 0,
             fill: 'white'
@@ -277,7 +281,7 @@ export function PlayerCard({
       {/* Bad quality */}
       <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent" onClick={() => handleServeClick(type, "bad")}>
         <div className="flex items-center gap-3 flex-1">
-          <div className={`flex items-center justify-center ${type === "ace" ? "bg-primary w-8 h-8 rounded-full" : "bg-destructive w-6 h-6 transform rotate-45"}`}>
+          <div className={`flex items-center justify-center ${type === "ace" ? "ace-bg w-8 h-8 rounded-full" : "error-bg w-6 h-6 transform rotate-45"}`}>
             <Minus className={`h-3 w-3 text-white font-bold ${type === "ace" ? "" : "transform -rotate-45"}`} style={{
             strokeWidth: 5
           }} />
@@ -303,10 +307,9 @@ export function PlayerCard({
         </div>
       </Button>
     </div>;
-  const {
-    players
-  } = useVolleyball();
+
   const qualityStats = calculateQualityStats(player.id);
+  
   return <>
       <Card className="w-full">
         <CardContent className="p-3">
@@ -318,12 +321,12 @@ export function PlayerCard({
             <div className="flex items-center gap-3 flex-shrink-0 bg-gradient-to-r from-muted/30 to-muted/60 rounded-lg px-3 py-2 border shadow-sm">
               <span className="text-sm flex items-center gap-1.5">
                 <span className="text-muted-foreground font-medium">A:</span>
-                <span className={`font-bold text-primary ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
+                <span className={`font-bold ace-text ${animatingAce ? "stat-change" : ""}`}>{stats.aces}</span>
               </span>
               <div className="w-px h-4 bg-border"></div>
               <span className="text-sm flex items-center gap-1.5">
-                <span className="font-medium text-xl text-rose-500">E:</span>
-                <span className={`font-bold text-destructive ${animatingError ? "stat-change" : ""}`}>{stats.fails}</span>
+                <span className="font-medium text-xl error-text">E:</span>
+                <span className={`font-bold error-text ${animatingError ? "stat-change" : ""}`}>{stats.errors}</span>
               </span>
             </div>
           </div>
@@ -344,7 +347,7 @@ export function PlayerCard({
           <div className="flex gap-2">
             <Popover open={acePopoverOpen} onOpenChange={setAcePopoverOpen}>
               <PopoverTrigger asChild>
-                <Button variant="default" size="lg" onClick={() => handleButtonClick("ace")} className="flex-1 h-12 bg-sky-600 hover:bg-sky-500">
+                <Button variant="default" size="lg" onClick={() => handleButtonClick("ace")} className="flex-1 h-12 ace-bg hover:ace-bg hover:opacity-90">
                   + Ace
                 </Button>
               </PopoverTrigger>

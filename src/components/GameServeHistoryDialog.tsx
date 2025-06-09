@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Circle, Minus } from "lucide-react";
+import { Plus, Circle, Minus, Crown } from "lucide-react";
 import { ServeQuality } from "../types";
 
 interface GameServeHistoryDialogProps {
@@ -21,7 +21,7 @@ interface GameServeHistoryDialogProps {
 }
 
 export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHistoryDialogProps) {
-  const { players, gameDays, getAllGameTypes } = useVolleyball();
+  const { players, gameDays, getAllGameTypes, getPlayerStats } = useVolleyball();
   
   if (!gameId) return null;
   
@@ -93,6 +93,74 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
   const totalErrors = sortedServes.filter(s => s.type === "fail").length;
   const totalAces = sortedServes.filter(s => s.type === "ace").length;
   
+  // Get players who participated in this game
+  const gamePlayerIds = [...new Set(gameServes.map(serve => serve.playerId))];
+  const gamePlayers = players.filter(p => gamePlayerIds.includes(p.id));
+  
+  // Calculate stats for each player in this game and rank them
+  const playerStatsWithRanking = gamePlayers.map(player => {
+    const stats = getPlayerStats(player.id, gameId);
+    
+    // Calculate A/E Ratio
+    const aeRatio = stats.errors === 0 ? stats.aces : stats.aces / stats.errors;
+    
+    // Calculate Quality Score
+    const playerServes = players.find(p => p.id === player.id)?.serves.filter(s => s.gameId === gameId) || [];
+    const totalPlayerServes = playerServes.length;
+    
+    let qualityScore = 0;
+    if (totalPlayerServes > 0) {
+      const score = playerServes.reduce((sum, serve) => {
+        const qualityValue = serve.quality === "good" ? 1 : serve.quality === "neutral" ? 0 : -1;
+        return sum + qualityValue;
+      }, 0);
+      qualityScore = score / totalPlayerServes;
+    }
+    
+    return {
+      ...player,
+      stats,
+      aeRatio,
+      qualityScore
+    };
+  });
+  
+  // Sort players by A/E ratio (descending), then by Quality Score (descending)
+  const sortedPlayers = [...playerStatsWithRanking].sort((a, b) => {
+    if (b.aeRatio !== a.aeRatio) return b.aeRatio - a.aeRatio;
+    return b.qualityScore - a.qualityScore;
+  });
+  
+  // Calculate averages
+  const avgAERatio = playerStatsWithRanking.length > 0 
+    ? playerStatsWithRanking.reduce((sum, p) => sum + p.aeRatio, 0) / playerStatsWithRanking.length
+    : 0;
+  
+  const avgQualityScore = playerStatsWithRanking.length > 0
+    ? playerStatsWithRanking.reduce((sum, p) => sum + p.qualityScore, 0) / playerStatsWithRanking.length
+    : 0;
+  
+  // Color helpers for stats
+  const getAERatioColor = (ratio: number) => {
+    if (ratio === 0) return "text-muted-foreground";
+    if (ratio > 1) return "ace-text";
+    if (ratio < 1) return "error-text";
+    return "text-muted-foreground";
+  };
+  
+  const getQualityScoreColor = (score: number) => {
+    if (score === 0) return "text-muted-foreground";
+    if (score > 0) return "ace-text";
+    if (score < 0) return "error-text";
+    return "text-muted-foreground";
+  };
+  
+  const formatValue = (value: number, showSign: boolean = false) => {
+    if (value === 0) return "0";
+    if (showSign && value > 0) return `+${value.toFixed(1)}`;
+    return value.toFixed(showSign ? 1 : 2);
+  };
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px]">
@@ -107,10 +175,37 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </span>
           </DialogTitle>
           
-          <div className="flex gap-4 text-sm pt-2">
-            <span>Total Serves: <strong>{totalServes}</strong></span>
-            <span>Errors: <strong>{totalErrors}</strong></span>
-            <span>Aces: <strong>{totalAces}</strong></span>
+          {/* Game Stats Overview */}
+          <div className="space-y-3 pt-2">
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="text-center">
+                <div className="font-medium text-muted-foreground">Total Serves</div>
+                <div className="text-lg font-bold">{totalServes}</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-muted-foreground">Total Aces</div>
+                <div className="text-lg font-bold ace-text">{totalAces}</div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-muted-foreground">Total Errors</div>
+                <div className="text-lg font-bold error-text">{totalErrors}</div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="text-center">
+                <div className="font-medium text-muted-foreground">Avg A/E Ratio</div>
+                <div className={`text-lg font-bold ${getAERatioColor(avgAERatio)}`}>
+                  {formatValue(avgAERatio)}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="font-medium text-muted-foreground">Avg QS</div>
+                <div className={`text-lg font-bold ${getQualityScoreColor(avgQualityScore)}`}>
+                  {formatValue(avgQualityScore, true)}
+                </div>
+              </div>
+            </div>
           </div>
         </DialogHeader>
         
@@ -121,9 +216,41 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </div>
           )}
           
+          {/* Player Rankings */}
+          {sortedPlayers.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Player Rankings</h4>
+              <div className="space-y-1">
+                {sortedPlayers.map((player, index) => (
+                  <div key={player.id} className="flex items-center justify-between p-2 rounded border bg-muted/20">
+                    <div className="flex items-center gap-2">
+                      {index === 0 && (
+                        <Crown className="h-4 w-4 text-yellow-500" />
+                      )}
+                      <span className="font-medium">{player.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        A:{player.stats.aces} E:{player.stats.errors}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className={getAERatioColor(player.aeRatio)}>
+                        {formatValue(player.aeRatio)}
+                      </span>
+                      <span className={getQualityScoreColor(player.qualityScore)}>
+                        {formatValue(player.qualityScore, true)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Serve History */}
           <div className="space-y-2">
+            <h4 className="text-sm font-medium">Serve History</h4>
             {sortedServes.length > 0 ? (
-              <div className="max-h-[400px] overflow-y-auto border rounded-md">
+              <div className="max-h-[300px] overflow-y-auto border rounded-md">
                 <Table>
                   <TableHeader>
                     <TableRow>
