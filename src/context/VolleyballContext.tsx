@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { Player, GameDay, Serve, ServeQuality, SortField, SortDirection, GameType, gameTypes as defaultGameTypes } from "../types";
 
@@ -33,7 +34,7 @@ interface VolleyballContextType {
   removeServe: (playerId: string, serveId: string) => void;
   
   // Helper functions
-  getPlayerStats: (playerId: string, gameId?: string, gameType?: GameType | string) => { errors: number, aces: number };
+  getPlayerStats: (playerId: string, gameId?: string, gameType?: GameType | string) => { fails: number, aces: number };
   getGameDayServes: (gameId: string) => Serve[];
   getFilteredGameDays: () => GameDay[];
   getFilteredPlayers: () => Player[];
@@ -308,7 +309,7 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   // Get player stats for all games, a specific game day, or filtered by game type
   const getPlayerStats = (playerId: string, gameId?: string, gameType?: GameType) => {
     const player = players.find(p => p.id === playerId);
-    if (!player) return { errors: 0, aces: 0 };
+    if (!player) return { fails: 0, aces: 0 };
     
     let relevantServes = player.serves;
 
@@ -322,13 +323,13 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
       relevantServes = player.serves.filter(serve => gameIds.includes(serve.gameId));
     } else if (!gameId && !gameType) {
       // Use total stats
-      return { errors: player.totalErrors, aces: player.totalAces };
+      return { fails: player.totalFails, aces: player.totalAces };
     }
     
-    const errors = relevantServes.filter(serve => serve.type === "fail").length;
+    const fails = relevantServes.filter(serve => serve.type === "fail").length;
     const aces = relevantServes.filter(serve => serve.type === "ace").length;
     
-    return { errors, aces };
+    return { fails, aces };
   };
 
   // Get all serves for a specific game day
@@ -353,11 +354,11 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
       const bStats = getPlayerStats(b.id, gameId, gameType);
       
       if (field === "serves") {
-        aValue = aStats.errors + aStats.aces;
-        bValue = bStats.errors + bStats.aces;
-      } else if (field === "errors") {
-        aValue = aStats.errors;
-        bValue = bStats.errors;
+        aValue = aStats.fails + aStats.aces;
+        bValue = bStats.fails + bStats.aces;
+      } else if (field === "fails") {
+        aValue = aStats.fails;
+        bValue = bStats.fails;
       } else {
         aValue = aStats.aces;
         bValue = bStats.aces;
