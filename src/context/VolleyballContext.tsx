@@ -33,7 +33,7 @@ interface VolleyballContextType {
   removeServe: (playerId: string, serveId: string) => void;
   
   // Helper functions
-  getPlayerStats: (playerId: string, gameId?: string, gameType?: GameType | string) => { fails: number, aces: number };
+  getPlayerStats: (playerId: string, gameId?: string, gameType?: GameType | string) => { errors: number, aces: number };
   getGameDayServes: (gameId: string) => Serve[];
   getFilteredGameDays: () => GameDay[];
   getFilteredPlayers: () => Player[];
@@ -308,7 +308,7 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
   // Get player stats for all games, a specific game day, or filtered by game type
   const getPlayerStats = (playerId: string, gameId?: string, gameType?: GameType) => {
     const player = players.find(p => p.id === playerId);
-    if (!player) return { fails: 0, aces: 0 };
+    if (!player) return { errors: 0, aces: 0 };
     
     let relevantServes = player.serves;
 
@@ -322,13 +322,13 @@ export function VolleyballProvider({ children }: { children: ReactNode }) {
       relevantServes = player.serves.filter(serve => gameIds.includes(serve.gameId));
     } else if (!gameId && !gameType) {
       // Use total stats
-      return { fails: player.totalFails, aces: player.totalAces };
+      return { errors: player.totalErrors, aces: player.totalAces };
     }
     
-    const fails = relevantServes.filter(serve => serve.type === "fail").length;
+    const errors = relevantServes.filter(serve => serve.type === "fail").length;
     const aces = relevantServes.filter(serve => serve.type === "ace").length;
     
-    return { fails, aces };
+    return { errors, aces };
   };
 
   // Get all serves for a specific game day
