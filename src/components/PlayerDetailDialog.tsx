@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Serve, ServeQuality, GameType } from "../types";
@@ -177,19 +176,19 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     
     // Define the icon based on quality
     let Icon = Circle;
-    let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
+    let iconStyle = { strokeWidth: 5, fill: quality === "neutral" ? 'white' : 'none' };
     let iconSize = "h-2 w-2";
     
     if (quality === "good") {
       Icon = Plus;
-      iconStyle = { strokeWidth: 4, fill: 'none' };
+      iconStyle = { strokeWidth: 5, fill: 'none' };
       iconSize = "h-2 w-2";
     } else if (quality === "bad") {
       Icon = Minus;
-      iconStyle = { strokeWidth: 4, fill: 'none' };
+      iconStyle = { strokeWidth: 5, fill: 'none' };
       iconSize = "h-2 w-2";
     } else {
-      // neutral - filled circle/dot with consistent size
+      // neutral - filled circle/dot with bolder appearance
       iconSize = "h-1 w-1";
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }

@@ -170,21 +170,21 @@ export function PlayerCard({
     // Define the icon based on quality - using consistent sizes
     let Icon = Circle;
     let iconStyle = {
-      strokeWidth: 4,
+      strokeWidth: 5,
       fill: quality === "neutral" ? 'white' : 'none'
     };
     let iconSize = "h-2 w-2";
     if (quality === "good") {
       Icon = Plus;
       iconStyle = {
-        strokeWidth: 4,
+        strokeWidth: 5,
         fill: 'none'
       };
       iconSize = "h-2 w-2";
     } else if (quality === "bad") {
       Icon = Minus;
       iconStyle = {
-        strokeWidth: 4,
+        strokeWidth: 5,
         fill: 'none'
       };
       iconSize = "h-2 w-2";
