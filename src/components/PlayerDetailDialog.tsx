@@ -131,7 +131,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   
   // Helper to get quality color - use global ace/error colors
   const getQualityColor = (quality: ServeQuality, type: "fail" | "ace") => {
-    return type === "ace" ? "bg-sky-600" : "bg-destructive";
+    return type === "ace" ? "ace-bg" : "error-bg";
   };
   
   // Get quality icon based on quality and type
@@ -211,15 +211,15 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   // Color helpers for stats
   const getAERatioColor = (ratio: number) => {
     if (ratio === 0) return "text-muted-foreground";
-    if (ratio > 1) return "text-sky-600";
-    if (ratio < 1) return "text-destructive";
+    if (ratio > 1) return "ace-text";
+    if (ratio < 1) return "error-text";
     return "text-muted-foreground";
   };
   
   const getQualityScoreColor = (score: number) => {
     if (score === 0) return "text-muted-foreground";
-    if (score > 0) return "text-sky-600";
-    if (score < 0) return "text-destructive";
+    if (score > 0) return "ace-text";
+    if (score < 0) return "error-text";
     return "text-muted-foreground";
   };
   
@@ -459,7 +459,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                       <TableRow>
                         <TableHead>Type</TableHead>
                         <TableHead>Quality</TableHead>
-                        <TableHead>Time</TableHead>
+                        <TableHead>Date</TableHead>
                         <TableHead className="w-[50px]">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -467,7 +467,10 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                       {sortedServes.map((serve) => (
                         <TableRow key={serve.id}>
                           <TableCell>
-                            <Badge variant={serve.type === "fail" ? "destructive" : "default"}>
+                            <Badge 
+                              variant={serve.type === "fail" ? "destructive" : "default"}
+                              className={`${serve.type === "ace" ? "ace-bg text-white" : ""}`}
+                            >
                               {serve.type === "fail" ? "Error" : "Ace"}
                             </Badge>
                           </TableCell>
@@ -475,7 +478,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                             <QualityIcon quality={serve.quality} type={serve.type} />
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
-                            {format(new Date(serve.timestamp), "MM.dd.yy")}
+                            {format(new Date(serve.timestamp), "dd.MM")}
                           </TableCell>
                           <TableCell>
                             <Button

@@ -89,9 +89,8 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     );
   };
 
-  // Quality overview icon for stats
+  // Quality overview icon for stats - always show, even with count 0
   const QualityOverviewIcon = ({ quality, type, count }: { quality: ServeQuality, type: "fail" | "ace", count: number }) => {
-    if (count === 0) return null;
     const isCircle = type === "ace";
 
     let Icon = Circle;
@@ -247,14 +246,21 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
             </div>
             
-            {/* Quality Breakdown */}
-            <div className="flex flex-wrap gap-3 items-center justify-center p-3 bg-muted/30 rounded-md">
-              <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
-              <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
-              <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
-              <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
-              <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
-              <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+            {/* Quality Breakdown - Separated Aces and Errors */}
+            <div className="flex justify-between items-center p-3 bg-muted/30 rounded-md">
+              {/* Ace icons on the left */}
+              <div className="flex gap-2 items-center">
+                <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
+                <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
+                <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
+              </div>
+              
+              {/* Error icons on the right */}
+              <div className="flex gap-2 items-center">
+                <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
+                <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
+                <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+              </div>
             </div>
           </div>
         </DialogHeader>
@@ -318,7 +324,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Serve History</h4>
               {sortedServes.length > 0 ? (
-                <div className="border rounded-md">
+                <div className="border rounded-md max-h-[300px] overflow-y-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -335,7 +341,10 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                             {serve.playerName}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={serve.type === "fail" ? "destructive" : "default"} className="text-xs">
+                            <Badge 
+                              variant={serve.type === "fail" ? "destructive" : "default"} 
+                              className={`text-xs ${serve.type === "ace" ? "ace-bg text-white" : ""}`}
+                            >
                               {serve.type === "fail" ? "Error" : "Ace"}
                             </Badge>
                           </TableCell>
@@ -343,7 +352,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                             <QualityIcon quality={serve.quality} type={serve.type} />
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
-                            {format(new Date(serve.timestamp), "HH:mm:ss")}
+                            {format(new Date(serve.timestamp), "HH:mm")}
                           </TableCell>
                         </TableRow>
                       ))}
