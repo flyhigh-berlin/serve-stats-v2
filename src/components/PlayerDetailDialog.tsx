@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { Serve, ServeQuality, GameType } from "../types";
@@ -469,7 +468,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
                           <TableCell>
                             <Badge 
                               variant={serve.type === "fail" ? "destructive" : "default"}
-                              className={`${serve.type === "ace" ? "ace-bg text-white" : ""}`}
+                              className={`${serve.type === "ace" ? "ace-bg text-white border-0" : "error-bg text-white border-0"}`}
                             >
                               {serve.type === "fail" ? "Error" : "Ace"}
                             </Badge>

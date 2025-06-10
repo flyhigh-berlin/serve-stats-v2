@@ -246,21 +246,14 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
             </div>
             
-            {/* Quality Breakdown - Separated Aces and Errors */}
+            {/* Quality Breakdown - Distributed across entire line */}
             <div className="flex justify-between items-center p-3 bg-muted/30 rounded-md">
-              {/* Ace icons on the left */}
-              <div className="flex gap-2 items-center">
-                <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
-                <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
-                <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
-              </div>
-              
-              {/* Error icons on the right */}
-              <div className="flex gap-2 items-center">
-                <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
-                <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
-                <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
-              </div>
+              <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
+              <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
+              <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
+              <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
+              <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
+              <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
             </div>
           </div>
         </DialogHeader>
@@ -276,25 +269,17 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             {/* Player Rankings - Top player for each stat */}
             {gamePlayers.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">Top Performers</h4>
-                <div className="grid grid-cols-4 gap-2 text-center text-xs">
-                  <div className="font-medium text-muted-foreground">
-                    <Crown className="h-3 w-3 mx-auto mb-1 text-yellow-500" />
-                    Aces
-                  </div>
-                  <div className="font-medium text-muted-foreground">
-                    <Crown className="h-3 w-3 mx-auto mb-1 text-yellow-500" />
-                    Errors
-                  </div>
-                  <div className="font-medium text-muted-foreground">
-                    <Crown className="h-3 w-3 mx-auto mb-1 text-yellow-500" />
-                    A/E
-                  </div>
-                  <div className="font-medium text-muted-foreground">
-                    <Crown className="h-3 w-3 mx-auto mb-1 text-yellow-500" />
-                    QS
-                  </div>
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-medium">Top Performers</h4>
+                  <Crown className="h-3 w-3 text-yellow-500" />
                 </div>
+                <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                  <div className="font-medium text-muted-foreground">Aces</div>
+                  <div className="font-medium text-muted-foreground">Errors</div>
+                  <div className="font-medium text-muted-foreground">A/E</div>
+                  <div className="font-medium text-muted-foreground">QS</div>
+                </div>
+                <hr className="border-muted" />
                 <div className="grid grid-cols-4 gap-2 text-center text-xs p-2 rounded border bg-muted/20">
                   <div className="truncate">
                     <div className="font-medium truncate">{topPlayerAces?.name || "-"}</div>
@@ -343,7 +328,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                           <TableCell>
                             <Badge 
                               variant={serve.type === "fail" ? "destructive" : "default"} 
-                              className={`text-xs ${serve.type === "ace" ? "ace-bg text-white" : ""}`}
+                              className={`text-xs ${serve.type === "ace" ? "ace-bg text-white border-0" : "error-bg text-white border-0"}`}
                             >
                               {serve.type === "fail" ? "Error" : "Ace"}
                             </Badge>

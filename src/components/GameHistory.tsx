@@ -13,7 +13,7 @@ export function GameHistory() {
     currentGameDay, 
     gameTypeFilter, 
     getAllGameTypes,
-    gameTypes 
+    getPlayerStats
   } = useVolleyball();
   
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
@@ -43,20 +43,78 @@ export function GameHistory() {
 
   // Calculate game stats
   const calculateGameStats = (gameId: string) => {
-    let totalServes = 0;
-    let totalFails = 0;
+    let totalErrors = 0;
     let totalAces = 0;
 
-    players.forEach(player => {
-      const gameServes = player.serves.filter(serve => serve.gameId === gameId);
-      gameServes.forEach(serve => {
-        totalServes++;
-        if (serve.type === "fail") totalFails++;
-        if (serve.type === "ace") totalAces++;
-      });
+    // Get players who participated in this game
+    const gamePlayerIds = [...new Set(players.flatMap(player => 
+      player.serves
+        .filter(serve => serve.gameId === gameId)
+        .map(() => player.id)
+    ))];
+    
+    const gamePlayers = players.filter(p => gamePlayerIds.includes(p.id));
+    
+    // Calculate stats for each player in this game
+    const playerStats = gamePlayers.map(player => {
+      const stats = getPlayerStats(player.id, gameId);
+      
+      totalAces += stats.aces;
+      totalErrors += stats.errors;
+      
+      // Calculate A/E Ratio
+      const aeRatio = stats.errors === 0 ? stats.aces : stats.aces / stats.errors;
+      
+      // Calculate Quality Score
+      const playerServes = players.find(p => p.id === player.id)?.serves.filter(s => s.gameId === gameId) || [];
+      const totalPlayerServes = playerServes.length;
+      
+      let qualityScore = 0;
+      if (totalPlayerServes > 0) {
+        const score = playerServes.reduce((sum, serve) => {
+          const qualityValue = serve.quality === "good" ? 1 : serve.quality === "neutral" ? 0 : -1;
+          return sum + qualityValue;
+        }, 0);
+        qualityScore = score / totalPlayerServes;
+      }
+      
+      return {
+        aeRatio,
+        qualityScore
+      };
     });
+    
+    // Calculate averages
+    const avgAERatio = playerStats.length > 0 
+      ? playerStats.reduce((sum, p) => sum + p.aeRatio, 0) / playerStats.length
+      : 0;
+    
+    const avgQualityScore = playerStats.length > 0
+      ? playerStats.reduce((sum, p) => sum + p.qualityScore, 0) / playerStats.length
+      : 0;
 
-    return { totalServes, totalFails, totalAces };
+    return { totalErrors, totalAces, avgAERatio, avgQualityScore };
+  };
+
+  // Color helpers for stats
+  const getAERatioColor = (ratio: number) => {
+    if (ratio === 0) return "text-muted-foreground";
+    if (ratio > 1) return "ace-text";
+    if (ratio < 1) return "error-text";
+    return "text-muted-foreground";
+  };
+  
+  const getQualityScoreColor = (score: number) => {
+    if (score === 0) return "text-muted-foreground";
+    if (score > 0) return "ace-text";
+    if (score < 0) return "error-text";
+    return "text-muted-foreground";
+  };
+  
+  const formatValue = (value: number, showSign: boolean = false) => {
+    if (value === 0) return "0";
+    if (showSign && value > 0) return `+${value.toFixed(1)}`;
+    return value.toFixed(showSign ? 1 : 2);
   };
 
   return (
@@ -105,9 +163,10 @@ export function GameHistory() {
                     )}
                     
                     <div className="flex gap-2 sm:gap-4 text-xs sm:text-sm flex-wrap">
-                      <span>Total: <strong>{stats.totalServes}</strong></span>
-                      <span>Errors: <strong>{stats.totalFails}</strong></span>
-                      <span>Aces: <strong>{stats.totalAces}</strong></span>
+                      <span>Aces: <strong className="ace-text">{stats.totalAces}</strong></span>
+                      <span>Errors: <strong className="error-text">{stats.totalErrors}</strong></span>
+                      <span>A/E: <strong className={getAERatioColor(stats.avgAERatio)}>{formatValue(stats.avgAERatio)}</strong></span>
+                      <span>QS: <strong className={getQualityScoreColor(stats.avgQualityScore)}>{formatValue(stats.avgQualityScore, true)}</strong></span>
                     </div>
                   </div>
                 );
