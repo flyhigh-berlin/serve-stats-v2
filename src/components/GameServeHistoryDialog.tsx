@@ -326,12 +326,11 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                             {serve.playerName}
                           </TableCell>
                           <TableCell>
-                            <Badge 
-                              variant={serve.type === "fail" ? "destructive" : "default"} 
-                              className={`text-xs ${serve.type === "ace" ? "ace-bg text-white border-0" : "error-bg text-white border-0"}`}
+                            <div 
+                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white ${serve.type === "ace" ? "ace-bg" : "error-bg"}`}
                             >
                               {serve.type === "fail" ? "Error" : "Ace"}
-                            </Badge>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <QualityIcon quality={serve.quality} type={serve.type} />
