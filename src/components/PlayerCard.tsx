@@ -251,10 +251,7 @@ export function PlayerCard({
       <Button variant="outline" className="w-full justify-start gap-3 h-auto py-3 bg-background hover:bg-accent" onClick={() => handleServeClick(type, "neutral")}>
         <div className="flex items-center gap-3 flex-1">
           <div className={`flex items-center justify-center ${type === "ace" ? "ace-bg w-8 h-8 rounded-full" : "error-bg w-6 h-6 transform rotate-45"}`}>
-            <Circle className={`h-0.5 w-0.5 text-white ${type === "ace" ? "" : "transform -rotate-45"}`} style={{
-            strokeWidth: 0,
-            fill: 'white'
-          }} />
+            <div className={`h-0.5 w-0.5 bg-white rounded-full ${type === "ace" ? "" : "transform -rotate-45"}`} />
           </div>
           <span className={type === "error" ? "ml-1" : ""}>Neutral</span>
           <TooltipProvider>
