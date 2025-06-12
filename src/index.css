@@ -108,7 +108,7 @@
 
   /* Custom styles for stats display */
   .stat-change {
-    @apply animate-pulse-score;
+    @apply animate-pulse;
   }
 
   /* Global ace and error color utilities */
@@ -126,5 +126,19 @@
   
   .error-text {
     color: hsl(var(--error-color));
+  }
+
+  /* Table improvements */
+  .table-striped tbody tr:nth-child(even) {
+    @apply bg-muted/30;
+  }
+
+  /* Leader highlight */
+  .leader-row {
+    @apply bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200;
+  }
+
+  .dark .leader-row {
+    @apply bg-gradient-to-r from-yellow-950/20 to-amber-950/20 border-yellow-800/30;
   }
 }
