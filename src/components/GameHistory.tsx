@@ -112,9 +112,9 @@ export function GameHistory() {
   };
   
   const formatValue = (value: number, showSign: boolean = false) => {
-    if (value === 0) return "0.00";
-    if (showSign && value > 0) return `+${value.toFixed(2)}`;
-    return value.toFixed(2);
+    if (value === 0) return "0";
+    if (showSign && value > 0) return `+${value.toFixed(1)}`;
+    return value.toFixed(showSign ? 1 : 2);
   };
 
   return (
@@ -133,7 +133,7 @@ export function GameHistory() {
                 return (
                   <div 
                     key={game.id} 
-                    className={`p-3 sm:p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-all duration-200 shadow-sm hover:shadow-md ${isSelected ? 'bg-muted border-primary ring-1 ring-primary/20' : ''}`}
+                    className={`p-3 sm:p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${isSelected ? 'bg-muted border-primary' : ''}`}
                     onClick={() => setSelectedGameId(game.id)}
                   >
                     <div className="flex items-center justify-between mb-2">

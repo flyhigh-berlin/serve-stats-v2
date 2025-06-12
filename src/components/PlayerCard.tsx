@@ -22,7 +22,6 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [acePopoverOpen, setAcePopoverOpen] = useState(false);
   const [errorPopoverOpen, setErrorPopoverOpen] = useState(false);
-  const [actionFeedback, setActionFeedback] = useState<'ace' | 'error' | null>(null);
 
   // Get the player's stats for the current game or all games
   const stats = getPlayerStats(player.id, gameId);
@@ -30,10 +29,6 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   // Handle adding a serve
   const handleServeClick = (type: "error" | "ace", quality: "good" | "neutral" | "bad") => {
     addServe(player.id, type === "error" ? "fail" : "ace", quality);
-
-    // Action feedback animation
-    setActionFeedback(type);
-    setTimeout(() => setActionFeedback(null), 600);
 
     // Animate the stat change
     if (type === "error") {
@@ -74,7 +69,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
 
   return (
     <>
-      <Card className="w-full shadow-sm border-border/50 hover:shadow-md transition-shadow duration-200">
+      <Card className="w-full">
         <CardContent className="p-3">
           <PlayerCardHeader 
             player={player}
@@ -94,9 +89,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
                   variant="default" 
                   size="lg" 
                   onClick={() => handleButtonClick("ace")} 
-                  className={`flex-1 h-12 bg-sky-600 hover:bg-sky-700 transition-all duration-200 ${
-                    actionFeedback === 'ace' ? 'animate-pulse bg-sky-500 scale-105' : ''
-                  }`}
+                  className="flex-1 h-12 bg-sky-600 hover:bg-sky-700"
                 >
                   + Ace
                 </Button>
@@ -115,9 +108,7 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
                 <Button 
                   variant="destructive" 
                   size="lg" 
-                  className={`flex-1 h-12 transition-all duration-200 ${
-                    actionFeedback === 'error' ? 'animate-pulse bg-red-400 scale-105' : ''
-                  }`}
+                  className="flex-1 h-12" 
                   onClick={() => handleButtonClick("error")}
                 >
                   + Error
