@@ -202,9 +202,9 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
   };
   
   const formatValue = (value: number, showSign: boolean = false) => {
-    if (value === 0) return "0";
-    if (showSign && value > 0) return `+${value.toFixed(1)}`;
-    return value.toFixed(showSign ? 1 : 2);
+    if (value === 0) return "0.00";
+    if (showSign && value > 0) return `+${value.toFixed(2)}`;
+    return value.toFixed(2);
   };
   
   return (
@@ -280,7 +280,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <div className="font-medium text-muted-foreground">QS</div>
                 </div>
                 <hr className="border-muted" />
-                <div className="grid grid-cols-4 gap-2 text-center text-xs p-2 rounded border bg-muted/20">
+                <div className="grid grid-cols-4 gap-2 text-center text-xs p-2 rounded border bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200">
                   <div className="truncate">
                     <div className="font-medium truncate">{topPlayerAces?.name || "-"}</div>
                     <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
@@ -316,12 +316,12 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                         <TableHead className="text-xs">Player</TableHead>
                         <TableHead className="text-xs">Type</TableHead>
                         <TableHead className="text-xs">Quality</TableHead>
-                        <TableHead className="text-xs">Time</TableHead>
+                        <TableHead className="text-xs text-right">Time</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      {sortedServes.map((serve) => (
-                        <TableRow key={serve.id}>
+                    <TableBody className="table-striped">
+                      {sortedServes.map((serve, index) => (
+                        <TableRow key={serve.id} className={index % 2 === 0 ? "bg-muted/20" : ""}>
                           <TableCell className="font-medium text-xs">
                             {serve.playerName}
                           </TableCell>
@@ -335,7 +335,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                           <TableCell>
                             <QualityIcon quality={serve.quality} type={serve.type} />
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
+                          <TableCell className="text-xs text-muted-foreground text-right">
                             {format(new Date(serve.timestamp), "HH:mm")}
                           </TableCell>
                         </TableRow>
