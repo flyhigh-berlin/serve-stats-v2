@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -94,27 +95,27 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
 
     let Icon = Circle;
     let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-2 w-2";
+    let iconSize = "h-2.5 w-2.5";
     
     if (quality === "good") {
       Icon = Plus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2 w-2";
+      iconSize = "h-2.5 w-2.5";
     } else if (quality === "bad") {
       Icon = Minus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2 w-2";
+      iconSize = "h-2.5 w-2.5";
     } else {
-      iconSize = "h-1 w-1";
+      iconSize = "h-1.5 w-1.5";
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
-      <div className="flex flex-col items-center gap-1">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-4 h-4 rounded-full' : 'w-3 h-3 transform rotate-45'} ${getQualityColor(type)}`}>
+      <div className="flex items-center gap-3">
+        <div className={`flex items-center justify-center ${isCircle ? 'w-6 h-6 rounded-full' : 'w-5 h-5 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
-        <span className="text-xs font-medium">{count}</span>
+        <span className="text-sm font-medium">{count}</span>
       </div>
     );
   };
@@ -220,44 +221,21 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </Badge>
           </DialogTitle>
           
-          {/* Game Stats Overview - Compact Row Layout */}
+          {/* Game Stats Overview - Single Line with Pill Backgrounds */}
           <div className="space-y-3 pt-2">
-            {/* Row 1: Aces with quality icons, Errors with quality icons - Compact */}
-            <div className="flex justify-center">
-              <div className="flex items-center gap-4 sm:gap-6 px-2">
-                {/* Aces Section */}
-                <div className="flex flex-col items-center space-y-1">
-                  <div className="font-medium text-muted-foreground text-xs">Aces</div>
-                  <div className="bg-muted/50 rounded-full px-2 py-1">
-                    <span className="text-base font-bold ace-text">{totalAces}</span>
-                  </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
-                    <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
-                    <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
-                  </div>
-                </div>
-                
-                {/* Separator */}
-                <div className="w-px h-12 bg-muted/50"></div>
-                
-                {/* Errors Section */}
-                <div className="flex flex-col items-center space-y-1">
-                  <div className="font-medium text-muted-foreground text-xs">Errors</div>
-                  <div className="bg-muted/50 rounded-full px-2 py-1">
-                    <span className="text-base font-bold error-text">{totalErrors}</span>
-                  </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
-                    <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
-                    <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
-                  </div>
+            <div className="grid grid-cols-4 gap-2 text-center text-xs sm:text-sm px-2">
+              <div>
+                <div className="font-medium text-muted-foreground">Aces</div>
+                <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
+                  <span className="text-lg font-bold ace-text">{totalAces}</span>
                 </div>
               </div>
-            </div>
-            
-            {/* Row 2: A/E and QS */}
-            <div className="grid grid-cols-2 gap-4 text-center text-xs sm:text-sm px-2">
+              <div>
+                <div className="font-medium text-muted-foreground">Errors</div>
+                <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
+                  <span className="text-lg font-bold error-text">{totalErrors}</span>
+                </div>
+              </div>
               <div>
                 <div className="font-medium text-muted-foreground">A/E</div>
                 <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
@@ -272,6 +250,28 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <span className={`text-lg font-bold ${getQualityScoreColor(avgQualityScore)}`}>
                     {formatValue(avgQualityScore, true)}
                   </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Quality Breakdown - Grouped by serve type with larger gap */}
+            <div className="flex justify-center">
+              <div className="flex justify-between items-center p-3 bg-muted/30 rounded-md w-full max-w-md">
+                {/* Aces Group */}
+                <div className="flex items-center gap-3">
+                  <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
+                  <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
+                  <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
+                </div>
+                
+                {/* Separator */}
+                <div className="w-px h-6 bg-muted"></div>
+                
+                {/* Errors Group */}
+                <div className="flex items-center gap-3">
+                  <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
+                  <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
+                  <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
                 </div>
               </div>
             </div>
