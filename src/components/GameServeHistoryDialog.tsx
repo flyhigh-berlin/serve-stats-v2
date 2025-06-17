@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -111,7 +110,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     }
 
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <div className={`flex items-center justify-center ${isCircle ? 'w-6 h-6 rounded-full' : 'w-5 h-5 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
@@ -286,15 +285,15 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <Crown className="h-3 w-3 text-yellow-500" />
                 </div>
                 <div className="flex justify-center">
-                  <div className="w-full max-w-md">
-                    <div className="grid grid-cols-4 gap-2 text-center text-xs px-2">
+                  <div className="w-full max-w-md border rounded-md">
+                    <div className="grid grid-cols-4 gap-2 text-center text-xs px-2 py-2">
                       <div className="font-medium text-muted-foreground">Aces</div>
                       <div className="font-medium text-muted-foreground">Errors</div>
                       <div className="font-medium text-muted-foreground">A/E</div>
                       <div className="font-medium text-muted-foreground">QS</div>
                     </div>
-                    <hr className="border-muted my-2" />
-                    <div className="grid grid-cols-4 gap-2 text-center text-xs p-2 rounded border">
+                    <hr className="border-muted" />
+                    <div className="grid grid-cols-4 gap-2 text-center text-xs p-2">
                       <div className="truncate">
                         <div className="font-medium truncate">{topPlayerAces?.name || "-"}</div>
                         <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
@@ -330,10 +329,10 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="text-xs w-1/4">Player</TableHead>
-                          <TableHead className="text-xs w-1/4">Type</TableHead>
-                          <TableHead className="text-xs w-1/4">Quality</TableHead>
-                          <TableHead className="text-xs w-1/4">Time</TableHead>
+                          <TableHead className="text-xs w-1/4 text-left">Player</TableHead>
+                          <TableHead className="text-xs w-1/4 text-left">Type</TableHead>
+                          <TableHead className="text-xs w-1/4 text-left">Quality</TableHead>
+                          <TableHead className="text-xs w-1/4 text-left">Time</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
