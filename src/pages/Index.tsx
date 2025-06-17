@@ -1,4 +1,3 @@
-
 import React from "react";
 import { VolleyballProvider } from "../context/VolleyballContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,18 +6,12 @@ import { GameDaySelector } from "@/components/GameDaySelector";
 import { Scoreboard } from "@/components/Scoreboard";
 import { GameHistory } from "@/components/GameHistory";
 import { StatsDescription } from "@/components/StatsDescription";
-
 const Index = () => {
-  return (
-    <VolleyballProvider>
+  return <VolleyballProvider>
       <div className="container py-4 px-2 sm:px-4 max-w-7xl">
         <header className="mb-4 text-center">
           <div className="flex flex-col items-center justify-center gap-2 mb-2">
-            <img 
-              src="/lovable-uploads/9d00919c-607d-49af-87e1-11c7dc280cba.png" 
-              alt="Serve Stats Logo" 
-              className="h-10 sm:h-12 w-auto"
-            />
+            <img src="/lovable-uploads/9d00919c-607d-49af-87e1-11c7dc280cba.png" alt="Serve Stats Logo" className="h-16 md:h-24" />
             <h1 className="text-2xl sm:text-3xl font-bold text-team-primary">Serve Stats</h1>
           </div>
         </header>
@@ -49,8 +42,6 @@ const Index = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </VolleyballProvider>
-  );
+    </VolleyballProvider>;
 };
-
 export default Index;
