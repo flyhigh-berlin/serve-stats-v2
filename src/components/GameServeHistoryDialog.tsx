@@ -222,7 +222,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
           
           {/* Game Stats Overview - Single Line */}
           <div className="space-y-3 pt-2">
-            <div className="grid grid-cols-4 gap-2 text-center text-xs sm:text-sm">
+            <div className="grid grid-cols-4 gap-2 text-center text-xs sm:text-sm px-2">
               <div>
                 <div className="font-medium text-muted-foreground">Aces</div>
                 <div className="text-lg font-bold ace-text">{totalAces}</div>
@@ -282,7 +282,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <h4 className="text-sm font-medium">Top Performers</h4>
                   <Crown className="h-3 w-3 text-yellow-500" />
                 </div>
-                <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                <div className="grid grid-cols-4 gap-2 text-center text-xs px-2">
                   <div className="font-medium text-muted-foreground">Aces</div>
                   <div className="font-medium text-muted-foreground">Errors</div>
                   <div className="font-medium text-muted-foreground">A/E</div>
@@ -322,10 +322,10 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-xs w-1/4">Player</TableHead>
-                        <TableHead className="text-xs w-1/4">Type</TableHead>
-                        <TableHead className="text-xs w-1/4">Quality</TableHead>
-                        <TableHead className="text-xs w-1/4 text-right">Time</TableHead>
+                        <TableHead className="text-xs">Player</TableHead>
+                        <TableHead className="text-xs">Type</TableHead>
+                        <TableHead className="text-xs">Quality</TableHead>
+                        <TableHead className="text-xs text-right">Time</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
