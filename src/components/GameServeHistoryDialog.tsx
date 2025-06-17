@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -221,21 +220,39 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </Badge>
           </DialogTitle>
           
-          {/* Game Stats Overview - Single Line with Pill Backgrounds */}
+          {/* Game Stats Overview - Reorganized Layout */}
           <div className="space-y-3 pt-2">
-            <div className="grid grid-cols-4 gap-2 text-center text-xs sm:text-sm px-2">
-              <div>
+            {/* Row 1: Aces with quality icons, Errors with quality icons */}
+            <div className="grid grid-cols-2 gap-4 text-center text-xs sm:text-sm px-2">
+              {/* Aces Section */}
+              <div className="space-y-2">
                 <div className="font-medium text-muted-foreground">Aces</div>
                 <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
                   <span className="text-lg font-bold ace-text">{totalAces}</span>
                 </div>
+                <div className="flex justify-center items-center gap-3">
+                  <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
+                  <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
+                  <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
+                </div>
               </div>
-              <div>
+              
+              {/* Errors Section */}
+              <div className="space-y-2">
                 <div className="font-medium text-muted-foreground">Errors</div>
                 <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
                   <span className="text-lg font-bold error-text">{totalErrors}</span>
                 </div>
+                <div className="flex justify-center items-center gap-3">
+                  <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
+                  <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
+                  <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+                </div>
               </div>
+            </div>
+            
+            {/* Row 2: A/E and QS */}
+            <div className="grid grid-cols-2 gap-4 text-center text-xs sm:text-sm px-2">
               <div>
                 <div className="font-medium text-muted-foreground">A/E</div>
                 <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
@@ -250,28 +267,6 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <span className={`text-lg font-bold ${getQualityScoreColor(avgQualityScore)}`}>
                     {formatValue(avgQualityScore, true)}
                   </span>
-                </div>
-              </div>
-            </div>
-            
-            {/* Quality Breakdown - Grouped by serve type with larger gap */}
-            <div className="flex justify-center">
-              <div className="flex justify-between items-center p-3 bg-muted/30 rounded-md w-full max-w-md">
-                {/* Aces Group */}
-                <div className="flex items-center gap-3">
-                  <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
-                  <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
-                  <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
-                </div>
-                
-                {/* Separator */}
-                <div className="w-px h-6 bg-muted"></div>
-                
-                {/* Errors Group */}
-                <div className="flex items-center gap-3">
-                  <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
-                  <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
-                  <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
                 </div>
               </div>
             </div>
