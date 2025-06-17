@@ -212,13 +212,13 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline">
-              [{game.gameType}] {allGameTypes[game.gameType]}
-            </Badge>
             <span>{game.title || format(new Date(game.date), "EEEE")}</span>
             <span className="text-sm text-muted-foreground">
               ({format(new Date(game.date), "dd.MM.yy")})
             </span>
+            <Badge variant="outline">
+              [{game.gameType}] {allGameTypes[game.gameType]}
+            </Badge>
           </DialogTitle>
           
           {/* Game Stats Overview - Single Line */}
@@ -280,7 +280,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <div className="font-medium text-muted-foreground">QS</div>
                 </div>
                 <hr className="border-muted" />
-                <div className="grid grid-cols-4 gap-2 text-center text-xs p-2 rounded border bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200">
+                <div className="grid grid-cols-4 gap-2 text-center text-xs p-2 rounded border">
                   <div className="truncate">
                     <div className="font-medium truncate">{topPlayerAces?.name || "-"}</div>
                     <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
@@ -313,15 +313,15 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-xs">Player</TableHead>
-                        <TableHead className="text-xs">Type</TableHead>
-                        <TableHead className="text-xs">Quality</TableHead>
-                        <TableHead className="text-xs text-right">Time</TableHead>
+                        <TableHead className="text-xs w-1/4">Player</TableHead>
+                        <TableHead className="text-xs w-1/4">Type</TableHead>
+                        <TableHead className="text-xs w-1/4">Quality</TableHead>
+                        <TableHead className="text-xs w-1/4 text-right">Time</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody className="table-striped">
+                    <TableBody>
                       {sortedServes.map((serve, index) => (
-                        <TableRow key={serve.id} className={index % 2 === 0 ? "bg-muted/20" : ""}>
+                        <TableRow key={serve.id} className={`${index % 2 === 0 ? "bg-muted/20" : ""} border-b border-muted/30`}>
                           <TableCell className="font-medium text-xs">
                             {serve.playerName}
                           </TableCell>
