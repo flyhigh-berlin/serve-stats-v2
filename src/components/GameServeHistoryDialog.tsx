@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -246,14 +245,24 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
             </div>
             
-            {/* Quality Breakdown - Distributed across entire line */}
+            {/* Quality Breakdown - Grouped by serve type with larger gap */}
             <div className="flex justify-between items-center p-3 bg-muted/30 rounded-md">
-              <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
-              <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
-              <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
-              <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
-              <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
-              <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+              {/* Aces Group */}
+              <div className="flex items-center gap-3">
+                <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
+                <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
+                <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
+              </div>
+              
+              {/* Separator */}
+              <div className="w-px h-6 bg-muted"></div>
+              
+              {/* Errors Group */}
+              <div className="flex items-center gap-3">
+                <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
+                <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
+                <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+              </div>
             </div>
           </div>
         </DialogHeader>
