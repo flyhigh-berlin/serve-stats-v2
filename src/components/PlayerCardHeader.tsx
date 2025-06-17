@@ -23,14 +23,14 @@ export function PlayerCardHeader({
       </span>
       <div className="flex items-center gap-3 flex-shrink-0 bg-gradient-to-r from-muted/30 to-muted/60 rounded-lg px-3 py-2 border shadow-sm">
         <span className="text-sm flex items-center gap-1.5">
-          <span className="font-medium text-xl text-slate-500">A:</span>
+          <span className="font-medium text-slate-500 text-lg">A:</span>
           <span className={`font-bold text-base ace-text ${animatingAce ? "stat-change" : ""}`}>
             {stats.aces}
           </span>
         </span>
         <div className="w-px h-4 bg-border"></div>
         <span className="text-sm flex items-center gap-1.5">
-          <span className="font-medium text-xl error-text text-slate-500">E:</span>
+          <span className="font-medium error-text text-slate-500 text-lg">E:</span>
           <span className={`font-bold text-base error-text ${animatingError ? "stat-change" : ""}`}>
             {stats.errors}
           </span>
