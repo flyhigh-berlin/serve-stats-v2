@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PlayerDetailDialog } from "./PlayerDetailDialog";
 import { PlayerCardHeader } from "./PlayerCardHeader";
-import { PlayerCardStats } from "./PlayerCardStats";
 import { QualitySelectionPopover } from "./QualitySelectionPopover";
 
 interface PlayerCardProps {
@@ -83,8 +82,6 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
             animatingError={animatingError}
             onPlayerClick={() => setIsDialogOpen(true)}
           />
-
-          <PlayerCardStats playerId={player.id} gameId={gameId} />
           
           {/* Action buttons */}
           <div className="flex gap-2">
