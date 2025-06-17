@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -210,7 +211,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="flex items-center gap-2 flex-wrap">
+          <DialogTitle className="flex items-center gap-2 flex-wrap justify-center sm:justify-start">
             <span>{game.title || format(new Date(game.date), "EEEE")}</span>
             <span className="text-sm text-muted-foreground">
               ({format(new Date(game.date), "dd.MM.yy")})
@@ -245,20 +246,20 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
             </div>
             
-            {/* Quality Breakdown - Grouped by serve type with larger gap */}
+            {/* Quality Breakdown - Grouped by serve type with larger gap and increased spacing within same type */}
             <div className="flex justify-between items-center p-3 bg-muted/30 rounded-md">
-              {/* Aces Group */}
-              <div className="flex items-center gap-3">
+              {/* Aces Group - increased spacing */}
+              <div className="flex items-center gap-4">
                 <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
                 <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
                 <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
               </div>
               
-              {/* Separator */}
-              <div className="w-px h-6 bg-muted"></div>
+              {/* Separator - larger gap */}
+              <div className="w-px h-6 bg-muted mx-6"></div>
               
-              {/* Errors Group */}
-              <div className="flex items-center gap-3">
+              {/* Errors Group - increased spacing */}
+              <div className="flex items-center gap-4">
                 <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
                 <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
                 <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
@@ -270,15 +271,15 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
         <ScrollArea className="flex-1 min-h-0">
           <div className="space-y-4 py-4 pr-4">
             {game.notes && (
-              <div className="p-3 bg-muted rounded-md">
-                <p className="text-sm">{game.notes}</p>
+              <div className="p-3 bg-muted rounded-md mx-auto max-w-full">
+                <p className="text-sm text-center sm:text-left">{game.notes}</p>
               </div>
             )}
             
             {/* Player Rankings - Top player for each stat */}
             {gamePlayers.length > 0 && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 justify-center sm:justify-start">
                   <h4 className="text-sm font-medium">Top Performers</h4>
                   <Crown className="h-3 w-3 text-yellow-500" />
                 </div>
@@ -289,7 +290,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <div className="font-medium text-muted-foreground">QS</div>
                 </div>
                 <hr className="border-muted" />
-                <div className="grid grid-cols-4 gap-2 text-center text-xs p-2 rounded border">
+                <div className="grid grid-cols-4 gap-2 text-center text-xs p-2 rounded border mx-auto max-w-full">
                   <div className="truncate">
                     <div className="font-medium truncate">{topPlayerAces?.name || "-"}</div>
                     <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
@@ -316,35 +317,39 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             
             {/* Serve History */}
             <div className="space-y-2">
-              <h4 className="text-sm font-medium">Serve History</h4>
+              <h4 className="text-sm font-medium text-center sm:text-left">Serve History</h4>
               {sortedServes.length > 0 ? (
-                <div className="border rounded-md max-h-[300px] overflow-y-auto">
+                <div className="border rounded-md max-h-[300px] overflow-y-auto mx-auto max-w-full">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-xs">Player</TableHead>
-                        <TableHead className="text-xs">Type</TableHead>
-                        <TableHead className="text-xs">Quality</TableHead>
-                        <TableHead className="text-xs text-right">Time</TableHead>
+                        <TableHead className="text-xs w-1/4 text-center">Player</TableHead>
+                        <TableHead className="text-xs w-1/4 text-center">Type</TableHead>
+                        <TableHead className="text-xs w-1/4 text-center">Quality</TableHead>
+                        <TableHead className="text-xs w-1/4 text-center">Time</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {sortedServes.map((serve, index) => (
-                        <TableRow key={serve.id} className={`${index % 2 === 0 ? "bg-muted/20" : ""} border-b border-muted/30`}>
-                          <TableCell className="font-medium text-xs">
+                        <TableRow key={serve.id} className={`${index % 2 === 0 ? "bg-muted/20" : "bg-background"} border-b border-muted/30`}>
+                          <TableCell className="font-medium text-xs w-1/4 text-center">
                             {serve.playerName}
                           </TableCell>
-                          <TableCell>
-                            <div 
-                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white ${serve.type === "ace" ? "ace-bg" : "error-bg"}`}
-                            >
-                              {serve.type === "fail" ? "Error" : "Ace"}
+                          <TableCell className="w-1/4 text-center">
+                            <div className="flex justify-center">
+                              <div 
+                                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white ${serve.type === "ace" ? "ace-bg" : "error-bg"}`}
+                              >
+                                {serve.type === "fail" ? "Error" : "Ace"}
+                              </div>
                             </div>
                           </TableCell>
-                          <TableCell>
-                            <QualityIcon quality={serve.quality} type={serve.type} />
+                          <TableCell className="w-1/4 text-center">
+                            <div className="flex justify-center">
+                              <QualityIcon quality={serve.quality} type={serve.type} />
+                            </div>
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground text-right">
+                          <TableCell className="text-xs text-muted-foreground w-1/4 text-center">
                             {format(new Date(serve.timestamp), "HH:mm")}
                           </TableCell>
                         </TableRow>
@@ -353,7 +358,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   </Table>
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground border rounded-md">
+                <div className="text-center py-8 text-muted-foreground border rounded-md mx-auto max-w-full">
                   No serve records found for this game.
                 </div>
               )}
@@ -361,7 +366,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
           </div>
         </ScrollArea>
         
-        <div className="flex justify-end flex-shrink-0 pt-4">
+        <div className="flex justify-center sm:justify-end flex-shrink-0 pt-4">
           <Button variant="outline" onClick={onClose}>Close</Button>
         </div>
       </DialogContent>
