@@ -29,7 +29,7 @@ export function PlayerList() {
                 onClick={() => setIsManagementDialogOpen(true)}
               >
                 <Settings className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-                <span className="hidden sm:inline">Manage</span>
+                <span className="hidden sm:inline">Manage Tags</span>
               </Button>
               <AddPlayerForm />
             </div>
