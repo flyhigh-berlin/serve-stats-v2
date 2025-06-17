@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -110,7 +111,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     }
 
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <div className={`flex items-center justify-center ${isCircle ? 'w-6 h-6 rounded-full' : 'w-5 h-5 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
@@ -220,27 +221,35 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </Badge>
           </DialogTitle>
           
-          {/* Game Stats Overview - Single Line */}
+          {/* Game Stats Overview - Single Line with Pill Backgrounds */}
           <div className="space-y-3 pt-2">
             <div className="grid grid-cols-4 gap-2 text-center text-xs sm:text-sm px-2">
               <div>
                 <div className="font-medium text-muted-foreground">Aces</div>
-                <div className="text-lg font-bold ace-text">{totalAces}</div>
+                <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
+                  <span className="text-lg font-bold ace-text">{totalAces}</span>
+                </div>
               </div>
               <div>
                 <div className="font-medium text-muted-foreground">Errors</div>
-                <div className="text-lg font-bold error-text">{totalErrors}</div>
+                <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
+                  <span className="text-lg font-bold error-text">{totalErrors}</span>
+                </div>
               </div>
               <div>
                 <div className="font-medium text-muted-foreground">A/E</div>
-                <div className={`text-lg font-bold ${getAERatioColor(avgAERatio)}`}>
-                  {formatValue(avgAERatio)}
+                <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
+                  <span className={`text-lg font-bold ${getAERatioColor(avgAERatio)}`}>
+                    {formatValue(avgAERatio)}
+                  </span>
                 </div>
               </div>
               <div>
                 <div className="font-medium text-muted-foreground">QS</div>
-                <div className={`text-lg font-bold ${getQualityScoreColor(avgQualityScore)}`}>
-                  {formatValue(avgQualityScore, true)}
+                <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
+                  <span className={`text-lg font-bold ${getQualityScoreColor(avgQualityScore)}`}>
+                    {formatValue(avgQualityScore, true)}
+                  </span>
                 </div>
               </div>
             </div>
