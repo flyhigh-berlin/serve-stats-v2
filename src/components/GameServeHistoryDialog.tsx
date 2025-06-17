@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -246,22 +247,24 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </div>
             
             {/* Quality Breakdown - Grouped by serve type with larger gap */}
-            <div className="flex justify-between items-center p-3 bg-muted/30 rounded-md">
-              {/* Aces Group */}
-              <div className="flex items-center gap-3">
-                <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
-                <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
-                <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
-              </div>
-              
-              {/* Separator */}
-              <div className="w-px h-6 bg-muted"></div>
-              
-              {/* Errors Group */}
-              <div className="flex items-center gap-3">
-                <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
-                <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
-                <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+            <div className="flex justify-center">
+              <div className="flex justify-between items-center p-3 bg-muted/30 rounded-md w-full max-w-md">
+                {/* Aces Group */}
+                <div className="flex items-center gap-3">
+                  <QualityOverviewIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
+                  <QualityOverviewIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
+                  <QualityOverviewIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
+                </div>
+                
+                {/* Separator */}
+                <div className="w-px h-6 bg-muted"></div>
+                
+                {/* Errors Group */}
+                <div className="flex items-center gap-3">
+                  <QualityOverviewIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
+                  <QualityOverviewIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
+                  <QualityOverviewIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+                </div>
               </div>
             </div>
           </div>
@@ -282,32 +285,36 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <h4 className="text-sm font-medium">Top Performers</h4>
                   <Crown className="h-3 w-3 text-yellow-500" />
                 </div>
-                <div className="grid grid-cols-4 gap-2 text-center text-xs px-2">
-                  <div className="font-medium text-muted-foreground">Aces</div>
-                  <div className="font-medium text-muted-foreground">Errors</div>
-                  <div className="font-medium text-muted-foreground">A/E</div>
-                  <div className="font-medium text-muted-foreground">QS</div>
-                </div>
-                <hr className="border-muted" />
-                <div className="grid grid-cols-4 gap-2 text-center text-xs p-2 rounded border">
-                  <div className="truncate">
-                    <div className="font-medium truncate">{topPlayerAces?.name || "-"}</div>
-                    <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
-                  </div>
-                  <div className="truncate">
-                    <div className="font-medium truncate">{topPlayerErrors?.name || "-"}</div>
-                    <div className="error-text font-bold">{topPlayerErrors?.stats.errors || 0}</div>
-                  </div>
-                  <div className="truncate">
-                    <div className="font-medium truncate">{topPlayerAERatio?.name || "-"}</div>
-                    <div className={`font-bold ${getAERatioColor(topPlayerAERatio?.aeRatio || 0)}`}>
-                      {formatValue(topPlayerAERatio?.aeRatio || 0)}
+                <div className="flex justify-center">
+                  <div className="w-full max-w-md">
+                    <div className="grid grid-cols-4 gap-2 text-center text-xs px-2">
+                      <div className="font-medium text-muted-foreground">Aces</div>
+                      <div className="font-medium text-muted-foreground">Errors</div>
+                      <div className="font-medium text-muted-foreground">A/E</div>
+                      <div className="font-medium text-muted-foreground">QS</div>
                     </div>
-                  </div>
-                  <div className="truncate">
-                    <div className="font-medium truncate">{topPlayerQS?.name || "-"}</div>
-                    <div className={`font-bold ${getQualityScoreColor(topPlayerQS?.qualityScore || 0)}`}>
-                      {formatValue(topPlayerQS?.qualityScore || 0, true)}
+                    <hr className="border-muted my-2" />
+                    <div className="grid grid-cols-4 gap-2 text-center text-xs p-2 rounded border">
+                      <div className="truncate">
+                        <div className="font-medium truncate">{topPlayerAces?.name || "-"}</div>
+                        <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
+                      </div>
+                      <div className="truncate">
+                        <div className="font-medium truncate">{topPlayerErrors?.name || "-"}</div>
+                        <div className="error-text font-bold">{topPlayerErrors?.stats.errors || 0}</div>
+                      </div>
+                      <div className="truncate">
+                        <div className="font-medium truncate">{topPlayerAERatio?.name || "-"}</div>
+                        <div className={`font-bold ${getAERatioColor(topPlayerAERatio?.aeRatio || 0)}`}>
+                          {formatValue(topPlayerAERatio?.aeRatio || 0)}
+                        </div>
+                      </div>
+                      <div className="truncate">
+                        <div className="font-medium truncate">{topPlayerQS?.name || "-"}</div>
+                        <div className={`font-bold ${getQualityScoreColor(topPlayerQS?.qualityScore || 0)}`}>
+                          {formatValue(topPlayerQS?.qualityScore || 0, true)}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -318,43 +325,47 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Serve History</h4>
               {sortedServes.length > 0 ? (
-                <div className="border rounded-md max-h-[300px] overflow-y-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-xs">Player</TableHead>
-                        <TableHead className="text-xs">Type</TableHead>
-                        <TableHead className="text-xs">Quality</TableHead>
-                        <TableHead className="text-xs text-right">Time</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedServes.map((serve, index) => (
-                        <TableRow key={serve.id} className={`${index % 2 === 0 ? "bg-muted/20" : ""} border-b border-muted/30`}>
-                          <TableCell className="font-medium text-xs">
-                            {serve.playerName}
-                          </TableCell>
-                          <TableCell>
-                            <div 
-                              className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white ${serve.type === "ace" ? "ace-bg" : "error-bg"}`}
-                            >
-                              {serve.type === "fail" ? "Error" : "Ace"}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <QualityIcon quality={serve.quality} type={serve.type} />
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground text-right">
-                            {format(new Date(serve.timestamp), "HH:mm")}
-                          </TableCell>
+                <div className="flex justify-center">
+                  <div className="border rounded-md max-h-[300px] overflow-y-auto w-full max-w-md">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-xs w-1/4">Player</TableHead>
+                          <TableHead className="text-xs w-1/4">Type</TableHead>
+                          <TableHead className="text-xs w-1/4">Quality</TableHead>
+                          <TableHead className="text-xs w-1/4">Time</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedServes.map((serve, index) => (
+                          <TableRow key={serve.id} className={`${index % 2 === 0 ? "bg-background" : "bg-muted/30"} border-b border-muted/30`}>
+                            <TableCell className="font-medium text-xs w-1/4">
+                              {serve.playerName}
+                            </TableCell>
+                            <TableCell className="w-1/4">
+                              <div 
+                                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white ${serve.type === "ace" ? "ace-bg" : "error-bg"}`}
+                              >
+                                {serve.type === "fail" ? "Error" : "Ace"}
+                              </div>
+                            </TableCell>
+                            <TableCell className="w-1/4">
+                              <QualityIcon quality={serve.quality} type={serve.type} />
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground w-1/4">
+                              {format(new Date(serve.timestamp), "HH:mm")}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-muted-foreground border rounded-md">
-                  No serve records found for this game.
+                <div className="flex justify-center">
+                  <div className="text-center py-8 text-muted-foreground border rounded-md w-full max-w-md">
+                    No serve records found for this game.
+                  </div>
                 </div>
               )}
             </div>
