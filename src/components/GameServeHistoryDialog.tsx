@@ -224,21 +224,21 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
           <div className="space-y-3 pt-2">
             <div className="grid grid-cols-4 gap-2 text-center text-xs sm:text-sm px-2">
               <div>
-                <div className="font-medium text-muted-foreground">Aces</div>
+                <div className="font-medium text-muted-foreground h-6 flex items-center justify-center">Aces</div>
                 <div className="text-lg font-bold ace-text">{totalAces}</div>
               </div>
               <div>
-                <div className="font-medium text-muted-foreground">Errors</div>
+                <div className="font-medium text-muted-foreground h-6 flex items-center justify-center">Errors</div>
                 <div className="text-lg font-bold error-text">{totalErrors}</div>
               </div>
               <div>
-                <div className="font-medium text-muted-foreground">A/E</div>
+                <div className="font-medium text-muted-foreground h-6 flex items-center justify-center">A/E</div>
                 <div className={`text-lg font-bold ${getAERatioColor(avgAERatio)}`}>
                   {formatValue(avgAERatio)}
                 </div>
               </div>
               <div>
-                <div className="font-medium text-muted-foreground">QS</div>
+                <div className="font-medium text-muted-foreground h-6 flex items-center justify-center">QS</div>
                 <div className={`text-lg font-bold ${getQualityScoreColor(avgQualityScore)}`}>
                   {formatValue(avgQualityScore, true)}
                 </div>
@@ -286,11 +286,11 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                 </div>
                 <div className="flex justify-center">
                   <div className="w-full max-w-md border rounded-md">
-                    <div className="grid grid-cols-4 gap-2 text-center text-xs px-2 py-2">
-                      <div className="font-medium text-muted-foreground">Aces</div>
-                      <div className="font-medium text-muted-foreground">Errors</div>
-                      <div className="font-medium text-muted-foreground">A/E</div>
-                      <div className="font-medium text-muted-foreground">QS</div>
+                    <div className="grid grid-cols-4 gap-2 text-center text-xs px-2">
+                      <div className="font-medium text-muted-foreground h-6 flex items-center justify-center">Aces</div>
+                      <div className="font-medium text-muted-foreground h-6 flex items-center justify-center">Errors</div>
+                      <div className="font-medium text-muted-foreground h-6 flex items-center justify-center">A/E</div>
+                      <div className="font-medium text-muted-foreground h-6 flex items-center justify-center">QS</div>
                     </div>
                     <hr className="border-muted" />
                     <div className="grid grid-cols-4 gap-2 text-center text-xs p-2">
@@ -329,10 +329,10 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="text-xs w-1/4 text-left">Player</TableHead>
-                          <TableHead className="text-xs w-1/4 text-left">Type</TableHead>
-                          <TableHead className="text-xs w-1/4 text-left">Quality</TableHead>
-                          <TableHead className="text-xs w-1/4 text-left">Time</TableHead>
+                          <TableHead className="text-xs w-1/4 text-left h-6 flex items-center">Player</TableHead>
+                          <TableHead className="text-xs w-1/4 text-left h-6 flex items-center">Type</TableHead>
+                          <TableHead className="text-xs w-1/4 text-left h-6 flex items-center">Quality</TableHead>
+                          <TableHead className="text-xs w-1/4 text-left h-6 flex items-center">Time</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
