@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -89,30 +88,30 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     );
   };
 
-  // Compact quality overview icon for Row 1
+  // Compact quality overview icon for single-line Row 1
   const CompactQualityIcon = ({ quality, type, count }: { quality: ServeQuality, type: "fail" | "ace", count: number }) => {
     const isCircle = type === "ace";
 
     let Icon = Circle;
     let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-2.5 w-2.5";
+    let iconSize = "h-2 w-2";
     
     if (quality === "good") {
       Icon = Plus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2.5 w-2.5";
+      iconSize = "h-2 w-2";
     } else if (quality === "bad") {
       Icon = Minus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2.5 w-2.5";
+      iconSize = "h-2 w-2";
     } else {
-      iconSize = "h-1.5 w-1.5";
+      iconSize = "h-1 w-1";
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
-      <div className="flex flex-col items-center gap-1 flex-1">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-6 h-6 rounded-full' : 'w-5 h-5 transform rotate-45'} ${getQualityColor(type)}`}>
+      <div className="flex items-center gap-1">
+        <div className={`flex items-center justify-center ${isCircle ? 'w-4 h-4 rounded-full' : 'w-3 h-3 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium">{count}</span>
@@ -221,59 +220,54 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </Badge>
           </DialogTitle>
           
-          {/* Game Stats Overview - Improved Layout */}
+          {/* Game Stats Overview - Single Line Layout */}
           <div className="space-y-4 pt-2">
-            {/* Row 1: 50/50 Split for Aces and Errors */}
+            {/* Row 1: Single line with Aces/Errors + Quality Icons */}
             <div className="flex justify-center">
-              <div className="w-full max-w-lg bg-muted/30 rounded-md p-4">
-                {/* Headers */}
-                <div className="grid grid-cols-2 gap-6 mb-3">
-                  <div className="text-center">
-                    <div className="text-sm font-medium text-muted-foreground mb-2">Aces</div>
-                    <div className="bg-muted rounded-full px-4 py-2 inline-block">
-                      <span className="text-lg font-bold ace-text">{totalAces}</span>
+              <div className="w-full max-w-lg bg-slate-200 dark:bg-slate-800 rounded-md p-4">
+                <div className="grid grid-cols-2 gap-8">
+                  {/* Aces Column */}
+                  <div className="flex items-center gap-3">
+                    <div className="text-center">
+                      <div className="text-xs font-medium text-muted-foreground mb-1">Aces</div>
+                      <div className="text-lg font-bold ace-text">{totalAces}</div>
                     </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm font-medium text-muted-foreground mb-2">Errors</div>
-                    <div className="bg-muted rounded-full px-4 py-2 inline-block">
-                      <span className="text-lg font-bold error-text">{totalErrors}</span>
+                    <div className="flex items-center gap-2">
+                      <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
+                      <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
+                      <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
                     </div>
-                  </div>
-                </div>
-                
-                {/* Quality Icons - Equal spacing */}
-                <div className="grid grid-cols-2 gap-6">
-                  {/* Aces Quality Icons */}
-                  <div className="flex justify-center gap-4">
-                    <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
-                    <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
-                    <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
                   </div>
                   
-                  {/* Errors Quality Icons */}
-                  <div className="flex justify-center gap-4">
-                    <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
-                    <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
-                    <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+                  {/* Errors Column */}
+                  <div className="flex items-center gap-3">
+                    <div className="text-center">
+                      <div className="text-xs font-medium text-muted-foreground mb-1">Errors</div>
+                      <div className="text-lg font-bold error-text">{totalErrors}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
+                      <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
+                      <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Row 2: Only A/E and QS stats with enhanced pills */}
-            <div className="grid grid-cols-2 gap-4 text-center text-sm px-4">
-              <div>
-                <div className="font-medium text-muted-foreground mb-2">A/E Ratio</div>
-                <div className="bg-muted rounded-full px-4 py-2">
+            {/* Row 2: Only A/E and QS stats with consistent pill sizing */}
+            <div className="grid grid-cols-2 gap-4 px-4 max-w-lg mx-auto">
+              <div className="text-center">
+                <div className="font-medium text-muted-foreground mb-2 text-sm">A/E Ratio</div>
+                <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-full">
                   <span className={`text-sm font-bold ${getAERatioColor(avgAERatio)}`}>
                     {formatValue(avgAERatio)}
                   </span>
                 </div>
               </div>
-              <div>
-                <div className="font-medium text-muted-foreground mb-2">Quality Score</div>
-                <div className="bg-muted rounded-full px-4 py-2">
+              <div className="text-center">
+                <div className="font-medium text-muted-foreground mb-2 text-sm">Quality Score</div>
+                <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-full">
                   <span className={`text-sm font-bold ${getQualityScoreColor(avgQualityScore)}`}>
                     {formatValue(avgQualityScore, true)}
                   </span>
