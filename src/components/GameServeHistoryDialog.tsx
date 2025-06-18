@@ -77,7 +77,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     return (
       <div className="flex items-center justify-center w-8">
         <div 
-          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-8 w-8'} ${getQualityColor(type)}`}
+          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-90'} ${getQualityColor(type)}`}
         >
           <Icon 
             className={`${iconSize} absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`} 
@@ -111,7 +111,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
 
     return (
       <div className="flex flex-col items-center justify-center w-8">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)}`}>
+        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-3.5 h-3.5 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium text-center mt-0.5">{count}</span>
@@ -229,7 +229,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   {/* Aces Column */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Aces</div>
-                    <div className="flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
                         <span className="text-base sm:text-lg font-bold ace-text">{totalAces}</span>
                       </div>
@@ -244,14 +244,14 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   {/* Errors Column */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Errors</div>
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-base sm:text-lg font-bold error-text">{totalErrors}</span>
-                      </div>
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <div className="flex items-center gap-1 overflow-hidden">
                         <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
                         <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
                         <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+                      </div>
+                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-base sm:text-lg font-bold error-text">{totalErrors}</span>
                       </div>
                     </div>
                   </div>
