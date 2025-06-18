@@ -220,17 +220,19 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </Badge>
           </DialogTitle>
           
-          {/* Game Stats Overview - Single Line Layout */}
+          {/* Game Stats Overview - Fixed Layout */}
           <div className="space-y-4 pt-2">
-            {/* Row 1: Single line with Aces/Errors + Quality Icons */}
+            {/* Row 1: Aces/Errors with individual number pills and aligned quality icons */}
             <div className="flex justify-center">
-              <div className="w-full max-w-lg bg-slate-200 dark:bg-slate-800 rounded-md p-4">
+              <div className="w-full max-w-lg">
                 <div className="grid grid-cols-2 gap-8">
                   {/* Aces Column */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center gap-3">
                     <div className="text-center">
                       <div className="text-xs font-medium text-muted-foreground mb-1">Aces</div>
-                      <div className="text-lg font-bold ace-text">{totalAces}</div>
+                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-1">
+                        <span className="text-lg font-bold ace-text">{totalAces}</span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
@@ -240,10 +242,12 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   </div>
                   
                   {/* Errors Column */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center gap-3">
                     <div className="text-center">
                       <div className="text-xs font-medium text-muted-foreground mb-1">Errors</div>
-                      <div className="text-lg font-bold error-text">{totalErrors}</div>
+                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-1">
+                        <span className="text-lg font-bold error-text">{totalErrors}</span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
@@ -255,11 +259,11 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
             </div>
             
-            {/* Row 2: Only A/E and QS stats with consistent pill sizing */}
+            {/* Row 2: A/E and QS stats with smaller pill sizing to match Row 1 */}
             <div className="grid grid-cols-2 gap-4 px-4 max-w-lg mx-auto">
               <div className="text-center">
                 <div className="font-medium text-muted-foreground mb-2 text-sm">A/E Ratio</div>
-                <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-full">
+                <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-1">
                   <span className={`text-sm font-bold ${getAERatioColor(avgAERatio)}`}>
                     {formatValue(avgAERatio)}
                   </span>
@@ -267,7 +271,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
               <div className="text-center">
                 <div className="font-medium text-muted-foreground mb-2 text-sm">Quality Score</div>
-                <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-full">
+                <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-1">
                   <span className={`text-sm font-bold ${getQualityScoreColor(avgQualityScore)}`}>
                     {formatValue(avgQualityScore, true)}
                   </span>
