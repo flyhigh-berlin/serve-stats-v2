@@ -89,7 +89,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     );
   };
 
-  // Compact quality overview icon for single-line Row 1 with fixed width
+  // Compact quality overview icon for mobile-optimized Row 1 with reduced width
   const CompactQualityIcon = ({ quality, type, count }: { quality: ServeQuality, type: "fail" | "ace", count: number }) => {
     const isCircle = type === "ace";
 
@@ -111,11 +111,11 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     }
 
     return (
-      <div className="flex items-center gap-1 w-9 justify-center">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-4 h-4 rounded-full' : 'w-3 h-3 transform rotate-45'} ${getQualityColor(type)}`}>
+      <div className="flex items-center gap-0.5 w-7 justify-center">
+        <div className={`flex items-center justify-center ${isCircle ? 'w-3 h-3 rounded-full' : 'w-2.5 h-2.5 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
-        <span className="text-xs font-medium w-4 text-center">{count}</span>
+        <span className="text-xs font-medium w-3 text-center">{count}</span>
       </div>
     );
   };
@@ -221,20 +221,20 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </Badge>
           </DialogTitle>
           
-          {/* Game Stats Overview - Fixed Layout for Single Line with Consistent Spacing */}
+          {/* Game Stats Overview - Mobile-Optimized Layout */}
           <div className="space-y-4 pt-2">
-            {/* Row 1: Aces/Errors with fixed width containers and optimized mobile gaps */}
+            {/* Row 1: Aces/Errors with mobile-optimized containers and spacing */}
             <div className="flex justify-center">
               <div className="w-full max-w-xl">
-                <div className="grid grid-cols-2 gap-1 sm:gap-4">
-                  {/* Aces Column - Header above count pill, then icons with fixed widths */}
-                  <div className="flex flex-col items-center gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                  {/* Aces Column - Reduced container width for mobile */}
+                  <div className="flex flex-col items-center gap-2 overflow-hidden">
                     <div className="text-xs font-medium text-muted-foreground">Aces</div>
                     <div className="flex items-center gap-1 sm:gap-3">
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-lg font-bold ace-text">{totalAces}</span>
+                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-base sm:text-lg font-bold ace-text">{totalAces}</span>
                       </div>
-                      <div className="flex items-center w-28 justify-center">
+                      <div className="flex items-center w-20 sm:w-28 justify-center overflow-hidden">
                         <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
                         <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
                         <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
@@ -242,17 +242,17 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                     </div>
                   </div>
                   
-                  {/* Errors Column - Header above count pill, then icons with fixed widths and manual ordering */}
-                  <div className="flex flex-col items-center gap-2">
+                  {/* Errors Column - Reduced container width for mobile */}
+                  <div className="flex flex-col items-center gap-2 overflow-hidden">
                     <div className="text-xs font-medium text-muted-foreground">Errors</div>
                     <div className="flex items-center gap-1 sm:gap-3">
-                      <div className="flex items-center w-28 justify-center">
+                      <div className="flex items-center w-20 sm:w-28 justify-center overflow-hidden">
                         <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
                         <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
                         <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
                       </div>
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-lg font-bold error-text">{totalErrors}</span>
+                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-base sm:text-lg font-bold error-text">{totalErrors}</span>
                       </div>
                     </div>
                   </div>
