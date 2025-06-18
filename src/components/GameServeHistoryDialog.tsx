@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -95,24 +94,24 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
 
     let Icon = Circle;
     let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-2 w-2";
+    let iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
     
     if (quality === "good") {
       Icon = Plus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2 w-2";
+      iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
     } else if (quality === "bad") {
       Icon = Minus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2 w-2";
+      iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
     } else {
-      iconSize = "h-1 w-1";
+      iconSize = "h-1.5 w-1.5"; // Increased from h-1 w-1
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
       <div className="flex flex-col items-center justify-center w-8">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-3 h-3 rounded-full' : 'w-2.5 h-2.5 transform rotate-45'} ${getQualityColor(type)}`}>
+        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-3.5 h-3.5 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium text-center mt-0.5">{count}</span>
@@ -226,7 +225,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             {/* Row 1: Aces/Errors with vertical icon layout */}
             <div className="flex justify-center">
               <div className="w-full max-w-xl">
-                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 gap-6 sm:gap-4">
                   {/* Aces Column */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Aces</div>
