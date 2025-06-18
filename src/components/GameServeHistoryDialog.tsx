@@ -95,24 +95,24 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
 
     let Icon = Circle;
     let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-2 w-2";
+    let iconSize = "h-2.5 w-2.5";
     
     if (quality === "good") {
       Icon = Plus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2 w-2";
+      iconSize = "h-2.5 w-2.5";
     } else if (quality === "bad") {
       Icon = Minus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2 w-2";
+      iconSize = "h-2.5 w-2.5";
     } else {
-      iconSize = "h-1 w-1";
+      iconSize = "h-1.5 w-1.5";
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
-      <div className="flex flex-col items-center gap-1">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-5 h-5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)}`}>
+      <div className="flex flex-col items-center gap-1 flex-1">
+        <div className={`flex items-center justify-center ${isCircle ? 'w-6 h-6 rounded-full' : 'w-5 h-5 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium">{count}</span>
@@ -123,8 +123,6 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
   // Calculate game stats
   const totalErrors = sortedServes.filter(s => s.type === "fail").length;
   const totalAces = sortedServes.filter(s => s.type === "ace").length;
-  const totalServes = sortedServes.length;
-  const successRate = totalServes > 0 ? ((totalServes - totalErrors) / totalServes) * 100 : 0;
   
   // Get players who participated in this game
   const gamePlayerIds = [...new Set(gameServes.map(serve => serve.playerId))];
@@ -223,38 +221,38 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </Badge>
           </DialogTitle>
           
-          {/* Game Stats Overview - 2 Row Layout */}
+          {/* Game Stats Overview - Improved Layout */}
           <div className="space-y-4 pt-2">
-            {/* Row 1: Aces + Quality + Errors + Quality */}
+            {/* Row 1: 50/50 Split for Aces and Errors */}
             <div className="flex justify-center">
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-md w-full max-w-lg gap-6">
-                {/* Aces Section */}
-                <div className="flex items-center gap-3">
+              <div className="w-full max-w-lg bg-muted/30 rounded-md p-4">
+                {/* Headers */}
+                <div className="grid grid-cols-2 gap-6 mb-3">
                   <div className="text-center">
-                    <div className="text-xs font-medium text-muted-foreground mb-1">Aces</div>
-                    <div className="bg-muted/50 rounded-full px-3 py-1">
+                    <div className="text-sm font-medium text-muted-foreground mb-2">Aces</div>
+                    <div className="bg-muted rounded-full px-4 py-2 inline-block">
                       <span className="text-lg font-bold ace-text">{totalAces}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="text-center">
+                    <div className="text-sm font-medium text-muted-foreground mb-2">Errors</div>
+                    <div className="bg-muted rounded-full px-4 py-2 inline-block">
+                      <span className="text-lg font-bold error-text">{totalErrors}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Quality Icons - Equal spacing */}
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Aces Quality Icons */}
+                  <div className="flex justify-center gap-4">
                     <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
                     <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
                     <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
                   </div>
-                </div>
-                
-                {/* Separator */}
-                <div className="w-px h-12 bg-muted"></div>
-                
-                {/* Errors Section */}
-                <div className="flex items-center gap-3">
-                  <div className="text-center">
-                    <div className="text-xs font-medium text-muted-foreground mb-1">Errors</div>
-                    <div className="bg-muted/50 rounded-full px-3 py-1">
-                      <span className="text-lg font-bold error-text">{totalErrors}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
+                  
+                  {/* Errors Quality Icons */}
+                  <div className="flex justify-center gap-4">
                     <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
                     <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
                     <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
@@ -263,34 +261,22 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
             </div>
             
-            {/* Row 2: A/E, QS, Total Serves, Success Rate */}
-            <div className="grid grid-cols-4 gap-2 text-center text-xs sm:text-sm px-2">
+            {/* Row 2: Only A/E and QS stats with enhanced pills */}
+            <div className="grid grid-cols-2 gap-4 text-center text-sm px-4">
               <div>
-                <div className="font-medium text-muted-foreground">A/E</div>
-                <div className="bg-muted/50 rounded-full px-2 py-1 inline-block">
+                <div className="font-medium text-muted-foreground mb-2">A/E Ratio</div>
+                <div className="bg-muted rounded-full px-4 py-2">
                   <span className={`text-sm font-bold ${getAERatioColor(avgAERatio)}`}>
                     {formatValue(avgAERatio)}
                   </span>
                 </div>
               </div>
               <div>
-                <div className="font-medium text-muted-foreground">QS</div>
-                <div className="bg-muted/50 rounded-full px-2 py-1 inline-block">
+                <div className="font-medium text-muted-foreground mb-2">Quality Score</div>
+                <div className="bg-muted rounded-full px-4 py-2">
                   <span className={`text-sm font-bold ${getQualityScoreColor(avgQualityScore)}`}>
                     {formatValue(avgQualityScore, true)}
                   </span>
-                </div>
-              </div>
-              <div>
-                <div className="font-medium text-muted-foreground">Total</div>
-                <div className="bg-muted/50 rounded-full px-2 py-1 inline-block">
-                  <span className="text-sm font-bold text-foreground">{totalServes}</span>
-                </div>
-              </div>
-              <div>
-                <div className="font-medium text-muted-foreground">Success</div>
-                <div className="bg-muted/50 rounded-full px-2 py-1 inline-block">
-                  <span className="text-sm font-bold text-foreground">{successRate.toFixed(0)}%</span>
                 </div>
               </div>
             </div>
