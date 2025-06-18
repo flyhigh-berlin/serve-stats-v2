@@ -14,8 +14,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Circle, Minus, Crown } from "lucide-react";
 import { ServeQuality } from "../types";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 interface GameServeHistoryDialogProps {
   gameId: string | null;
@@ -125,6 +123,8 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
   // Calculate game stats
   const totalErrors = sortedServes.filter(s => s.type === "fail").length;
   const totalAces = sortedServes.filter(s => s.type === "ace").length;
+  const totalServes = sortedServes.length;
+  const successRate = totalServes > 0 ? ((totalServes - totalErrors) / totalServes) * 100 : 0;
   
   // Get players who participated in this game
   const gamePlayerIds = [...new Set(gameServes.map(serve => serve.playerId))];
@@ -208,27 +208,10 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     if (showSign && value > 0) return `+${value.toFixed(2)}`;
     return value.toFixed(2);
   };
-
-  // Pie chart data
-  const pieData = [
-    { name: 'Aces', value: totalAces, fill: 'hsl(var(--chart-1))' },
-    { name: 'Errors', value: totalErrors, fill: 'hsl(var(--chart-2))' }
-  ];
-
-  const chartConfig = {
-    aces: {
-      label: "Aces",
-      color: "hsl(var(--chart-1))",
-    },
-    errors: {
-      label: "Errors", 
-      color: "hsl(var(--chart-2))",
-    },
-  };
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             <span>{game.title || format(new Date(game.date), "EEEE")}</span>
@@ -241,85 +224,76 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
           </DialogTitle>
           
           {/* Game Stats Overview - 2 Row Layout */}
-          <div className="space-y-4 pt-4">
-            {/* Row 1: Header labels */}
-            <div className="grid grid-cols-2 gap-4 text-center">
-              <div className="text-sm font-medium text-muted-foreground">Aces</div>
-              <div className="text-sm font-medium text-muted-foreground">Errors</div>
-            </div>
-            
-            {/* Row 1: Stats and Icons - True 50/50 split */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Aces Section - Left Half */}
-              <div className="flex flex-col items-center space-y-3">
-                <div className="bg-muted/50 rounded-full px-4 py-2">
-                  <span className="text-xl font-bold ace-text">{totalAces}</span>
-                </div>
+          <div className="space-y-4 pt-2">
+            {/* Row 1: Aces + Quality + Errors + Quality */}
+            <div className="flex justify-center">
+              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-md w-full max-w-lg gap-6">
+                {/* Aces Section */}
                 <div className="flex items-center gap-3">
-                  <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
-                  <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
-                  <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-muted-foreground mb-1">Aces</div>
+                    <div className="bg-muted/50 rounded-full px-3 py-1">
+                      <span className="text-lg font-bold ace-text">{totalAces}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
+                    <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
+                    <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
+                  </div>
+                </div>
+                
+                {/* Separator */}
+                <div className="w-px h-12 bg-muted"></div>
+                
+                {/* Errors Section */}
+                <div className="flex items-center gap-3">
+                  <div className="text-center">
+                    <div className="text-xs font-medium text-muted-foreground mb-1">Errors</div>
+                    <div className="bg-muted/50 rounded-full px-3 py-1">
+                      <span className="text-lg font-bold error-text">{totalErrors}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
+                    <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
+                    <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+                  </div>
                 </div>
               </div>
-              
-              {/* Errors Section - Right Half */}
-              <div className="flex flex-col items-center space-y-3">
-                <div className="bg-muted/50 rounded-full px-4 py-2">
-                  <span className="text-xl font-bold error-text">{totalErrors}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
-                  <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
-                  <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
-                </div>
-              </div>
             </div>
             
-            {/* Row 2: A/E and QS only */}
-            <div className="grid grid-cols-2 gap-4 text-center">
+            {/* Row 2: A/E, QS, Total Serves, Success Rate */}
+            <div className="grid grid-cols-4 gap-2 text-center text-xs sm:text-sm px-2">
               <div>
-                <div className="text-sm font-medium text-muted-foreground mb-2">A/E Ratio</div>
-                <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
+                <div className="font-medium text-muted-foreground">A/E</div>
+                <div className="bg-muted/50 rounded-full px-2 py-1 inline-block">
                   <span className={`text-sm font-bold ${getAERatioColor(avgAERatio)}`}>
                     {formatValue(avgAERatio)}
                   </span>
                 </div>
               </div>
               <div>
-                <div className="text-sm font-medium text-muted-foreground mb-2">Quality Score</div>
-                <div className="bg-muted/50 rounded-full px-3 py-1 inline-block">
+                <div className="font-medium text-muted-foreground">QS</div>
+                <div className="bg-muted/50 rounded-full px-2 py-1 inline-block">
                   <span className={`text-sm font-bold ${getQualityScoreColor(avgQualityScore)}`}>
                     {formatValue(avgQualityScore, true)}
                   </span>
                 </div>
               </div>
-            </div>
-
-            {/* Pie Chart Section */}
-            {(totalAces > 0 || totalErrors > 0) && (
-              <div className="flex justify-center">
-                <div className="w-32 h-32">
-                  <ChartContainer config={chartConfig} className="w-full h-full">
-                    <PieChart>
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={20}
-                        outerRadius={50}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ChartContainer>
+              <div>
+                <div className="font-medium text-muted-foreground">Total</div>
+                <div className="bg-muted/50 rounded-full px-2 py-1 inline-block">
+                  <span className="text-sm font-bold text-foreground">{totalServes}</span>
                 </div>
               </div>
-            )}
+              <div>
+                <div className="font-medium text-muted-foreground">Success</div>
+                <div className="bg-muted/50 rounded-full px-2 py-1 inline-block">
+                  <span className="text-sm font-bold text-foreground">{successRate.toFixed(0)}%</span>
+                </div>
+              </div>
+            </div>
           </div>
         </DialogHeader>
         
