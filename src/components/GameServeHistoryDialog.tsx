@@ -221,20 +221,20 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </Badge>
           </DialogTitle>
           
-          {/* Game Stats Overview - Fixed Layout with Consistent Pills */}
+          {/* Game Stats Overview - Fixed Layout for Single Line */}
           <div className="space-y-4 pt-2">
-            {/* Row 1: Aces/Errors with mirrored layout and improved icon spacing */}
+            {/* Row 1: Aces/Errors with headers above count pills and symmetrical layout */}
             <div className="flex justify-center">
               <div className="w-full max-w-xl">
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Aces Column - Left side: Count then Icons */}
+                <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                  {/* Aces Column - Header above count pill, then icons */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Aces</div>
-                    <div className="flex items-center gap-3">
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-20 flex items-center justify-center">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-20 flex items-center justify-center flex-shrink-0">
                         <span className="text-lg font-bold ace-text">{totalAces}</span>
                       </div>
-                      <div className="flex items-center gap-2 w-28">
+                      <div className="flex items-center gap-1 sm:gap-2 max-w-[100px] overflow-hidden">
                         <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
                         <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
                         <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
@@ -242,17 +242,17 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                     </div>
                   </div>
                   
-                  {/* Errors Column - Right side: Icons then Count (mirrored) */}
+                  {/* Errors Column - Header above count pill, then icons (manually ordered) */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Errors</div>
-                    <div className="flex items-center gap-3 flex-row-reverse">
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-20 flex items-center justify-center">
-                        <span className="text-lg font-bold error-text">{totalErrors}</span>
-                      </div>
-                      <div className="flex items-center gap-2 w-28">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="flex items-center gap-1 sm:gap-2 max-w-[100px] overflow-hidden">
                         <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
                         <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
                         <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
+                      </div>
+                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-lg font-bold error-text">{totalErrors}</span>
                       </div>
                     </div>
                   </div>
