@@ -94,24 +94,24 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
 
     let Icon = Circle;
     let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
+    let iconSize = isCircle ? "h-2.5 w-2.5" : "h-2 w-2"; // Reduced diamond size
     
     if (quality === "good") {
       Icon = Plus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
+      iconSize = isCircle ? "h-2.5 w-2.5" : "h-2 w-2"; // Reduced diamond size
     } else if (quality === "bad") {
       Icon = Minus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
+      iconSize = isCircle ? "h-2.5 w-2.5" : "h-2 w-2"; // Reduced diamond size
     } else {
-      iconSize = "h-1.5 w-1.5"; // Increased from h-1 w-1
+      iconSize = isCircle ? "h-1.5 w-1.5" : "h-1 w-1"; // Reduced neutral diamond size
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
       <div className="flex flex-col items-center justify-center w-8">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-3.5 h-3.5 transform rotate-45'} ${getQualityColor(type)}`}>
+        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium text-center mt-0.5">{count}</span>
@@ -222,37 +222,33 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
           
           {/* Game Stats Overview - Mobile-Optimized Layout */}
           <div className="space-y-4 pt-2">
-            {/* Row 1: Aces/Errors with vertical icon layout */}
+            {/* Row 1: Aces/Errors with headers above pills */}
             <div className="flex justify-center">
               <div className="w-full max-w-xl">
                 <div className="grid grid-cols-2 gap-6 sm:gap-4">
                   {/* Aces Column */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Aces</div>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-base sm:text-lg font-bold ace-text">{totalAces}</span>
-                      </div>
-                      <div className="flex items-center gap-1 overflow-hidden">
-                        <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
-                        <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
-                        <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
-                      </div>
+                    <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-base sm:text-lg font-bold ace-text">{totalAces}</span>
+                    </div>
+                    <div className="flex items-center gap-1 overflow-hidden">
+                      <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
+                      <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
+                      <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
                     </div>
                   </div>
                   
                   {/* Errors Column */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Errors</div>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="flex items-center gap-1 overflow-hidden">
-                        <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
-                        <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
-                        <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
-                      </div>
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-base sm:text-lg font-bold error-text">{totalErrors}</span>
-                      </div>
+                    <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-base sm:text-lg font-bold error-text">{totalErrors}</span>
+                    </div>
+                    <div className="flex items-center gap-1 overflow-hidden">
+                      <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
+                      <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
+                      <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
                     </div>
                   </div>
                 </div>
