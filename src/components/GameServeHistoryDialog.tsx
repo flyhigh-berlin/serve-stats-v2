@@ -94,24 +94,25 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
 
     let Icon = Circle;
     let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-2.5 w-2.5"; // Keep circle size unchanged
+    let iconSize = "h-2.5 w-2.5"; // Default for circles
     
     if (quality === "good") {
       Icon = Plus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = isCircle ? "h-2.5 w-2.5" : "h-2 w-2"; // Reduce diamond size
+      iconSize = isCircle ? "h-2.5 w-2.5" : "h-1.5 w-1.5"; // Smaller diamonds
     } else if (quality === "bad") {
       Icon = Minus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = isCircle ? "h-2.5 w-2.5" : "h-2 w-2"; // Reduce diamond size
+      iconSize = isCircle ? "h-2.5 w-2.5" : "h-1.5 w-1.5"; // Smaller diamonds
     } else {
-      iconSize = isCircle ? "h-1.5 w-1.5" : "h-1 w-1"; // Reduce neutral diamond dot size
+      // neutral - make ace dot smaller to match error dot
+      iconSize = "h-1 w-1"; // Same size for both ace and error neutral dots
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
       <div className="flex flex-col items-center justify-center w-8">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)}`}>
+        <div className={`flex items-center justify-center py-1 ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium text-center mt-0.5">{count}</span>
