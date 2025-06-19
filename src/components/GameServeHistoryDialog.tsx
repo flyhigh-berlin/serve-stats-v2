@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -89,33 +88,33 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     );
   };
 
-  // Compact quality overview icon with vertical layout (icon on top, number below)
+  // Compact quality overview icon with bottom-aligned numbers for consistent positioning
   const CompactQualityIcon = ({ quality, type, count }: { quality: ServeQuality, type: "fail" | "ace", count: number }) => {
     const isCircle = type === "ace";
 
     let Icon = Circle;
     let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
+    let iconSize = "h-2.5 w-2.5";
     
     if (quality === "good") {
       Icon = Plus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
+      iconSize = "h-2.5 w-2.5";
     } else if (quality === "bad") {
       Icon = Minus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
+      iconSize = "h-2.5 w-2.5";
     } else {
-      iconSize = "h-1.5 w-1.5"; // Increased from h-1 w-1
+      iconSize = "h-1.5 w-1.5";
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
-      <div className="flex flex-col items-center justify-center w-8 py-1">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)}`}>
+      <div className="flex flex-col items-center justify-end w-8 h-12">
+        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)} mb-1`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
-        <span className="text-xs font-medium text-center mt-0.5">{count}</span>
+        <span className="text-xs font-medium text-center leading-none">{count}</span>
       </div>
     );
   };
@@ -221,20 +220,20 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </Badge>
           </DialogTitle>
           
-          {/* Game Stats Overview - Mobile-Optimized Layout */}
+          {/* Game Stats Overview - Fixed Layout with Consistent Heights */}
           <div className="space-y-4 pt-2">
-            {/* Row 1: Aces/Errors with vertical icon layout */}
+            {/* Row 1: Aces/Errors with standardized layout and consistent heights */}
             <div className="flex justify-center">
               <div className="w-full max-w-xl">
                 <div className="grid grid-cols-2 gap-6 sm:gap-4">
-                  {/* Aces Column */}
+                  {/* Aces Column - Standardized container with fixed height */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Aces</div>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
+                    <div className="flex items-end gap-2 sm:gap-3 h-12">
+                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0 h-10">
                         <span className="text-base sm:text-lg font-bold ace-text">{totalAces}</span>
                       </div>
-                      <div className="flex items-center gap-1 overflow-hidden">
+                      <div className="flex items-end gap-1 overflow-hidden h-12">
                         <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
                         <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
                         <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
@@ -242,16 +241,16 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                     </div>
                   </div>
                   
-                  {/* Errors Column */}
+                  {/* Errors Column - Standardized container with identical height */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Errors</div>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="flex items-center gap-1 overflow-hidden">
+                    <div className="flex items-end gap-2 sm:gap-3 h-12">
+                      <div className="flex items-end gap-1 overflow-hidden h-12">
                         <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
                         <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
                         <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
                       </div>
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
+                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0 h-10">
                         <span className="text-base sm:text-lg font-bold error-text">{totalErrors}</span>
                       </div>
                     </div>
