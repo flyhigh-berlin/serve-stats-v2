@@ -94,24 +94,24 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
 
     let Icon = Circle;
     let iconStyle = { strokeWidth: 4, fill: quality === "neutral" ? 'white' : 'none' };
-    let iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
+    let iconSize = "h-2.5 w-2.5";
     
     if (quality === "good") {
       Icon = Plus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
+      iconSize = "h-2.5 w-2.5";
     } else if (quality === "bad") {
       Icon = Minus;
       iconStyle = { strokeWidth: 4, fill: 'none' };
-      iconSize = "h-2.5 w-2.5"; // Increased from h-2 w-2
+      iconSize = "h-2.5 w-2.5";
     } else {
-      iconSize = "h-1.5 w-1.5"; // Increased from h-1 w-1
+      iconSize = "h-1.5 w-1.5";
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
       <div className="flex flex-col items-center justify-center w-8">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)}`}>
+        <div className={`flex items-center justify-center ${isCircle ? 'w-4 h-4 rounded-full' : 'w-5 h-5 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium text-center mt-0.5">{count}</span>
@@ -233,7 +233,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                       <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
                         <span className="text-base sm:text-lg font-bold ace-text">{totalAces}</span>
                       </div>
-                      <div className="flex items-center gap-1 overflow-hidden">
+                      <div className="flex items-center gap-0.5 sm:gap-1 overflow-hidden">
                         <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
                         <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
                         <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
@@ -248,7 +248,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                       <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
                         <span className="text-base sm:text-lg font-bold error-text">{totalErrors}</span>
                       </div>
-                      <div className="flex items-center gap-1 overflow-hidden">
+                      <div className="flex items-center gap-0.5 sm:gap-1 overflow-hidden">
                         <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
                         <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
                         <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
