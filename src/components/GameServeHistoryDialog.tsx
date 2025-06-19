@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -229,10 +228,12 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                 <div className="grid grid-cols-2 gap-6 sm:gap-4">
                   {/* Aces Column - Standardized container with fixed height */}
                   <div className="flex flex-col items-center gap-2">
-                    <div className="text-xs font-medium text-muted-foreground">Aces</div>
                     <div className="flex items-end gap-2 sm:gap-3 h-12">
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0 h-10">
-                        <span className="text-base sm:text-lg font-bold ace-text">{totalAces}</span>
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="text-xs font-medium text-muted-foreground">Aces</div>
+                        <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0 h-10">
+                          <span className="text-base sm:text-lg font-bold ace-text">{totalAces}</span>
+                        </div>
                       </div>
                       <div className="flex items-end gap-1 overflow-hidden h-12">
                         <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
@@ -244,15 +245,17 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   
                   {/* Errors Column - Standardized container with identical height */}
                   <div className="flex flex-col items-center gap-2">
-                    <div className="text-xs font-medium text-muted-foreground">Errors</div>
                     <div className="flex items-end gap-2 sm:gap-3 h-12">
                       <div className="flex items-end gap-1 overflow-hidden h-12">
                         <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
                         <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
                         <CompactQualityIcon quality="bad" type="fail" count={qualityBreakdown.bad.errors} />
                       </div>
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0 h-10">
-                        <span className="text-base sm:text-lg font-bold error-text">{totalErrors}</span>
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="text-xs font-medium text-muted-foreground">Errors</div>
+                        <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0 h-10">
+                          <span className="text-base sm:text-lg font-bold error-text">{totalErrors}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
