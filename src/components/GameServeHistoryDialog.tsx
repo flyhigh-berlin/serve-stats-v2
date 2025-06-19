@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -110,8 +111,8 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     }
 
     return (
-      <div className="flex flex-col items-center justify-center w-8">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-3 h-3 transform rotate-45'} ${getQualityColor(type)}`}>
+      <div className="flex flex-col items-center justify-center w-8 py-1">
+        <div className={`flex items-center justify-center ${isCircle ? 'w-3.5 h-3.5 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)}`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium text-center mt-0.5">{count}</span>
