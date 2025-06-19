@@ -70,7 +70,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
       iconSize = "h-3 w-3";
     } else {
       // neutral - filled circle/dot
-      iconSize = "h-1.5 w-1.5";
+      iconSize = "h-1 w-1";
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
@@ -105,13 +105,13 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
       iconStyle = { strokeWidth: 4, fill: 'none' };
       iconSize = "h-2.5 w-2.5";
     } else {
-      iconSize = "h-1.5 w-1.5";
+      iconSize = "h-1 w-1";
       iconStyle = { strokeWidth: 0, fill: 'white' };
     }
 
     return (
       <div className="flex flex-col items-center justify-end w-8 h-12">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-4 h-4 rounded-full' : 'w-4 h-4 transform rotate-45'} ${getQualityColor(type)} mb-1`}>
+        <div className={`flex items-center justify-center ${isCircle ? 'w-4 h-4 rounded-full' : 'w-3.5 h-3.5 transform rotate-45'} ${getQualityColor(type)} mb-1`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium text-center leading-none">{count}</span>
