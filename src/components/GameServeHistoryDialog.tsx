@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
@@ -223,29 +222,29 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
           
           {/* Game Stats Overview - Mobile-Optimized Layout */}
           <div className="space-y-4 pt-2">
-            {/* Row 1: Aces/Errors with vertical icon layout */}
+            {/* Row 1: Aces/Errors with standardized layout */}
             <div className="flex justify-center">
               <div className="w-full max-w-xl">
                 <div className="grid grid-cols-2 gap-6 sm:gap-4">
-                  {/* Aces Column */}
+                  {/* Aces Column - Standardized Structure */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Aces</div>
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-base sm:text-lg font-bold ace-text">{totalAces}</span>
-                      </div>
+                    <div className="flex items-center justify-center gap-2 sm:gap-3">
                       <div className="flex items-center gap-1 overflow-hidden">
                         <CompactQualityIcon quality="good" type="ace" count={qualityBreakdown.good.aces} />
                         <CompactQualityIcon quality="neutral" type="ace" count={qualityBreakdown.neutral.aces} />
                         <CompactQualityIcon quality="bad" type="ace" count={qualityBreakdown.bad.aces} />
                       </div>
+                      <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-3 py-2 w-16 sm:w-20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-base sm:text-lg font-bold ace-text">{totalAces}</span>
+                      </div>
                     </div>
                   </div>
                   
-                  {/* Errors Column */}
+                  {/* Errors Column - Matching Structure */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="text-xs font-medium text-muted-foreground">Errors</div>
-                    <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="flex items-center justify-center gap-2 sm:gap-3">
                       <div className="flex items-center gap-1 overflow-hidden">
                         <CompactQualityIcon quality="good" type="fail" count={qualityBreakdown.good.errors} />
                         <CompactQualityIcon quality="neutral" type="fail" count={qualityBreakdown.neutral.errors} />
