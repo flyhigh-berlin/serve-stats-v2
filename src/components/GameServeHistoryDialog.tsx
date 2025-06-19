@@ -77,7 +77,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     return (
       <div className="flex items-center justify-center w-8">
         <div 
-          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-90'} ${getQualityColor(type)}`}
+          className={`relative flex items-center justify-center ${isCircle ? 'rounded-full h-8 w-8' : 'rounded-none transform rotate-45 h-7 w-7 scale-90 -translate-y-0.5'} ${getQualityColor(type)}`}
         >
           <Icon 
             className={`${iconSize} absolute text-white ${!isCircle ? "transform -rotate-45" : ""}`} 
@@ -111,7 +111,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
 
     return (
       <div className="flex flex-col items-center justify-end w-8 h-12">
-        <div className={`flex items-center justify-center ${isCircle ? 'w-4 h-4 rounded-full' : 'w-3.5 h-3.5 transform rotate-45'} ${getQualityColor(type)} mb-1`}>
+        <div className={`flex items-center justify-center ${isCircle ? 'w-4 h-4 rounded-full' : 'w-3.5 h-3.5 transform rotate-45 -translate-y-0.5'} ${getQualityColor(type)} mb-1`}>
           <Icon className={`${iconSize} text-white ${!isCircle ? "transform -rotate-45" : ""}`} style={iconStyle} />
         </div>
         <span className="text-xs font-medium text-center leading-none">{count}</span>
