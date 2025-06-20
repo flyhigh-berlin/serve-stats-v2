@@ -302,29 +302,29 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                 </div>
                 <div className="flex justify-center">
                   <div className="w-full max-w-md border rounded-md">
-                    <div className="grid grid-cols-4 gap-2 text-center text-xs px-2 py-2">
-                      <div className="font-medium text-muted-foreground">Aces</div>
-                      <div className="font-medium text-muted-foreground">Errors</div>
-                      <div className="font-medium text-muted-foreground">A/E</div>
-                      <div className="font-medium text-muted-foreground">QS</div>
+                    <div className="grid grid-cols-4 text-center text-xs px-4 py-2">
+                      <div className="font-medium text-muted-foreground w-1/4 text-left">Aces</div>
+                      <div className="font-medium text-muted-foreground w-1/4 text-left">Errors</div>
+                      <div className="font-medium text-muted-foreground w-1/4 text-left">A/E</div>
+                      <div className="font-medium text-muted-foreground w-1/4 text-left">QS</div>
                     </div>
                     <hr className="border-muted" />
-                    <div className="grid grid-cols-4 gap-2 text-center text-xs p-2">
-                      <div className="truncate">
+                    <div className="grid grid-cols-4 text-center text-xs p-4">
+                      <div className="w-1/4 text-left">
                         <div className="font-medium truncate">{topPlayerAces?.name || "-"}</div>
                         <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
                       </div>
-                      <div className="truncate">
+                      <div className="w-1/4 text-left">
                         <div className="font-medium truncate">{topPlayerErrors?.name || "-"}</div>
                         <div className="error-text font-bold">{topPlayerErrors?.stats.errors || 0}</div>
                       </div>
-                      <div className="truncate">
+                      <div className="w-1/4 text-left">
                         <div className="font-medium truncate">{topPlayerAERatio?.name || "-"}</div>
                         <div className={`font-bold ${getAERatioColor(topPlayerAERatio?.aeRatio || 0)}`}>
                           {formatValue(topPlayerAERatio?.aeRatio || 0)}
                         </div>
                       </div>
-                      <div className="truncate">
+                      <div className="w-1/4 text-left">
                         <div className="font-medium truncate">{topPlayerQS?.name || "-"}</div>
                         <div className={`font-bold ${getQualityScoreColor(topPlayerQS?.qualityScore || 0)}`}>
                           {formatValue(topPlayerQS?.qualityScore || 0, true)}
