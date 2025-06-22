@@ -208,7 +208,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             <span>{game.title || format(new Date(game.date), "EEEE")}</span>
@@ -286,7 +286,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
         </DialogHeader>
         
         <ScrollArea className="flex-1 min-h-0">
-          <div className="space-y-4 py-4 pr-4">
+          <div className="space-y-6 py-4 pr-4">
             {game.notes && (
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-sm">{game.notes}</p>
@@ -295,37 +295,36 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             
             {/* Player Rankings - Top player for each stat */}
             {gamePlayers.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 px-2">
                   <h4 className="text-sm font-medium">Top Performers</h4>
                   <Crown className="h-3 w-3 text-yellow-500" />
                 </div>
                 <div className="flex justify-center">
-                  <div className="w-full max-w-md border rounded-md">
-                    <div className="grid grid-cols-4 text-center text-xs px-4 py-2">
-                      <div className="font-medium text-muted-foreground w-1/4 text-left">Aces</div>
-                      <div className="font-medium text-muted-foreground w-1/4 text-left">Errors</div>
-                      <div className="font-medium text-muted-foreground w-1/4 text-left">A/E</div>
-                      <div className="font-medium text-muted-foreground w-1/4 text-left">QS</div>
+                  <div className="w-full max-w-2xl border rounded-md">
+                    <div className="grid grid-cols-4 gap-0 text-xs px-4 py-3 bg-muted/30">
+                      <div className="font-medium text-muted-foreground text-left">Aces</div>
+                      <div className="font-medium text-muted-foreground text-left">Errors</div>
+                      <div className="font-medium text-muted-foreground text-left">A/E</div>
+                      <div className="font-medium text-muted-foreground text-left">QS</div>
                     </div>
-                    <hr className="border-muted" />
-                    <div className="grid grid-cols-4 text-center text-xs p-4">
-                      <div className="w-1/4 text-left">
-                        <div className="font-medium truncate">{topPlayerAces?.name || "-"}</div>
+                    <div className="grid grid-cols-4 gap-0 text-xs px-4 py-3">
+                      <div className="text-left">
+                        <div className="font-medium truncate text-sm">{topPlayerAces?.name || "-"}</div>
                         <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
                       </div>
-                      <div className="w-1/4 text-left">
-                        <div className="font-medium truncate">{topPlayerErrors?.name || "-"}</div>
+                      <div className="text-left">
+                        <div className="font-medium truncate text-sm">{topPlayerErrors?.name || "-"}</div>
                         <div className="error-text font-bold">{topPlayerErrors?.stats.errors || 0}</div>
                       </div>
-                      <div className="w-1/4 text-left">
-                        <div className="font-medium truncate">{topPlayerAERatio?.name || "-"}</div>
+                      <div className="text-left">
+                        <div className="font-medium truncate text-sm">{topPlayerAERatio?.name || "-"}</div>
                         <div className={`font-bold ${getAERatioColor(topPlayerAERatio?.aeRatio || 0)}`}>
                           {formatValue(topPlayerAERatio?.aeRatio || 0)}
                         </div>
                       </div>
-                      <div className="w-1/4 text-left">
-                        <div className="font-medium truncate">{topPlayerQS?.name || "-"}</div>
+                      <div className="text-left">
+                        <div className="font-medium truncate text-sm">{topPlayerQS?.name || "-"}</div>
                         <div className={`font-bold ${getQualityScoreColor(topPlayerQS?.qualityScore || 0)}`}>
                           {formatValue(topPlayerQS?.qualityScore || 0, true)}
                         </div>
@@ -337,37 +336,37 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             )}
             
             {/* Serve History */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium">Serve History</h4>
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium px-2">Serve History</h4>
               {sortedServes.length > 0 ? (
                 <div className="flex justify-center">
-                  <div className="border rounded-md max-h-[300px] overflow-y-auto w-full max-w-md">
+                  <div className="border rounded-md max-h-[300px] overflow-y-auto w-full max-w-2xl">
                     <Table>
                       <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-xs w-1/4 text-left">Player</TableHead>
-                          <TableHead className="text-xs w-1/4 text-left">Type</TableHead>
-                          <TableHead className="text-xs w-1/4 text-left">Quality</TableHead>
-                          <TableHead className="text-xs w-1/4 text-left">Time</TableHead>
+                        <TableRow className="bg-muted/30">
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Player</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Type</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Quality</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Time</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {sortedServes.map((serve, index) => (
                           <TableRow key={serve.id} className={`${index % 2 === 0 ? "bg-background" : "bg-muted/30"} border-b border-muted/30`}>
-                            <TableCell className="font-medium text-xs w-1/4">
-                              {serve.playerName}
+                            <TableCell className="font-medium text-sm w-1/4 text-left">
+                              <div className="truncate">{serve.playerName}</div>
                             </TableCell>
-                            <TableCell className="w-1/4">
+                            <TableCell className="w-1/4 text-left">
                               <div 
                                 className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white ${serve.type === "ace" ? "ace-bg" : "error-bg"}`}
                               >
                                 {serve.type === "fail" ? "Error" : "Ace"}
                               </div>
                             </TableCell>
-                            <TableCell className="w-1/4">
+                            <TableCell className="w-1/4 text-left">
                               <QualityIcon quality={serve.quality} type={serve.type} />
                             </TableCell>
-                            <TableCell className="text-xs text-muted-foreground w-1/4">
+                            <TableCell className="text-xs text-muted-foreground w-1/4 text-left">
                               {format(new Date(serve.timestamp), "HH:mm")}
                             </TableCell>
                           </TableRow>
@@ -378,7 +377,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                 </div>
               ) : (
                 <div className="flex justify-center">
-                  <div className="text-center py-8 text-muted-foreground border rounded-md w-full max-w-md">
+                  <div className="text-center py-8 text-muted-foreground border rounded-md w-full max-w-2xl">
                     No serve records found for this game.
                   </div>
                 </div>
