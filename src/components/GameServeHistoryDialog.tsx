@@ -362,7 +362,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                       </TableHeader>
                       <TableBody>
                         {sortedServes.map((serve, index) => (
-                          <TableRow key={serve.id} className={`${index % 2 === 0 ? "bg-background" : "bg-muted/30"} border-b border-muted/30`}>
+                          <TableRow key={serve.id} className={`${index % 2 === 0 ? "bg-background" : "bg-muted/50"} border-b border-muted/30`}>
                             <TableCell className="font-medium text-sm w-1/4 text-left p-4">
                               <div className="truncate">{serve.playerName}</div>
                             </TableCell>
