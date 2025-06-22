@@ -290,7 +290,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
         </DialogHeader>
         
         <ScrollArea className="flex-1 min-h-0">
-          <div className="space-y-6 py-4 pr-4">
+          <div className="space-y-6 py-4">
             {game.notes && (
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-sm">{game.notes}</p>
@@ -304,7 +304,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <h4 className="text-sm font-medium">Top Performers</h4>
                   <Crown className="h-3 w-3 text-yellow-500" />
                 </div>
-                <div className="w-full max-w-2xl mx-auto">
+                <div className="max-w-2xl mx-auto">
                   <div className="border rounded-md">
                     <Table>
                       <TableHeader>
@@ -349,7 +349,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             <div className="space-y-3">
               <h4 className="text-sm font-medium px-2">Serve History</h4>
               {sortedServes.length > 0 ? (
-                <div className="w-full max-w-2xl mx-auto">
+                <div className="max-w-2xl mx-auto">
                   <div className="border rounded-md max-h-[300px] overflow-y-auto">
                     <Table>
                       <TableHeader>
@@ -386,7 +386,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   </div>
                 </div>
               ) : (
-                <div className="w-full max-w-2xl mx-auto">
+                <div className="max-w-2xl mx-auto">
                   <div className="text-center py-8 text-muted-foreground border rounded-md">
                     No serve records found for this game.
                   </div>
