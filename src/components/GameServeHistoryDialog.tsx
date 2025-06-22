@@ -224,7 +224,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
           <div className="space-y-4 pt-2">
             {/* Row 1: Aces/Errors with standardized layout and consistent heights */}
             <div className="flex justify-center">
-              <div className="w-full max-w-xl">
+              <div className="w-full max-w-2xl">
                 <div className="grid grid-cols-2 gap-6 sm:gap-4">
                   {/* Aces Column - Standardized container with fixed height */}
                   <div className="flex flex-col items-center gap-2">
@@ -264,21 +264,25 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </div>
             
             {/* Row 2: A/E and QS stats with matching pill sizes */}
-            <div className="grid grid-cols-2 gap-4 px-4 max-w-xl mx-auto">
-              <div className="text-center">
-                <div className="font-medium text-muted-foreground mb-2 text-xs">A/E Ratio</div>
-                <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-20 mx-auto flex items-center justify-center">
-                  <span className={`text-lg font-bold ${getAERatioColor(avgAERatio)}`}>
-                    {formatValue(avgAERatio)}
-                  </span>
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="font-medium text-muted-foreground mb-2 text-xs">Quality Score</div>
-                <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-20 mx-auto flex items-center justify-center">
-                  <span className={`text-lg font-bold ${getQualityScoreColor(avgQualityScore)}`}>
-                    {formatValue(avgQualityScore, true)}
-                  </span>
+            <div className="flex justify-center">
+              <div className="w-full max-w-2xl">
+                <div className="grid grid-cols-2 gap-4 px-4">
+                  <div className="text-center">
+                    <div className="font-medium text-muted-foreground mb-2 text-xs">A/E Ratio</div>
+                    <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-20 mx-auto flex items-center justify-center">
+                      <span className={`text-lg font-bold ${getAERatioColor(avgAERatio)}`}>
+                        {formatValue(avgAERatio)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-muted-foreground mb-2 text-xs">Quality Score</div>
+                    <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-20 mx-auto flex items-center justify-center">
+                      <span className={`text-lg font-bold ${getQualityScoreColor(avgQualityScore)}`}>
+                        {formatValue(avgQualityScore, true)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -300,34 +304,34 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <h4 className="text-sm font-medium">Top Performers</h4>
                   <Crown className="h-3 w-3 text-yellow-500" />
                 </div>
-                <div className="flex justify-center">
-                  <div className="w-full max-w-2xl border rounded-md">
+                <div className="w-full max-w-2xl mx-auto">
+                  <div className="border rounded-md">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30">
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Aces</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Errors</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">A/E</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">QS</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Aces</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Errors</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">A/E</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">QS</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         <TableRow>
-                          <TableCell className="w-1/4 text-left">
+                          <TableCell className="w-1/4 text-left p-4">
                             <div className="font-medium truncate text-sm">{topPlayerAces?.name || "-"}</div>
                             <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
                           </TableCell>
-                          <TableCell className="w-1/4 text-left">
+                          <TableCell className="w-1/4 text-left p-4">
                             <div className="font-medium truncate text-sm">{topPlayerErrors?.name || "-"}</div>
                             <div className="error-text font-bold">{topPlayerErrors?.stats.errors || 0}</div>
                           </TableCell>
-                          <TableCell className="w-1/4 text-left">
+                          <TableCell className="w-1/4 text-left p-4">
                             <div className="font-medium truncate text-sm">{topPlayerAERatio?.name || "-"}</div>
                             <div className={`font-bold ${getAERatioColor(topPlayerAERatio?.aeRatio || 0)}`}>
                               {formatValue(topPlayerAERatio?.aeRatio || 0)}
                             </div>
                           </TableCell>
-                          <TableCell className="w-1/4 text-left">
+                          <TableCell className="w-1/4 text-left p-4">
                             <div className="font-medium truncate text-sm">{topPlayerQS?.name || "-"}</div>
                             <div className={`font-bold ${getQualityScoreColor(topPlayerQS?.qualityScore || 0)}`}>
                               {formatValue(topPlayerQS?.qualityScore || 0, true)}
@@ -345,34 +349,34 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             <div className="space-y-3">
               <h4 className="text-sm font-medium px-2">Serve History</h4>
               {sortedServes.length > 0 ? (
-                <div className="flex justify-center">
-                  <div className="border rounded-md max-h-[300px] overflow-y-auto w-full max-w-2xl">
+                <div className="w-full max-w-2xl mx-auto">
+                  <div className="border rounded-md max-h-[300px] overflow-y-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30">
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Player</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Type</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Quality</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Time</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Player</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Type</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Quality</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Time</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {sortedServes.map((serve, index) => (
                           <TableRow key={serve.id} className={`${index % 2 === 0 ? "bg-background" : "bg-muted/30"} border-b border-muted/30`}>
-                            <TableCell className="font-medium text-sm w-1/4 text-left">
+                            <TableCell className="font-medium text-sm w-1/4 text-left p-4">
                               <div className="truncate">{serve.playerName}</div>
                             </TableCell>
-                            <TableCell className="w-1/4 text-left">
+                            <TableCell className="w-1/4 text-left p-4">
                               <div 
                                 className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white ${serve.type === "ace" ? "ace-bg" : "error-bg"}`}
                               >
                                 {serve.type === "fail" ? "Error" : "Ace"}
                               </div>
                             </TableCell>
-                            <TableCell className="w-1/4 text-left">
+                            <TableCell className="w-1/4 text-left p-4">
                               <QualityIcon quality={serve.quality} type={serve.type} />
                             </TableCell>
-                            <TableCell className="text-xs text-muted-foreground w-1/4 text-left">
+                            <TableCell className="text-xs text-muted-foreground w-1/4 text-left p-4">
                               {format(new Date(serve.timestamp), "HH:mm")}
                             </TableCell>
                           </TableRow>
@@ -382,8 +386,8 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   </div>
                 </div>
               ) : (
-                <div className="flex justify-center">
-                  <div className="text-center py-8 text-muted-foreground border rounded-md w-full max-w-2xl">
+                <div className="w-full max-w-2xl mx-auto">
+                  <div className="text-center py-8 text-muted-foreground border rounded-md">
                     No serve records found for this game.
                   </div>
                 </div>
