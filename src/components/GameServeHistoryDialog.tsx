@@ -293,7 +293,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
             )}
             
-            {/* Player Rankings - Top player for each stat */}
+            {/* Player Rankings - Top player for each stat - Now using Table structure */}
             {gamePlayers.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2 px-2">
@@ -302,34 +302,40 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                 </div>
                 <div className="flex justify-center">
                   <div className="w-full max-w-2xl border rounded-md">
-                    <div className="grid grid-cols-4 gap-0 text-xs px-4 py-3 bg-muted/30">
-                      <div className="font-medium text-muted-foreground text-left">Aces</div>
-                      <div className="font-medium text-muted-foreground text-left">Errors</div>
-                      <div className="font-medium text-muted-foreground text-left">A/E</div>
-                      <div className="font-medium text-muted-foreground text-left">QS</div>
-                    </div>
-                    <div className="grid grid-cols-4 gap-0 text-xs px-4 py-3">
-                      <div className="text-left">
-                        <div className="font-medium truncate text-sm">{topPlayerAces?.name || "-"}</div>
-                        <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium truncate text-sm">{topPlayerErrors?.name || "-"}</div>
-                        <div className="error-text font-bold">{topPlayerErrors?.stats.errors || 0}</div>
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium truncate text-sm">{topPlayerAERatio?.name || "-"}</div>
-                        <div className={`font-bold ${getAERatioColor(topPlayerAERatio?.aeRatio || 0)}`}>
-                          {formatValue(topPlayerAERatio?.aeRatio || 0)}
-                        </div>
-                      </div>
-                      <div className="text-left">
-                        <div className="font-medium truncate text-sm">{topPlayerQS?.name || "-"}</div>
-                        <div className={`font-bold ${getQualityScoreColor(topPlayerQS?.qualityScore || 0)}`}>
-                          {formatValue(topPlayerQS?.qualityScore || 0, true)}
-                        </div>
-                      </div>
-                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/30">
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Aces</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">Errors</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">A/E</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4">QS</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell className="w-1/4 text-left">
+                            <div className="font-medium truncate text-sm">{topPlayerAces?.name || "-"}</div>
+                            <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
+                          </TableCell>
+                          <TableCell className="w-1/4 text-left">
+                            <div className="font-medium truncate text-sm">{topPlayerErrors?.name || "-"}</div>
+                            <div className="error-text font-bold">{topPlayerErrors?.stats.errors || 0}</div>
+                          </TableCell>
+                          <TableCell className="w-1/4 text-left">
+                            <div className="font-medium truncate text-sm">{topPlayerAERatio?.name || "-"}</div>
+                            <div className={`font-bold ${getAERatioColor(topPlayerAERatio?.aeRatio || 0)}`}>
+                              {formatValue(topPlayerAERatio?.aeRatio || 0)}
+                            </div>
+                          </TableCell>
+                          <TableCell className="w-1/4 text-left">
+                            <div className="font-medium truncate text-sm">{topPlayerQS?.name || "-"}</div>
+                            <div className={`font-bold ${getQualityScoreColor(topPlayerQS?.qualityScore || 0)}`}>
+                              {formatValue(topPlayerQS?.qualityScore || 0, true)}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
                   </div>
                 </div>
               </div>
