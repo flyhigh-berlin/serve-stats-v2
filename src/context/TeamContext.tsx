@@ -1,0 +1,226 @@
+
+import { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./AuthContext";
+import { toast } from "sonner";
+
+interface Team {
+  id: string;
+  name: string;
+  created_at: string;
+  role: 'admin' | 'member';
+}
+
+interface TeamContextType {
+  teams: Team[];
+  currentTeam: Team | null;
+  loading: boolean;
+  isTeamAdmin: boolean;
+  isSuperAdmin: boolean;
+  switchTeam: (teamId: string) => void;
+  createTeam: (name: string) => Promise<{ error: any }>;
+  joinTeam: (inviteCode: string) => Promise<{ error: any }>;
+  refreshTeams: () => Promise<void>;
+}
+
+const TeamContext = createContext<TeamContextType | undefined>(undefined);
+
+export function TeamProvider({ children }: { children: ReactNode }) {
+  const { user, session } = useAuth();
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [currentTeam, setCurrentTeam] = useState<Team | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  const isTeamAdmin = currentTeam?.role === 'admin';
+
+  useEffect(() => {
+    if (user) {
+      loadUserTeams();
+      checkSuperAdmin();
+    } else {
+      setTeams([]);
+      setCurrentTeam(null);
+      setIsSuperAdmin(false);
+      setLoading(false);
+    }
+  }, [user]);
+
+  const checkSuperAdmin = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('is_super_admin')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (!error && data) {
+      setIsSuperAdmin(data.is_super_admin || false);
+    }
+  };
+
+  const loadUserTeams = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    
+    const { data, error } = await supabase
+      .from('team_members')
+      .select(`
+        team_id,
+        role,
+        teams:team_id (
+          id,
+          name,
+          created_at
+        )
+      `)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error loading teams:', error);
+      toast.error('Failed to load teams');
+    } else if (data) {
+      const userTeams = data.map(item => ({
+        id: item.teams.id,
+        name: item.teams.name,
+        created_at: item.teams.created_at,
+        role: item.role
+      }));
+      
+      setTeams(userTeams);
+      
+      // Set current team if none selected
+      if (!currentTeam && userTeams.length > 0) {
+        setCurrentTeam(userTeams[0]);
+      }
+    }
+    
+    setLoading(false);
+  };
+
+  const switchTeam = (teamId: string) => {
+    const team = teams.find(t => t.id === teamId);
+    if (team) {
+      setCurrentTeam(team);
+      toast.success(`Switched to ${team.name}`);
+    }
+  };
+
+  const createTeam = async (name: string) => {
+    if (!user) return { error: 'Not authenticated' };
+    
+    const { data: team, error: teamError } = await supabase
+      .from('teams')
+      .insert({ name, created_by: user.id })
+      .select()
+      .single();
+
+    if (teamError) {
+      toast.error('Failed to create team');
+      return { error: teamError };
+    }
+
+    // Add creator as admin
+    const { error: memberError } = await supabase
+      .from('team_members')
+      .insert({
+        team_id: team.id,
+        user_id: user.id,
+        role: 'admin',
+        joined_at: new Date().toISOString()
+      });
+
+    if (memberError) {
+      toast.error('Failed to add team admin');
+      return { error: memberError };
+    }
+
+    await refreshTeams();
+    toast.success(`Team "${name}" created successfully!`);
+    return { error: null };
+  };
+
+  const joinTeam = async (inviteCode: string) => {
+    if (!user) return { error: 'Not authenticated' };
+    
+    // Validate invite code
+    const { data: validation, error: validationError } = await supabase
+      .rpc('validate_invite_code', { code: inviteCode });
+
+    if (validationError || !validation[0]?.is_valid) {
+      const errorMessage = validation[0]?.error_message || 'Invalid invite code';
+      toast.error(errorMessage);
+      return { error: errorMessage };
+    }
+
+    const invitation = validation[0];
+    
+    // Add user to team
+    const { error: memberError } = await supabase
+      .from('team_members')
+      .insert({
+        team_id: invitation.team_id,
+        user_id: user.id,
+        role: 'member',
+        joined_at: new Date().toISOString()
+      });
+
+    if (memberError) {
+      if (memberError.code === '23505') { // Unique violation
+        toast.error('You are already a member of this team');
+      } else {
+        toast.error('Failed to join team');
+      }
+      return { error: memberError };
+    }
+
+    // Update invitation usage
+    const { error: updateError } = await supabase
+      .from('team_invitations')
+      .update({ 
+        current_uses: invitation.current_uses + 1,
+        last_used_at: new Date().toISOString()
+      })
+      .eq('id', invitation.invitation_id);
+
+    if (updateError) {
+      console.error('Failed to update invitation usage:', updateError);
+    }
+
+    await refreshTeams();
+    toast.success(`Successfully joined ${invitation.team_name}!`);
+    return { error: null };
+  };
+
+  const refreshTeams = async () => {
+    await loadUserTeams();
+  };
+
+  const value = {
+    teams,
+    currentTeam,
+    loading,
+    isTeamAdmin,
+    isSuperAdmin,
+    switchTeam,
+    createTeam,
+    joinTeam,
+    refreshTeams,
+  };
+
+  return (
+    <TeamContext.Provider value={value}>
+      {children}
+    </TeamContext.Provider>
+  );
+}
+
+export function useTeam() {
+  const context = useContext(TeamContext);
+  if (context === undefined) {
+    throw new Error("useTeam must be used within a TeamProvider");
+  }
+  return context;
+}

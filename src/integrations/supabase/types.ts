@@ -9,16 +9,430 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      custom_game_types: {
+        Row: {
+          abbreviation: string
+          created_at: string | null
+          id: string
+          name: string
+          team_id: string
+        }
+        Insert: {
+          abbreviation: string
+          created_at?: string | null
+          id?: string
+          name: string
+          team_id: string
+        }
+        Update: {
+          abbreviation?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_game_types_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_days: {
+        Row: {
+          created_at: string | null
+          date: string
+          game_type: string
+          id: string
+          notes: string | null
+          team_id: string
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          game_type: string
+          id?: string
+          notes?: string | null
+          team_id: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          game_type?: string
+          id?: string
+          notes?: string | null
+          team_id?: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_days_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          tags: Json | null
+          team_id: string
+          total_aces: number | null
+          total_fails: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          tags?: Json | null
+          team_id: string
+          total_aces?: number | null
+          total_fails?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          tags?: Json | null
+          team_id?: string
+          total_aces?: number | null
+          total_fails?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      serves: {
+        Row: {
+          game_id: string
+          id: string
+          player_id: string
+          quality: Database["public"]["Enums"]["serve_quality"]
+          recorded_by: string | null
+          team_id: string
+          timestamp: string | null
+          type: Database["public"]["Enums"]["serve_type"]
+        }
+        Insert: {
+          game_id: string
+          id?: string
+          player_id: string
+          quality: Database["public"]["Enums"]["serve_quality"]
+          recorded_by?: string | null
+          team_id: string
+          timestamp?: string | null
+          type: Database["public"]["Enums"]["serve_type"]
+        }
+        Update: {
+          game_id?: string
+          id?: string
+          player_id?: string
+          quality?: Database["public"]["Enums"]["serve_quality"]
+          recorded_by?: string | null
+          team_id?: string
+          timestamp?: string | null
+          type?: Database["public"]["Enums"]["serve_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "serves_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "game_days"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "serves_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "serves_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      super_admin_audit: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          id: string
+          new_value: boolean | null
+          old_value: boolean | null
+          reason: string | null
+          target_user_id: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_value?: boolean | null
+          old_value?: boolean | null
+          reason?: string | null
+          target_user_id: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_value?: boolean | null
+          old_value?: boolean | null
+          reason?: string | null
+          target_user_id?: string
+        }
+        Relationships: []
+      }
+      team_invitations: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          current_uses: number | null
+          expires_at: string | null
+          id: string
+          invite_code: string
+          is_active: boolean | null
+          last_used_at: string | null
+          max_uses: number | null
+          team_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          invite_code: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          max_uses?: number | null
+          team_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          invite_code?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          max_uses?: number | null
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_members: {
+        Row: {
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          joined_at: string | null
+          role: Database["public"]["Enums"]["team_member_role"] | null
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          joined_at?: string | null
+          role?: Database["public"]["Enums"]["team_member_role"] | null
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          joined_at?: string | null
+          role?: Database["public"]["Enums"]["team_member_role"] | null
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_settings: {
+        Row: {
+          allow_public_invites: boolean | null
+          created_at: string | null
+          default_member_role:
+            | Database["public"]["Enums"]["team_member_role"]
+            | null
+          id: string
+          max_members: number | null
+          require_approval: boolean | null
+          team_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          allow_public_invites?: boolean | null
+          created_at?: string | null
+          default_member_role?:
+            | Database["public"]["Enums"]["team_member_role"]
+            | null
+          id?: string
+          max_members?: number | null
+          require_approval?: boolean | null
+          team_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          allow_public_invites?: boolean | null
+          created_at?: string | null
+          default_member_role?:
+            | Database["public"]["Enums"]["team_member_role"]
+            | null
+          id?: string
+          max_members?: number | null
+          require_approval?: boolean | null
+          team_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_settings_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: true
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          is_super_admin: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id?: string
+          is_super_admin?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          is_super_admin?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_invite_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_user_teams: {
+        Args: { check_user_id: string }
+        Returns: {
+          team_id: string
+          role: Database["public"]["Enums"]["team_member_role"]
+        }[]
+      }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_team_admin: {
+        Args: { check_user_id: string; check_team_id: string }
+        Returns: boolean
+      }
+      validate_invite_code: {
+        Args: { code: string }
+        Returns: {
+          invitation_id: string
+          team_id: string
+          team_name: string
+          is_valid: boolean
+          error_message: string
+        }[]
+      }
     }
     Enums: {
-      [_ in never]: never
+      serve_quality: "good" | "neutral" | "bad"
+      serve_type: "fail" | "ace"
+      team_member_role: "admin" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +547,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      serve_quality: ["good", "neutral", "bad"],
+      serve_type: ["fail", "ace"],
+      team_member_role: ["admin", "member"],
+    },
   },
 } as const
