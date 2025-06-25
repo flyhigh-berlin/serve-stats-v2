@@ -2,346 +2,267 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeam } from "../context/TeamContext";
+import { Player, GameDay, Serve, GameType } from "../types";
 import { toast } from "sonner";
 
-// Types that match our database schema
-export interface Player {
-  id: string;
-  team_id: string;
-  name: string;
-  total_fails: number;
-  total_aces: number;
-  tags: string[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface GameDay {
-  id: string;
-  team_id: string;
-  date: string;
-  game_type: string;
-  title?: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Serve {
-  id: string;
-  team_id: string;
-  player_id: string;
-  game_id: string;
-  type: 'fail' | 'ace';
-  quality: 'good' | 'neutral' | 'bad';
-  timestamp: string;
-}
-
-export interface CustomGameType {
-  id: string;
-  team_id: string;
-  abbreviation: string;
-  name: string;
-  created_at: string;
-}
-
-export function useSupabasePlayers() {
+export function useSupabaseVolleyball() {
   const { currentTeam } = useTeam();
   const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [gameDays, setGameDays] = useState<GameDay[]>([]);
+  const [currentGameDay, setCurrentGameDay] = useState<GameDay | null>(null);
+  const [serves, setServes] = useState<Serve[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (currentTeam) {
-      loadPlayers();
-      
-      // Set up real-time subscription
-      const channel = supabase
-        .channel('players-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'players',
-            filter: `team_id=eq.${currentTeam.id}`
-          },
-          () => {
-            loadPlayers();
-          }
-        )
-        .subscribe();
+  const currentTeamId = currentTeam?.id;
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    } else {
-      setPlayers([]);
-      setLoading(false);
-    }
-  }, [currentTeam]);
-
+  // Load players from database
   const loadPlayers = async () => {
-    if (!currentTeam) return;
+    if (!currentTeamId) return;
     
     setLoading(true);
-    const { data, error } = await supabase
-      .from('players')
-      .select('*')
-      .eq('team_id', currentTeam.id)
-      .order('name');
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('team_id', currentTeamId);
 
-    if (error) {
+      if (error) throw error;
+
+      // Convert JSONB tags to string array and map to Player interface
+      const formattedPlayers: Player[] = data.map(player => ({
+        id: player.id,
+        name: player.name,
+        totalFails: player.total_fails || 0,
+        totalAces: player.total_aces || 0,
+        serves: [], // Will be loaded separately
+        tags: Array.isArray(player.tags) 
+          ? player.tags as string[]
+          : (typeof player.tags === 'string' 
+              ? JSON.parse(player.tags) 
+              : []) as string[]
+      }));
+
+      setPlayers(formattedPlayers);
+    } catch (error) {
       console.error('Error loading players:', error);
       toast.error('Failed to load players');
-    } else {
-      setPlayers(data || []);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
+  // Load game days from database
+  const loadGameDays = async () => {
+    if (!currentTeamId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('game_days')
+        .select('*')
+        .eq('team_id', currentTeamId)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+
+      const formattedGameDays: GameDay[] = data.map(gameDay => ({
+        id: gameDay.id,
+        date: gameDay.date,
+        gameType: gameDay.game_type as GameType,
+        title: gameDay.title || undefined,
+        notes: gameDay.notes || undefined
+      }));
+
+      setGameDays(formattedGameDays);
+    } catch (error) {
+      console.error('Error loading game days:', error);
+      toast.error('Failed to load game days');
+    }
+  };
+
+  // Load serves for current game day
+  const loadServes = async (gameId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('serves')
+        .select('*')
+        .eq('game_id', gameId);
+
+      if (error) throw error;
+
+      const formattedServes: Serve[] = data.map(serve => ({
+        id: serve.id,
+        gameId: serve.game_id,
+        type: serve.type as "fail" | "ace",
+        quality: serve.quality as "good" | "neutral" | "bad",
+        timestamp: serve.timestamp || new Date().toISOString()
+      }));
+
+      setServes(formattedServes);
+    } catch (error) {
+      console.error('Error loading serves:', error);
+      toast.error('Failed to load serves');
+    }
+  };
+
+  // Add player
   const addPlayer = async (name: string, tags: string[] = []) => {
-    if (!currentTeam) return;
+    if (!currentTeamId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('players')
+        .insert({
+          name,
+          team_id: currentTeamId,
+          tags: JSON.stringify(tags),
+          total_aces: 0,
+          total_fails: 0
+        })
+        .select()
+        .single();
 
-    const { data, error } = await supabase
-      .from('players')
-      .insert({
-        team_id: currentTeam.id,
-        name,
-        tags: tags,
-      })
-      .select()
-      .single();
+      if (error) throw error;
 
-    if (error) {
+      const newPlayer: Player = {
+        id: data.id,
+        name: data.name,
+        totalFails: data.total_fails || 0,
+        totalAces: data.total_aces || 0,
+        serves: [],
+        tags: Array.isArray(data.tags) 
+          ? data.tags as string[]
+          : (typeof data.tags === 'string' 
+              ? JSON.parse(data.tags) 
+              : []) as string[]
+      };
+
+      setPlayers(prev => [...prev, newPlayer]);
+      toast.success(`Player ${name} added successfully`);
+    } catch (error) {
       console.error('Error adding player:', error);
       toast.error('Failed to add player');
-    } else {
-      toast.success(`${name} added to the team!`);
-      loadPlayers();
     }
   };
 
-  const updatePlayer = async (playerId: string, updates: Partial<Pick<Player, 'name' | 'tags'>>) => {
-    const { error } = await supabase
-      .from('players')
-      .update(updates)
-      .eq('id', playerId);
+  // Add game day
+  const addGameDay = async (gameDay: Omit<GameDay, 'id'>) => {
+    if (!currentTeamId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('game_days')
+        .insert({
+          team_id: currentTeamId,
+          date: gameDay.date,
+          game_type: gameDay.gameType,
+          title: gameDay.title,
+          notes: gameDay.notes
+        })
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error updating player:', error);
-      toast.error('Failed to update player');
-    } else {
-      loadPlayers();
+      if (error) throw error;
+
+      const newGameDay: GameDay = {
+        id: data.id,
+        date: data.date,
+        gameType: data.game_type as GameType,
+        title: data.title || undefined,
+        notes: data.notes || undefined
+      };
+
+      setGameDays(prev => [newGameDay, ...prev]);
+      toast.success('Game day added successfully');
+    } catch (error) {
+      console.error('Error adding game day:', error);
+      toast.error('Failed to add game day');
     }
   };
 
-  const removePlayer = async (playerId: string) => {
-    const { error } = await supabase
-      .from('players')
-      .delete()
-      .eq('id', playerId);
+  // Record serve
+  const recordServe = async (playerId: string, type: "fail" | "ace", quality: "good" | "neutral" | "bad") => {
+    if (!currentGameDay) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('serves')
+        .insert({
+          player_id: playerId,
+          game_id: currentGameDay.id,
+          team_id: currentTeamId!,
+          type,
+          quality,
+          timestamp: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-    if (error) {
-      console.error('Error removing player:', error);
-      toast.error('Failed to remove player');
-    } else {
-      toast.success('Player removed');
-      loadPlayers();
+      if (error) throw error;
+
+      const newServe: Serve = {
+        id: data.id,
+        gameId: data.game_id,
+        type: data.type as "fail" | "ace",
+        quality: data.quality as "good" | "neutral" | "bad",
+        timestamp: data.timestamp || new Date().toISOString()
+      };
+
+      setServes(prev => [...prev, newServe]);
+      
+      // Update player stats locally (will be synced by database trigger)
+      setPlayers(prev => prev.map(player => 
+        player.id === playerId 
+          ? {
+              ...player,
+              totalAces: type === 'ace' ? player.totalAces + 1 : player.totalAces,
+              totalFails: type === 'fail' ? player.totalFails + 1 : player.totalFails,
+              serves: [...player.serves, newServe]
+            }
+          : player
+      ));
+      
+      toast.success(`${type === 'ace' ? 'Ace' : 'Fail'} recorded`);
+    } catch (error) {
+      console.error('Error recording serve:', error);
+      toast.error('Failed to record serve');
     }
   };
+
+  // Load data when team changes
+  useEffect(() => {
+    if (currentTeamId) {
+      loadPlayers();
+      loadGameDays();
+    } else {
+      setPlayers([]);
+      setGameDays([]);
+      setCurrentGameDay(null);
+      setServes([]);
+    }
+  }, [currentTeamId]);
+
+  // Load serves when game day changes
+  useEffect(() => {
+    if (currentGameDay) {
+      loadServes(currentGameDay.id);
+    } else {
+      setServes([]);
+    }
+  }, [currentGameDay]);
 
   return {
     players,
-    loading,
-    addPlayer,
-    updatePlayer,
-    removePlayer,
-    refreshPlayers: loadPlayers,
-  };
-}
-
-export function useSupabaseGameDays() {
-  const { currentTeam } = useTeam();
-  const [gameDays, setGameDays] = useState<GameDay[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (currentTeam) {
-      loadGameDays();
-      
-      // Set up real-time subscription
-      const channel = supabase
-        .channel('gamedays-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'game_days',
-            filter: `team_id=eq.${currentTeam.id}`
-          },
-          () => {
-            loadGameDays();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    } else {
-      setGameDays([]);
-      setLoading(false);
-    }
-  }, [currentTeam]);
-
-  const loadGameDays = async () => {
-    if (!currentTeam) return;
-    
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('game_days')
-      .select('*')
-      .eq('team_id', currentTeam.id)
-      .order('date', { ascending: false });
-
-    if (error) {
-      console.error('Error loading game days:', error);
-      toast.error('Failed to load game days');
-    } else {
-      setGameDays(data || []);
-    }
-    setLoading(false);
-  };
-
-  const addGameDay = async (date: string, gameType: string, title?: string, notes?: string) => {
-    if (!currentTeam) return;
-
-    const { data, error } = await supabase
-      .from('game_days')
-      .insert({
-        team_id: currentTeam.id,
-        date,
-        game_type: gameType,
-        title,
-        notes,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error adding game day:', error);
-      toast.error('Failed to add game day');
-      return null;
-    } else {
-      toast.success('Game day added!');
-      loadGameDays();
-      return data;
-    }
-  };
-
-  return {
     gameDays,
-    loading,
-    addGameDay,
-    refreshGameDays: loadGameDays,
-  };
-}
-
-export function useSupabaseServes() {
-  const { currentTeam } = useTeam();
-  const [serves, setServes] = useState<Serve[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (currentTeam) {
-      loadServes();
-      
-      // Set up real-time subscription
-      const channel = supabase
-        .channel('serves-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'serves',
-            filter: `team_id=eq.${currentTeam.id}`
-          },
-          () => {
-            loadServes();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    } else {
-      setServes([]);
-      setLoading(false);
-    }
-  }, [currentTeam]);
-
-  const loadServes = async () => {
-    if (!currentTeam) return;
-    
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('serves')
-      .select('*')
-      .eq('team_id', currentTeam.id)
-      .order('timestamp', { ascending: false });
-
-    if (error) {
-      console.error('Error loading serves:', error);
-      toast.error('Failed to load serves');
-    } else {
-      setServes(data || []);
-    }
-    setLoading(false);
-  };
-
-  const addServe = async (playerId: string, gameId: string, type: 'fail' | 'ace', quality: 'good' | 'neutral' | 'bad') => {
-    if (!currentTeam) return;
-
-    const { error } = await supabase
-      .from('serves')
-      .insert({
-        team_id: currentTeam.id,
-        player_id: playerId,
-        game_id: gameId,
-        type,
-        quality,
-      });
-
-    if (error) {
-      console.error('Error adding serve:', error);
-      toast.error('Failed to add serve');
-    } else {
-      loadServes();
-    }
-  };
-
-  const removeServe = async (serveId: string) => {
-    const { error } = await supabase
-      .from('serves')
-      .delete()
-      .eq('id', serveId);
-
-    if (error) {
-      console.error('Error removing serve:', error);
-      toast.error('Failed to remove serve');
-    } else {
-      loadServes();
-    }
-  };
-
-  return {
+    currentGameDay,
     serves,
     loading,
-    addServe,
-    removeServe,
-    refreshServes: loadServes,
+    setCurrentGameDay,
+    addPlayer,
+    addGameDay,
+    recordServe,
+    refreshData: () => {
+      loadPlayers();
+      loadGameDays();
+    }
   };
 }

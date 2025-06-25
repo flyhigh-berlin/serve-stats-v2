@@ -176,17 +176,26 @@ export function TeamProvider({ children }: { children: ReactNode }) {
       return { error: memberError };
     }
 
-    // Update invitation usage
-    const { error: updateError } = await supabase
+    // Get the current usage count from the invitations table
+    const { data: inviteData, error: inviteError } = await supabase
       .from('team_invitations')
-      .update({ 
-        current_uses: invitation.current_uses + 1,
-        last_used_at: new Date().toISOString()
-      })
-      .eq('id', invitation.invitation_id);
+      .select('current_uses')
+      .eq('id', invitation.invitation_id)
+      .single();
 
-    if (updateError) {
-      console.error('Failed to update invitation usage:', updateError);
+    if (!inviteError && inviteData) {
+      // Update invitation usage
+      const { error: updateError } = await supabase
+        .from('team_invitations')
+        .update({ 
+          current_uses: inviteData.current_uses + 1,
+          last_used_at: new Date().toISOString()
+        })
+        .eq('id', invitation.invitation_id);
+
+      if (updateError) {
+        console.error('Failed to update invitation usage:', updateError);
+      }
     }
 
     await refreshTeams();
