@@ -11,11 +11,12 @@ import { Scoreboard } from "@/components/Scoreboard";
 import { GameHistory } from "@/components/GameHistory";
 import { StatsDescription } from "@/components/StatsDescription";
 import { VolleyballProvider } from "../context/VolleyballContext";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Settings, Shield } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const { user, signOut } = useAuth();
-  const { currentTeam, loading } = useTeam();
+  const { currentTeam, loading, isSuperAdmin, isTeamAdmin } = useTeam();
 
   if (loading) {
     return (
@@ -33,15 +34,37 @@ const Index = () => {
           <h1 className="text-2xl sm:text-3xl font-bold text-team-primary">Serve Stats</h1>
         </div>
         
-        {/* User info and logout */}
+        {/* User info and actions */}
         <div className="flex items-center justify-between mb-4">
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
             Welcome, <strong>{user?.email}</strong>
+            {isSuperAdmin && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                <Shield className="h-3 w-3 mr-1" />
+                Super Admin
+              </span>
+            )}
+            {isTeamAdmin && !isSuperAdmin && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                <Settings className="h-3 w-3 mr-1" />
+                Team Admin
+              </span>
+            )}
           </div>
-          <Button variant="outline" size="sm" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-2">
+            {isSuperAdmin && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/admin">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Panel
+                </Link>
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
