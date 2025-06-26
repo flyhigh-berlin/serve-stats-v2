@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -55,24 +54,33 @@ export function SuperAdminTeamMembersDialog({
   const loadMembers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get team members
+      const { data: teamMembers, error: teamMembersError } = await supabase
         .from('team_members')
-        .select(`
-          id,
-          user_id,
-          role,
-          joined_at,
-          user_profiles (
-            email,
-            full_name
-          )
-        `)
+        .select('id, user_id, role, joined_at')
         .eq('team_id', team.id)
         .order('role')
         .order('joined_at');
 
-      if (error) throw error;
-      setMembers(data || []);
+      if (teamMembersError) throw teamMembersError;
+
+      // Then get user profiles for each member
+      const membersWithProfiles = await Promise.all(
+        (teamMembers || []).map(async (member) => {
+          const { data: profile, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('email, full_name')
+            .eq('user_id', member.user_id)
+            .single();
+
+          return {
+            ...member,
+            user_profiles: profileError ? null : profile
+          };
+        })
+      );
+
+      setMembers(membersWithProfiles);
     } catch (error) {
       console.error('Error loading members:', error);
       toast.error('Failed to load team members');
