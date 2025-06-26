@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -61,9 +62,7 @@ function AppRoutes() {
       } />
       <Route path="/" element={
         <ProtectedRoute>
-          <TeamProvider>
-            <Index />
-          </TeamProvider>
+          <Index />
         </ProtectedRoute>
       } />
       <Route path="*" element={<NotFound />} />
@@ -78,7 +77,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <TeamProvider>
+            <AppRoutes />
+          </TeamProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
