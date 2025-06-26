@@ -208,6 +208,41 @@ export type Database = {
         }
         Relationships: []
       }
+      team_activity_audit: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          performed_by: string | null
+          team_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          performed_by?: string | null
+          team_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          performed_by?: string | null
+          team_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_activity_audit_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_invitations: {
         Row: {
           created_at: string | null
@@ -399,6 +434,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      change_member_role: {
+        Args: {
+          member_id_param: string
+          new_role: Database["public"]["Enums"]["team_member_role"]
+        }
+        Returns: boolean
+      }
+      delete_team_and_data: {
+        Args: { team_id_param: string }
+        Returns: boolean
+      }
       generate_invite_code: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -416,6 +462,14 @@ export type Database = {
       }
       is_team_admin: {
         Args: { check_user_id: string; check_team_id: string }
+        Returns: boolean
+      }
+      remove_team_member: {
+        Args: { member_id_param: string }
+        Returns: boolean
+      }
+      reset_team_data: {
+        Args: { team_id_param: string; preserve_players?: boolean }
         Returns: boolean
       }
       validate_invite_code: {

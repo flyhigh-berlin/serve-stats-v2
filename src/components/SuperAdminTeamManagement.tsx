@@ -7,8 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/dialog";
 import { Loader2, Plus, Users, Settings, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { SuperAdminTeamManagementDialog } from "./SuperAdminTeamManagementDialog";
+import { SuperAdminTeamMembersDialog } from "./SuperAdminTeamMembersDialog";
 
 interface TeamWithMembers {
   id: string;
@@ -25,6 +28,9 @@ export function SuperAdminTeamManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedTeamForManagement, setSelectedTeamForManagement] = useState<TeamWithMembers | null>(null);
+  const [selectedTeamForMembers, setSelectedTeamForMembers] = useState<TeamWithMembers | null>(null);
+  const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
 
   useEffect(() => {
     loadTeams();
@@ -92,6 +98,25 @@ export function SuperAdminTeamManagement() {
       toast.error('Failed to create team');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteTeam = async (teamId: string, teamName: string) => {
+    setDeletingTeamId(teamId);
+    try {
+      const { error } = await supabase.rpc('delete_team_and_data', {
+        team_id_param: teamId
+      });
+
+      if (error) throw error;
+      
+      toast.success(`Team "${teamName}" deleted successfully`);
+      await loadTeams();
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      toast.error('Failed to delete team');
+    } finally {
+      setDeletingTeamId(null);
     }
   };
 
@@ -174,23 +199,73 @@ export function SuperAdminTeamManagement() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setSelectedTeamForManagement(team)}
+                >
                   <Settings className="h-4 w-4 mr-2" />
                   Manage
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setSelectedTeamForMembers(team)}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Members
                 </Button>
-                <Button variant="destructive" size="sm" className="ml-auto">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" className="ml-auto">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Team "{team.name}"?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete the team and ALL associated data including members, players, games, and serves. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={() => handleDeleteTeam(team.id, team.name)}
+                        className="bg-red-600"
+                      >
+                        {deletingTeamId === team.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Delete Team
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {/* Team Management Dialog */}
+      {selectedTeamForManagement && (
+        <SuperAdminTeamManagementDialog
+          team={selectedTeamForManagement}
+          isOpen={!!selectedTeamForManagement}
+          onClose={() => setSelectedTeamForManagement(null)}
+          onTeamUpdated={loadTeams}
+        />
+      )}
+
+      {/* Team Members Dialog */}
+      {selectedTeamForMembers && (
+        <SuperAdminTeamMembersDialog
+          team={selectedTeamForMembers}
+          isOpen={!!selectedTeamForMembers}
+          onClose={() => setSelectedTeamForMembers(null)}
+          onTeamUpdated={loadTeams}
+        />
+      )}
     </div>
   );
 }
