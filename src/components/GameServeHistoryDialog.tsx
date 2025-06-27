@@ -208,7 +208,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
+      <DialogContent size="large" className="flex flex-col max-h-[90vh]">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 flex-wrap">
             <span>{game.title || format(new Date(game.date), "EEEE")}</span>
@@ -220,13 +220,13 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
             </Badge>
           </DialogTitle>
           
-          {/* Game Stats Overview - Fixed Layout with Consistent Heights */}
+          {/* Game Stats Overview - Responsive Layout */}
           <div className="space-y-4 pt-2">
-            {/* Row 1: Aces/Errors with standardized layout and consistent heights */}
+            {/* Row 1: Aces/Errors with responsive layout and consistent heights */}
             <div className="flex justify-center">
               <div className="w-full max-w-2xl">
-                <div className="grid grid-cols-2 gap-6 sm:gap-4">
-                  {/* Aces Column - Standardized container with fixed height */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-4">
+                  {/* Aces Column */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex items-end gap-2 sm:gap-3 h-12">
                       <div className="flex flex-col items-center gap-1">
@@ -243,7 +243,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                     </div>
                   </div>
                   
-                  {/* Errors Column - Standardized container with identical height */}
+                  {/* Errors Column */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex items-end gap-2 sm:gap-3 h-12">
                       <div className="flex items-end gap-1 overflow-hidden h-12">
@@ -263,7 +263,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
             </div>
             
-            {/* Row 2: A/E and QS stats with matching pill sizes */}
+            {/* Row 2: A/E and QS stats - Responsive grid */}
             <div className="flex justify-center">
               <div className="w-full max-w-2xl">
                 <div className="grid grid-cols-2 gap-4 px-4">
@@ -290,14 +290,14 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
         </DialogHeader>
         
         <ScrollArea className="flex-1 min-h-0">
-          <div className="space-y-6 py-4">
+          <div className="space-y-6 py-4 pr-4">
             {game.notes && (
               <div className="p-3 bg-muted rounded-md">
                 <p className="text-sm">{game.notes}</p>
               </div>
             )}
             
-            {/* Player Rankings - Top player for each stat - Now using Table structure */}
+            {/* Player Rankings - Responsive table */}
             {gamePlayers.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2 px-2">
@@ -305,35 +305,35 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <Crown className="h-3 w-3 text-yellow-500" />
                 </div>
                 <div className="max-w-2xl mx-auto">
-                  <div className="border rounded-md">
+                  <div className="border rounded-md overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30">
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Aces</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Errors</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">A/E</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">QS</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-2 sm:p-4">Aces</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-2 sm:p-4">Errors</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-2 sm:p-4">A/E</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-2 sm:p-4">QS</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         <TableRow>
-                          <TableCell className="w-1/4 text-left p-4">
-                            <div className="font-medium truncate text-sm">{topPlayerAces?.name || "-"}</div>
-                            <div className="ace-text font-bold">{topPlayerAces?.stats.aces || 0}</div>
+                          <TableCell className="w-1/4 text-left p-2 sm:p-4">
+                            <div className="font-medium truncate text-xs sm:text-sm">{topPlayerAces?.name || "-"}</div>
+                            <div className="ace-text font-bold text-sm">{topPlayerAces?.stats.aces || 0}</div>
                           </TableCell>
-                          <TableCell className="w-1/4 text-left p-4">
-                            <div className="font-medium truncate text-sm">{topPlayerErrors?.name || "-"}</div>
-                            <div className="error-text font-bold">{topPlayerErrors?.stats.errors || 0}</div>
+                          <TableCell className="w-1/4 text-left p-2 sm:p-4">
+                            <div className="font-medium truncate text-xs sm:text-sm">{topPlayerErrors?.name || "-"}</div>
+                            <div className="error-text font-bold text-sm">{topPlayerErrors?.stats.errors || 0}</div>
                           </TableCell>
-                          <TableCell className="w-1/4 text-left p-4">
-                            <div className="font-medium truncate text-sm">{topPlayerAERatio?.name || "-"}</div>
-                            <div className={`font-bold ${getAERatioColor(topPlayerAERatio?.aeRatio || 0)}`}>
+                          <TableCell className="w-1/4 text-left p-2 sm:p-4">
+                            <div className="font-medium truncate text-xs sm:text-sm">{topPlayerAERatio?.name || "-"}</div>
+                            <div className={`font-bold text-sm ${getAERatioColor(topPlayerAERatio?.aeRatio || 0)}`}>
                               {formatValue(topPlayerAERatio?.aeRatio || 0)}
                             </div>
                           </TableCell>
-                          <TableCell className="w-1/4 text-left p-4">
-                            <div className="font-medium truncate text-sm">{topPlayerQS?.name || "-"}</div>
-                            <div className={`font-bold ${getQualityScoreColor(topPlayerQS?.qualityScore || 0)}`}>
+                          <TableCell className="w-1/4 text-left p-2 sm:p-4">
+                            <div className="font-medium truncate text-xs sm:text-sm">{topPlayerQS?.name || "-"}</div>
+                            <div className={`font-bold text-sm ${getQualityScoreColor(topPlayerQS?.qualityScore || 0)}`}>
                               {formatValue(topPlayerQS?.qualityScore || 0, true)}
                             </div>
                           </TableCell>
@@ -345,7 +345,7 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
               </div>
             )}
             
-            {/* Serve History */}
+            {/* Serve History - Responsive table */}
             <div className="space-y-3">
               <h4 className="text-sm font-medium px-2">Serve History</h4>
               {sortedServes.length > 0 ? (
@@ -354,29 +354,29 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30">
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Player</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Type</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Quality</TableHead>
-                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-4">Time</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-2 sm:p-4">Player</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-2 sm:p-4">Type</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-2 sm:p-4">Quality</TableHead>
+                          <TableHead className="text-xs font-medium text-muted-foreground text-left w-1/4 p-2 sm:p-4">Time</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {sortedServes.map((serve, index) => (
                           <TableRow key={serve.id} className={`${index % 2 === 0 ? "bg-background" : "bg-muted/50"} border-b border-muted/30`}>
-                            <TableCell className="font-medium text-sm w-1/4 text-left p-4">
+                            <TableCell className="font-medium text-xs sm:text-sm w-1/4 text-left p-2 sm:p-4">
                               <div className="truncate">{serve.playerName}</div>
                             </TableCell>
-                            <TableCell className="w-1/4 text-left p-4">
+                            <TableCell className="w-1/4 text-left p-2 sm:p-4">
                               <div 
                                 className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-white ${serve.type === "ace" ? "ace-bg" : "error-bg"}`}
                               >
                                 {serve.type === "fail" ? "Error" : "Ace"}
                               </div>
                             </TableCell>
-                            <TableCell className="w-1/4 text-left p-4">
+                            <TableCell className="w-1/4 text-left p-2 sm:p-4">
                               <QualityIcon quality={serve.quality} type={serve.type} />
                             </TableCell>
-                            <TableCell className="text-xs text-muted-foreground w-1/4 text-left p-4">
+                            <TableCell className="text-xs text-muted-foreground w-1/4 text-left p-2 sm:p-4">
                               {format(new Date(serve.timestamp), "HH:mm")}
                             </TableCell>
                           </TableRow>

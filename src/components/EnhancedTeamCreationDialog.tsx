@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -11,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CheckCircle, AlertCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { AdminAssignmentSection } from "./AdminAssignmentSection";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface AdminAssignment {
   email: string;
@@ -187,100 +187,98 @@ export function EnhancedTeamCreationDialog({
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent size="large" className="flex flex-col max-h-[90vh]">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Create New Team</DialogTitle>
         </DialogHeader>
 
         {creationStatus ? (
-          <div className="space-y-4">
-            <div className="text-center">
-              <h3 className="text-lg font-medium">{creationStatus.step}</h3>
-              {isSubmitting && <Loader2 className="h-6 w-6 animate-spin mx-auto mt-2" />}
-            </div>
+          <ScrollArea className="flex-1">
+            <div className="space-y-4 pr-4">
+              <div className="text-center">
+                <h3 className="text-lg font-medium">{creationStatus.step}</h3>
+                {isSubmitting && <Loader2 className="h-6 w-6 animate-spin mx-auto mt-2" />}
+              </div>
 
-            {creationStatus.results.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium">Administrator Assignment Results:</h4>
-                {creationStatus.results.map((result, index) => (
-                  <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                    {result.success ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                    ) : (
-                      <AlertCircle className="h-4 w-4 text-red-600" />
-                    )}
-                    <div className="flex-1">
-                      <div className="font-medium">{result.email}</div>
-                      <div className="text-sm text-muted-foreground">{result.message}</div>
+              {creationStatus.results.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium">Administrator Assignment Results:</h4>
+                  {creationStatus.results.map((result, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                      {result.success ? (
+                        <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{result.email}</div>
+                        <div className="text-sm text-muted-foreground">{result.message}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {!isSubmitting && (
-              <div className="flex justify-end">
-                <Button onClick={handleClose}>Close</Button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <form onSubmit={finalizeTeamCreation}>
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="team-name">Team Name *</Label>
-                  <Input
-                    id="team-name"
-                    value={teamName}
-                    onChange={(e) => setTeamName(e.target.value)}
-                    placeholder="Enter team name"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="team-description">Description (Optional)</Label>
-                  <Textarea
-                    id="team-description"
-                    value={teamDescription}
-                    onChange={(e) => setTeamDescription(e.target.value)}
-                    placeholder="Brief description of the team"
-                    rows={3}
-                  />
-                </div>
-              </div>
-
-              <Separator />
-
-              <AdminAssignmentSection
-                adminAssignments={adminAssignments}
-                onAdminAssignmentsChange={setAdminAssignments}
-                teamId={createdTeamId}
-                onTeamCreated={handleTeamCreated}
-              />
-
-              {hasNoAdmins && (
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>Warning:</strong> No administrators have been assigned to this team. 
-                    Teams should have at least one administrator to manage members and settings. 
-                    You can assign administrators later from the team management page.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {createdTeamId && (
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-700">
-                    Team created successfully! You can continue adding admins or finalize the setup.
-                  </p>
+                  ))}
                 </div>
               )}
             </div>
+          </ScrollArea>
+        ) : (
+          <form onSubmit={finalizeTeamCreation} className="flex flex-col flex-1 min-h-0">
+            <ScrollArea className="flex-1">
+              <div className="space-y-6 pr-4">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="team-name">Team Name *</Label>
+                    <Input
+                      id="team-name"
+                      value={teamName}
+                      onChange={(e) => setTeamName(e.target.value)}
+                      placeholder="Enter team name"
+                      required
+                    />
+                  </div>
 
-            <DialogFooter className="mt-6">
+                  <div>
+                    <Label htmlFor="team-description">Description (Optional)</Label>
+                    <Textarea
+                      id="team-description"
+                      value={teamDescription}
+                      onChange={(e) => setTeamDescription(e.target.value)}
+                      placeholder="Brief description of the team"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <AdminAssignmentSection
+                  adminAssignments={adminAssignments}
+                  onAdminAssignmentsChange={setAdminAssignments}
+                  teamId={createdTeamId}
+                  onTeamCreated={handleTeamCreated}
+                />
+
+                {hasNoAdmins && (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>Warning:</strong> No administrators have been assigned to this team. 
+                      Teams should have at least one administrator to manage members and settings. 
+                      You can assign administrators later from the team management page.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {createdTeamId && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-700">
+                      Team created successfully! You can continue adding admins or finalize the setup.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            <DialogFooter className="flex-shrink-0 mt-6">
               <Button variant="outline" type="button" onClick={handleClose}>
                 Cancel
               </Button>
@@ -290,10 +288,21 @@ export function EnhancedTeamCreationDialog({
                 className={hasNoAdmins ? 'bg-orange-600 hover:bg-orange-700' : undefined}
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {hasNoAdmins ? 'Create Team (No Admin)' : (createdTeamId ? 'Finalize Team Setup' : 'Create Team')}
+                <span className="hidden sm:inline">
+                  {hasNoAdmins ? 'Create Team (No Admin)' : (createdTeamId ? 'Finalize Team Setup' : 'Create Team')}
+                </span>
+                <span className="sm:hidden">
+                  {createdTeamId ? 'Finalize' : 'Create'}
+                </span>
               </Button>
             </DialogFooter>
           </form>
+        )}
+
+        {creationStatus && !isSubmitting && (
+          <DialogFooter className="flex-shrink-0">
+            <Button onClick={handleClose}>Close</Button>
+          </DialogFooter>
         )}
       </DialogContent>
     </Dialog>

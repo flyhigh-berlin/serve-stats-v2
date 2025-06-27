@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PlayerManagementDialogProps {
   children: React.ReactNode;
@@ -51,46 +52,48 @@ export function PlayerManagementDialog({ children }: PlayerManagementDialogProps
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
+      <DialogContent size="default" className="flex flex-col max-h-[90vh]">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Manage Player Tags</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-          {players.map(player => (
-            <div key={player.id} className="border rounded-lg p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">{player.name}</h4>
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="space-y-4 pr-4">
+            {players.map(player => (
+              <div key={player.id} className="border rounded-lg p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium truncate">{player.name}</h4>
+                </div>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {Object.entries(allGameTypes).map(([abbreviation, name]) => {
+                    const isChecked = player.tags.includes(abbreviation);
+                    const canRemove = canRemoveTagFromPlayer(player.id, abbreviation);
+                    
+                    return (
+                      <div key={abbreviation} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`${player.id}-${abbreviation}`}
+                          checked={isChecked}
+                          disabled={isChecked && !canRemove}
+                          onCheckedChange={(checked) => handleTagChange(player, abbreviation, checked)}
+                        />
+                        <Label 
+                          htmlFor={`${player.id}-${abbreviation}`} 
+                          className={`text-sm truncate ${isChecked && !canRemove ? 'text-muted-foreground' : ''}`}
+                        >
+                          [{abbreviation}]
+                        </Label>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-              
-              <div className="grid grid-cols-3 gap-2">
-                {Object.entries(allGameTypes).map(([abbreviation, name]) => {
-                  const isChecked = player.tags.includes(abbreviation);
-                  const canRemove = canRemoveTagFromPlayer(player.id, abbreviation);
-                  
-                  return (
-                    <div key={abbreviation} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`${player.id}-${abbreviation}`}
-                        checked={isChecked}
-                        disabled={isChecked && !canRemove}
-                        onCheckedChange={(checked) => handleTagChange(player, abbreviation, checked)}
-                      />
-                      <Label 
-                        htmlFor={`${player.id}-${abbreviation}`} 
-                        className={`text-sm ${isChecked && !canRemove ? 'text-muted-foreground' : ''}`}
-                      >
-                        [{abbreviation}]
-                      </Label>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </ScrollArea>
         
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <Button onClick={() => setIsOpen(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
