@@ -10,10 +10,9 @@ import { toast } from "sonner";
 
 interface JoinTeamProps {
   onSuccess?: () => void;
-  onSkip?: () => void;
 }
 
-export function JoinTeam({ onSuccess, onSkip }: JoinTeamProps) {
+export function JoinTeam({ onSuccess }: JoinTeamProps) {
   const { joinTeam } = useTeam();
   const [inviteCode, setInviteCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -103,12 +102,12 @@ export function JoinTeam({ onSuccess, onSkip }: JoinTeamProps) {
 
   return (
     <div className="container flex items-center justify-center min-h-screen py-8">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <Users className="h-16 w-16 mx-auto mb-4 text-team-primary" />
           <h1 className="text-3xl font-bold text-team-primary">Join a Team</h1>
           <p className="text-muted-foreground mt-2">
-            Enter an invitation code to join your team
+            Enter an invitation code to join your team and get started
           </p>
         </div>
 
@@ -142,12 +141,12 @@ export function JoinTeam({ onSuccess, onSkip }: JoinTeamProps) {
           </Card>
         )}
 
-        <Card>
+        <Card className="max-w-2xl mx-auto">
           <CardHeader>
             <CardTitle className="text-center">Team Invitation</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleJoinTeam} className="space-y-4">
+            <form onSubmit={handleJoinTeam} className="space-y-6">
               <div>
                 <Label htmlFor="invite-code">Invitation Code</Label>
                 <Input
@@ -161,6 +160,7 @@ export function JoinTeam({ onSuccess, onSkip }: JoinTeamProps) {
                     validateInviteCode(value);
                   }}
                   disabled={isSubmitting}
+                  className="mt-2"
                 />
                 {inviteInfo?.isValidating && (
                   <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
@@ -170,31 +170,20 @@ export function JoinTeam({ onSuccess, onSkip }: JoinTeamProps) {
                 )}
               </div>
               
-              <div className="flex gap-3">
-                <Button
-                  type="submit"
-                  className="flex-1"
-                  disabled={isSubmitting || inviteInfo?.isValidating || Boolean(inviteCode && inviteInfo?.error)}
-                >
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Join Team
-                </Button>
-                
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onSkip}
-                  disabled={isSubmitting}
-                >
-                  Skip for Now
-                </Button>
-              </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSubmitting || inviteInfo?.isValidating || Boolean(inviteCode && inviteInfo?.error)}
+              >
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <UserPlus className="mr-2 h-4 w-4" />
+                Join Team
+              </Button>
             </form>
             
-            <div className="mt-4 text-sm text-muted-foreground text-center">
+            <div className="mt-6 text-sm text-muted-foreground text-center">
               <p>Don't have an invitation code?</p>
-              <p>Ask your team administrator for one, or skip to explore the app.</p>
+              <p>Ask your team administrator for one to get started.</p>
             </div>
           </CardContent>
         </Card>

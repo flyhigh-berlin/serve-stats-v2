@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Copy, Users, UserPlus, Trash2, RefreshCw, Calendar, Clock } from "lucide-react";
+import { Copy, Users, UserPlus, Trash2, RefreshCw, Calendar, Clock, Info } from "lucide-react";
 import { toast } from "sonner";
 
 interface TeamMemberInvitation {
@@ -131,7 +131,7 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
 
   if (loading) {
     return (
-      <Card>
+      <Card className="max-w-4xl mx-auto">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
@@ -149,7 +149,7 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
   }
 
   return (
-    <Card>
+    <Card className="max-w-4xl mx-auto">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -177,9 +177,9 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-4">
+          <div className="space-y-6">
+            <div className="border rounded-lg p-6">
+              <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">Active Member Invitation</Badge>
                   <Badge variant="outline">
@@ -197,7 +197,7 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
                       Deactivate
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent>
+                  <AlertDialogContent className="max-w-2xl">
                     <AlertDialogHeader>
                       <AlertDialogTitle>Deactivate Member Invitation?</AlertDialogTitle>
                       <AlertDialogDescription>
@@ -218,11 +218,11 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
                 </AlertDialog>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Member Invitation Code</label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <code className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded border">
+                  <div className="flex items-center gap-2 mt-2">
+                    <code className="flex-1 text-sm font-mono bg-muted px-4 py-3 rounded border">
                       {invitation.invite_code}
                     </code>
                     <Button
@@ -232,22 +232,23 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
                       type="button"
                     >
                       <Copy className="h-4 w-4" />
+                      Copy
                     </Button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Created</label>
-                    <div className="flex items-center gap-1 text-sm mt-1">
-                      <Calendar className="h-3 w-3" />
+                    <div className="flex items-center gap-2 text-sm mt-1">
+                      <Calendar className="h-4 w-4" />
                       {formatDate(invitation.created_at)}
                     </div>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Expires</label>
-                    <div className="flex items-center gap-1 text-sm mt-1">
-                      <Clock className="h-3 w-3" />
+                    <div className="flex items-center gap-2 text-sm mt-1">
+                      <Clock className="h-4 w-4" />
                       {formatDate(invitation.expires_at)}
                     </div>
                   </div>
@@ -256,8 +257,8 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
                 {invitation.last_used_at && (
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Last Used</label>
-                    <div className="flex items-center gap-1 text-sm mt-1">
-                      <Clock className="h-3 w-3" />
+                    <div className="flex items-center gap-2 text-sm mt-1">
+                      <Clock className="h-4 w-4" />
                       {formatDate(invitation.last_used_at)}
                     </div>
                   </div>
@@ -265,11 +266,18 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
               </div>
             </div>
 
-            <div className="text-sm text-muted-foreground bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="font-medium text-blue-800 mb-1">Member Invitation Info:</p>
-              <p>• This invitation code can be used by multiple people to join as team members</p>
-              <p>• Members can view and participate in team activities but cannot manage team settings</p>
-              <p>• Share this code with users you want to join your team as members</p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-blue-800 mb-2">Member Invitation Info:</p>
+                  <ul className="text-blue-700 space-y-1">
+                    <li>• This invitation code can be used by multiple people to join as team members</li>
+                    <li>• Members can view and participate in team activities but cannot manage team settings</li>
+                    <li>• Share this code with users you want to join your team as members</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         )}

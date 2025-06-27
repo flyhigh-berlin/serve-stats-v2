@@ -24,7 +24,7 @@ import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 
 export function TeamSelector() {
-  const { teams, currentTeam, loading, switchTeam, createTeam, joinTeam } = useTeam();
+  const { teams, currentTeam, loading, switchTeam, createTeam, joinTeam, isSuperAdmin } = useTeam();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
@@ -88,54 +88,56 @@ export function TeamSelector() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
-            You're not part of any teams yet. Create a new team or join an existing one to get started.
+            You're not part of any teams yet. {isSuperAdmin ? "Create a new team or join an existing one to get started." : "Ask for an invitation code to join a team and get started."}
           </p>
           
           <div className="flex gap-2">
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Team
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Team</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleCreateTeam}>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="team-name">Team Name</Label>
-                      <Input
-                        id="team-name"
-                        value={newTeamName}
-                        onChange={(e) => setNewTeamName(e.target.value)}
-                        placeholder="Enter team name"
-                        required
-                      />
+            {isSuperAdmin && (
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Team
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Team</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleCreateTeam}>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="team-name">Team Name</Label>
+                        <Input
+                          id="team-name"
+                          value={newTeamName}
+                          onChange={(e) => setNewTeamName(e.target.value)}
+                          placeholder="Enter team name"
+                          required
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <DialogFooter className="mt-6">
-                    <Button variant="outline" type="button" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                      Create Team
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+                    <DialogFooter className="mt-6">
+                      <Button variant="outline" type="button" onClick={() => setIsCreateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        Create Team
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
 
             <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant={isSuperAdmin ? "outline" : "default"}>
                   <Users className="h-4 w-4 mr-2" />
                   Join Team
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Join Team</DialogTitle>
                 </DialogHeader>
@@ -178,40 +180,42 @@ export function TeamSelector() {
             Current Team
           </span>
           <div className="flex gap-2">
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline">
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Create New Team</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleCreateTeam}>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="team-name">Team Name</Label>
-                      <Input
-                        id="team-name"
-                        value={newTeamName}
-                        onChange={(e) => setNewTeamName(e.target.value)}
-                        placeholder="Enter team name"
-                        required
-                      />
+            {isSuperAdmin && (
+              <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Team</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleCreateTeam}>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="team-name">Team Name</Label>
+                        <Input
+                          id="team-name"
+                          value={newTeamName}
+                          onChange={(e) => setNewTeamName(e.target.value)}
+                          placeholder="Enter team name"
+                          required
+                        />
+                      </div>
                     </div>
-                  </div>
-                  <DialogFooter className="mt-6">
-                    <Button variant="outline" type="button" onClick={() => setIsCreateDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                      Create Team
-                    </Button>
-                  </DialogFooter>
-                </form>
-              </DialogContent>
-            </Dialog>
+                    <DialogFooter className="mt-6">
+                      <Button variant="outline" type="button" onClick={() => setIsCreateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isSubmitting}>
+                        Create Team
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
 
             <Dialog open={isJoinDialogOpen} onOpenChange={setIsJoinDialogOpen}>
               <DialogTrigger asChild>
@@ -219,7 +223,7 @@ export function TeamSelector() {
                   <Users className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Join Team</DialogTitle>
                 </DialogHeader>
