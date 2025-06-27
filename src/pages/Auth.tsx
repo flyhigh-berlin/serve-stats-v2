@@ -305,7 +305,7 @@ const Auth = () => {
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={isSubmitting || inviteInfo?.isValidating || (inviteCode && inviteInfo?.error)}
+                    disabled={isSubmitting || inviteInfo?.isValidating || Boolean(inviteCode && inviteInfo?.error)}
                   >
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign Up
