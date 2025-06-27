@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TeamProvider, useTeam } from "./context/TeamContext";
 import { JoinTeam } from "./components/JoinTeam";
@@ -37,6 +37,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function SuperAdminRedirect() {
   const { user, loading } = useAuth();
   const { isSuperAdmin, loading: teamsLoading } = useTeam();
+  const navigate = useNavigate();
   
   useEffect(() => {
     // Auto-redirect super admins to admin panel after login
@@ -44,10 +45,10 @@ function SuperAdminRedirect() {
       const hasRedirected = sessionStorage.getItem('super-admin-redirected');
       if (!hasRedirected) {
         sessionStorage.setItem('super-admin-redirected', 'true');
-        window.location.href = '/admin';
+        navigate('/admin', { replace: true });
       }
     }
-  }, [user, isSuperAdmin, loading, teamsLoading]);
+  }, [user, isSuperAdmin, loading, teamsLoading, navigate]);
 
   return null;
 }
