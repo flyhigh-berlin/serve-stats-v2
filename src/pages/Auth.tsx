@@ -1,92 +1,18 @@
 
-import React, { useState, useEffect } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import React, { useState } from "react";
+import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "../context/AuthContext";
-import { Loader2, Mail, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const { user, loading, signIn, signUp, resetPassword } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
-  const [searchParams] = useSearchParams();
-  const [inviteCode, setInviteCode] = useState("");
-  const [inviteInfo, setInviteInfo] = useState<{
-    teamName: string;
-    role: string;
-    email: string;
-    invitationType: string;
-    isValidating?: boolean;
-    error?: string;
-  } | null>(null);
-
-  // Check for invitation code in URL
-  useEffect(() => {
-    const code = searchParams.get('invite');
-    if (code) {
-      setInviteCode(code);
-      setActiveTab("signup");
-      validateInviteCode(code);
-    }
-  }, [searchParams]);
-
-  const validateInviteCode = async (code: string) => {
-    if (!code) return;
-    
-    setInviteInfo(prev => ({ ...prev, isValidating: true, error: undefined }) as any);
-    
-    try {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data, error } = await supabase.rpc('validate_invite_code', {
-        code: code
-      });
-
-      if (error) throw error;
-      
-      if (data && data[0]?.is_valid) {
-        const invitation = data[0];
-        const role = invitation.admin_role ? 'Administrator' : 'Member';
-        const invitationType = invitation.admin_role ? 'Admin' : 'Member';
-        
-        setInviteInfo({
-          teamName: invitation.team_name,
-          role: role,
-          email: invitation.invited_email || '',
-          invitationType: invitationType,
-          isValidating: false
-        });
-        toast.success(`Valid ${invitationType.toLowerCase()} invitation for ${invitation.team_name}!`);
-      } else {
-        const errorMessage = data[0]?.error_message || 'Invalid invitation code';
-        setInviteInfo({
-          teamName: '',
-          role: '',
-          email: '',
-          invitationType: '',
-          isValidating: false,
-          error: errorMessage
-        });
-        toast.error(errorMessage);
-      }
-    } catch (error) {
-      console.error('Error validating invite code:', error);
-      const errorMessage = 'Failed to validate invitation code';
-      setInviteInfo({
-        teamName: '',
-        role: '',
-        email: '',
-        invitationType: '',
-        isValidating: false,
-        error: errorMessage
-      });
-      toast.error(errorMessage);
-    }
-  };
 
   // Redirect if already authenticated
   if (user && !loading) {
@@ -126,24 +52,9 @@ const Auth = () => {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const fullName = formData.get('fullName') as string;
-    const inviteCodeValue = formData.get('inviteCode') as string || inviteCode;
-    
-    // Validate email matches invitation if there's an invite code
-    if (inviteCodeValue && inviteInfo?.email && inviteInfo.email.toLowerCase() !== email.toLowerCase()) {
-      toast.error('Email must match the invitation email address');
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Check for invitation errors
-    if (inviteCodeValue && inviteInfo?.error) {
-      toast.error(inviteInfo.error);
-      setIsSubmitting(false);
-      return;
-    }
     
     try {
-      const { error } = await signUp(email, password, fullName, inviteCodeValue);
+      const { error } = await signUp(email, password, fullName);
       
       if (error) {
         console.error('Signup error:', error);
@@ -179,41 +90,6 @@ const Auth = () => {
           <h1 className="text-3xl font-bold text-team-primary">Serve Stats</h1>
           <p className="text-muted-foreground mt-2">Track your volleyball serving performance</p>
         </div>
-
-        {inviteInfo && !inviteInfo.error && (
-          <Card className="mb-6 border-green-200 bg-green-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="font-medium text-green-800">{inviteInfo.invitationType} Team Invitation</p>
-                  <p className="text-sm text-green-700">
-                    You're invited to join <strong>{inviteInfo.teamName}</strong> as a <strong>{inviteInfo.role}</strong>
-                  </p>
-                  {inviteInfo.email && (
-                    <p className="text-xs text-green-600 mt-1">
-                      Use email: {inviteInfo.email}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {inviteInfo?.error && (
-          <Card className="mb-6 border-red-200 bg-red-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-red-600" />
-                <div>
-                  <p className="font-medium text-red-800">Invalid Invitation</p>
-                  <p className="text-sm text-red-700">{inviteInfo.error}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <Card>
           <CardHeader>
@@ -279,8 +155,6 @@ const Auth = () => {
                       type="email"
                       required
                       placeholder="your@email.com"
-                      defaultValue={inviteInfo?.email || ''}
-                      disabled={!!inviteInfo?.email}
                     />
                   </div>
                   <div>
@@ -294,36 +168,10 @@ const Auth = () => {
                       minLength={6}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="signup-invite">
-                      {inviteInfo?.invitationType ? `${inviteInfo.invitationType} Invitation Code` : 'Invitation Code (Optional)'}
-                    </Label>
-                    <Input
-                      id="signup-invite"
-                      name="inviteCode"
-                      type="text"
-                      placeholder="Enter invitation code"
-                      value={inviteCode}
-                      onChange={(e) => {
-                        setInviteCode(e.target.value);
-                        if (e.target.value) {
-                          validateInviteCode(e.target.value);
-                        } else {
-                          setInviteInfo(null);
-                        }
-                      }}
-                    />
-                    {inviteInfo?.isValidating && (
-                      <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Validating invitation code...
-                      </div>
-                    )}
-                  </div>
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={isSubmitting || inviteInfo?.isValidating || Boolean(inviteCode && inviteInfo?.error)}
+                    disabled={isSubmitting}
                   >
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign Up

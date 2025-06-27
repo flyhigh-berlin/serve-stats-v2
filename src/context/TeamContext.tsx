@@ -165,68 +165,69 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const joinTeam = async (inviteCode: string) => {
     if (!user) return { error: 'Not authenticated' };
     
-    // Validate invite code
-    const { data: validation, error: validationError } = await supabase
-      .rpc('validate_invite_code', { code: inviteCode });
+    try {
+      // Validate invite code
+      const { data: validation, error: validationError } = await supabase
+        .rpc('validate_invite_code', { code: inviteCode });
 
-    if (validationError || !validation[0]?.is_valid) {
-      const errorMessage = validation[0]?.error_message || 'Invalid invite code';
-      toast.error(errorMessage);
-      return { error: errorMessage };
-    }
+      if (validationError || !validation[0]?.is_valid) {
+        const errorMessage = validation[0]?.error_message || 'Invalid invite code';
+        return { error: errorMessage };
+      }
 
-    const invitation = validation[0];
-    
-    // Determine role based on invitation type and admin_role flag
-    const memberRole = invitation.admin_role ? 'admin' : 'member';
-    
-    // Check if user is already a team member
-    const { data: existingMember } = await supabase
-      .from('team_members')
-      .select('id')
-      .eq('team_id', invitation.team_id)
-      .eq('user_id', user.id)
-      .single();
+      const invitation = validation[0];
+      
+      // Determine role based on invitation type and admin_role flag
+      const memberRole = invitation.admin_role ? 'admin' : 'member';
+      
+      // Check if user is already a team member
+      const { data: existingMember } = await supabase
+        .from('team_members')
+        .select('id')
+        .eq('team_id', invitation.team_id)
+        .eq('user_id', user.id)
+        .single();
 
-    if (existingMember) {
-      toast.error('You are already a member of this team');
-      return { error: 'Already a member' };
-    }
+      if (existingMember) {
+        return { error: 'You are already a member of this team' };
+      }
 
-    // Add user to team with appropriate role
-    const { error: memberError } = await supabase
-      .from('team_members')
-      .insert({
-        team_id: invitation.team_id,
-        user_id: user.id,
-        role: memberRole,
-        joined_at: new Date().toISOString()
+      // Add user to team with appropriate role
+      const { error: memberError } = await supabase
+        .from('team_members')
+        .insert({
+          team_id: invitation.team_id,
+          user_id: user.id,
+          role: memberRole,
+          joined_at: new Date().toISOString()
+        });
+
+      if (memberError) {
+        if (memberError.code === '23505') { // Unique violation
+          return { error: 'You are already a member of this team' };
+        } else {
+          return { error: 'Failed to join team' };
+        }
+      }
+
+      // Mark invitation as accepted using the new function
+      const { error: acceptError } = await supabase.rpc('mark_invitation_accepted', {
+        invitation_code: inviteCode,
+        user_id_param: user.id
       });
 
-    if (memberError) {
-      if (memberError.code === '23505') { // Unique violation
-        toast.error('You are already a member of this team');
-      } else {
-        toast.error('Failed to join team');
+      if (acceptError) {
+        console.error('Failed to mark invitation as accepted:', acceptError);
+        // Don't fail the join process if this fails, just log it
       }
-      return { error: memberError };
+
+      await refreshTeams();
+      return { error: null };
+      
+    } catch (error) {
+      console.error('Error joining team:', error);
+      return { error: 'Failed to join team' };
     }
-
-    // Mark invitation as accepted using the new function
-    const { error: acceptError } = await supabase.rpc('mark_invitation_accepted', {
-      invitation_code: inviteCode,
-      user_id_param: user.id
-    });
-
-    if (acceptError) {
-      console.error('Failed to mark invitation as accepted:', acceptError);
-      // Don't fail the join process if this fails, just log it
-    }
-
-    await refreshTeams();
-    const roleMessage = memberRole === 'admin' ? 'as an administrator' : 'as a member';
-    toast.success(`Successfully joined ${invitation.team_name} ${roleMessage}!`);
-    return { error: null };
   };
 
   const refreshTeams = async () => {
