@@ -10,7 +10,6 @@ import { Settings, Plus } from "lucide-react";
 
 export function PlayerList() {
   const { getFilteredPlayers, currentGameDay, gameTypeFilter } = useVolleyball();
-  const [isManagementDialogOpen, setIsManagementDialogOpen] = useState(false);
   
   // Get filtered players based on current game day or game type filter
   const filteredPlayers = getFilteredPlayers();
@@ -22,15 +21,16 @@ export function PlayerList() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg sm:text-xl">Players</CardTitle>
             <div className="flex items-center gap-1 sm:gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
-                onClick={() => setIsManagementDialogOpen(true)}
-              >
-                <Settings className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
-                <span className="hidden sm:inline">Manage Tags</span>
-              </Button>
+              <PlayerManagementDialog>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm"
+                >
+                  <Settings className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-1" />
+                  <span className="hidden sm:inline">Manage Tags</span>
+                </Button>
+              </PlayerManagementDialog>
               <AddPlayerForm />
             </div>
           </div>
@@ -56,11 +56,6 @@ export function PlayerList() {
           </div>
         </CardContent>
       </Card>
-      
-      <PlayerManagementDialog 
-        isOpen={isManagementDialogOpen}
-        onClose={() => setIsManagementDialogOpen(false)}
-      />
     </>
   );
 }

@@ -23,7 +23,6 @@ interface TeamWithMembers {
 export function SuperAdminTeamManagement() {
   const [teams, setTeams] = useState<TeamWithMembers[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedTeamForManagement, setSelectedTeamForManagement] = useState<TeamWithMembers | null>(null);
   const [selectedTeamForMembers, setSelectedTeamForMembers] = useState<TeamWithMembers | null>(null);
   const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
@@ -104,10 +103,12 @@ export function SuperAdminTeamManagement() {
             Create and manage teams with administrator assignments
           </p>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Team
-        </Button>
+        <EnhancedTeamCreationDialog onTeamCreated={loadTeams}>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Team
+          </Button>
+        </EnhancedTeamCreationDialog>
       </div>
 
       <div className="grid gap-4">
@@ -181,16 +182,6 @@ export function SuperAdminTeamManagement() {
           </Card>
         ))}
       </div>
-
-      {/* Enhanced Team Creation Dialog */}
-      <EnhancedTeamCreationDialog
-        isOpen={isCreateDialogOpen}
-        onClose={() => setIsCreateDialogOpen(false)}
-        onTeamCreated={() => {
-          setIsCreateDialogOpen(false);
-          loadTeams();
-        }}
-      />
 
       {/* Team Management Dialog */}
       {selectedTeamForManagement && (
