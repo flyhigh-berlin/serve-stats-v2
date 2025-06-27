@@ -245,6 +245,7 @@ export type Database = {
       }
       team_invitations: {
         Row: {
+          admin_role: boolean | null
           created_at: string | null
           created_by: string | null
           current_uses: number | null
@@ -257,6 +258,7 @@ export type Database = {
           team_id: string
         }
         Insert: {
+          admin_role?: boolean | null
           created_at?: string | null
           created_by?: string | null
           current_uses?: number | null
@@ -269,6 +271,7 @@ export type Database = {
           team_id: string
         }
         Update: {
+          admin_role?: boolean | null
           created_at?: string | null
           created_by?: string | null
           current_uses?: number | null
@@ -434,12 +437,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_team_admin_by_email: {
+        Args: { team_id_param: string; admin_email: string }
+        Returns: Json
+      }
       change_member_role: {
         Args: {
           member_id_param: string
           new_role: Database["public"]["Enums"]["team_member_role"]
         }
         Returns: boolean
+      }
+      create_admin_invitation: {
+        Args: { team_id_param: string; admin_email: string }
+        Returns: Json
       }
       delete_team_and_data: {
         Args: { team_id_param: string }
@@ -480,6 +491,7 @@ export type Database = {
           team_name: string
           is_valid: boolean
           error_message: string
+          admin_role: boolean
         }[]
       }
     }

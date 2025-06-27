@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
@@ -157,13 +156,16 @@ export function TeamProvider({ children }: { children: ReactNode }) {
 
     const invitation = validation[0];
     
-    // Add user to team
+    // Determine role based on invitation type
+    const memberRole = invitation.admin_role ? 'admin' : 'member';
+    
+    // Add user to team with appropriate role
     const { error: memberError } = await supabase
       .from('team_members')
       .insert({
         team_id: invitation.team_id,
         user_id: user.id,
-        role: 'member',
+        role: memberRole,
         joined_at: new Date().toISOString()
       });
 
@@ -199,7 +201,8 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }
 
     await refreshTeams();
-    toast.success(`Successfully joined ${invitation.team_name}!`);
+    const roleMessage = memberRole === 'admin' ? 'as an administrator' : 'as a member';
+    toast.success(`Successfully joined ${invitation.team_name} ${roleMessage}!`);
     return { error: null };
   };
 

@@ -4,14 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Loader2, Plus, Users, Settings, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { SuperAdminTeamManagementDialog } from "./SuperAdminTeamManagementDialog";
 import { SuperAdminTeamMembersDialog } from "./SuperAdminTeamMembersDialog";
+import { EnhancedTeamCreationDialog } from "./EnhancedTeamCreationDialog";
 
 interface TeamWithMembers {
   id: string;
@@ -26,8 +24,6 @@ export function SuperAdminTeamManagement() {
   const [teams, setTeams] = useState<TeamWithMembers[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newTeamName, setNewTeamName] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedTeamForManagement, setSelectedTeamForManagement] = useState<TeamWithMembers | null>(null);
   const [selectedTeamForMembers, setSelectedTeamForMembers] = useState<TeamWithMembers | null>(null);
   const [deletingTeamId, setDeletingTeamId] = useState<string | null>(null);
@@ -72,35 +68,6 @@ export function SuperAdminTeamManagement() {
     }
   };
 
-  const handleCreateTeam = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTeamName.trim()) {
-      toast.error("Team name is required");
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const { data: team, error: teamError } = await supabase
-        .from('teams')
-        .insert({ name: newTeamName.trim() })
-        .select()
-        .single();
-
-      if (teamError) throw teamError;
-
-      await loadTeams();
-      setNewTeamName("");
-      setIsCreateDialogOpen(false);
-      toast.success(`Team "${newTeamName}" created successfully!`);
-    } catch (error) {
-      console.error('Error creating team:', error);
-      toast.error('Failed to create team');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleDeleteTeam = async (teamId: string, teamName: string) => {
     setDeletingTeamId(teamId);
     try {
@@ -134,45 +101,13 @@ export function SuperAdminTeamManagement() {
         <div>
           <h2 className="text-2xl font-bold">Team Management</h2>
           <p className="text-muted-foreground">
-            Manage all teams across the platform
+            Create and manage teams with administrator assignments
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Team
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Team</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleCreateTeam}>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="team-name">Team Name</Label>
-                  <Input
-                    id="team-name"
-                    value={newTeamName}
-                    onChange={(e) => setNewTeamName(e.target.value)}
-                    placeholder="Enter team name"
-                    required
-                  />
-                </div>
-              </div>
-              <DialogFooter className="mt-6">
-                <Button variant="outline" type="button" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Team
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Team
+        </Button>
       </div>
 
       <div className="grid gap-4">
@@ -246,6 +181,16 @@ export function SuperAdminTeamManagement() {
           </Card>
         ))}
       </div>
+
+      {/* Enhanced Team Creation Dialog */}
+      <EnhancedTeamCreationDialog
+        isOpen={isCreateDialogOpen}
+        onClose={() => setIsCreateDialogOpen(false)}
+        onTeamCreated={() => {
+          setIsCreateDialogOpen(false);
+          loadTeams();
+        }}
+      />
 
       {/* Team Management Dialog */}
       {selectedTeamForManagement && (
