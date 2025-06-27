@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,16 +22,15 @@ interface AdminAssignment {
 }
 
 interface EnhancedTeamCreationDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onTeamCreated: () => void;
+  children: React.ReactNode;
+  onTeamCreated?: () => void;
 }
 
 export function EnhancedTeamCreationDialog({
-  isOpen,
-  onClose,
+  children,
   onTeamCreated
 }: EnhancedTeamCreationDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [teamName, setTeamName] = useState("");
   const [teamDescription, setTeamDescription] = useState("");
   const [adminAssignments, setAdminAssignments] = useState<AdminAssignment[]>([]);
@@ -52,7 +51,7 @@ export function EnhancedTeamCreationDialog({
 
   const handleClose = () => {
     resetForm();
-    onClose();
+    setIsOpen(false);
   };
 
   const handleTeamCreated = (teamId: string) => {
@@ -169,7 +168,7 @@ export function EnhancedTeamCreationDialog({
         toast.warning("Remember to assign at least one administrator to manage this team");
       }
       
-      onTeamCreated();
+      onTeamCreated?.();
 
     } catch (error) {
       console.error('Error finalizing team creation:', error);
@@ -184,7 +183,10 @@ export function EnhancedTeamCreationDialog({
   const hasNoAdmins = adminAssignments.length === 0;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Team</DialogTitle>

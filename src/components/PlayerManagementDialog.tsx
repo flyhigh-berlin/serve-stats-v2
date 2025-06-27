@@ -11,17 +11,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 interface PlayerManagementDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
+  children: React.ReactNode;
 }
 
-export function PlayerManagementDialog({ isOpen, onClose }: PlayerManagementDialogProps) {
+export function PlayerManagementDialog({ children }: PlayerManagementDialogProps) {
   const { players, getAllGameTypes, updatePlayerTags, canRemoveTagFromPlayer } = useVolleyball();
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   
   const allGameTypes = getAllGameTypes();
@@ -46,7 +47,10 @@ export function PlayerManagementDialog({ isOpen, onClose }: PlayerManagementDial
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Manage Player Tags</DialogTitle>
@@ -87,7 +91,7 @@ export function PlayerManagementDialog({ isOpen, onClose }: PlayerManagementDial
         </div>
         
         <DialogFooter>
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={() => setIsOpen(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
