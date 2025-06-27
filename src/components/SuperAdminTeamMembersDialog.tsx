@@ -41,13 +41,13 @@ export function SuperAdminTeamMembersDialog({
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [inviteCode, setInviteCode] = useState("");
+  const [memberInviteCode, setMemberInviteCode] = useState("");
   const [generatingInvite, setGeneratingInvite] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       loadMembers();
-      loadActiveInviteCode();
+      loadMemberInviteCode();
     }
   }, [isOpen, team.id]);
 
@@ -89,59 +89,63 @@ export function SuperAdminTeamMembersDialog({
     }
   };
 
-  const loadActiveInviteCode = async () => {
+  const loadMemberInviteCode = async () => {
     try {
+      // STRICTLY filter for member invitation type only - NEVER show admin codes
       const { data, error } = await supabase
         .from('team_invitations')
         .select('invite_code')
         .eq('team_id', team.id)
+        .eq('invitation_type', 'member')  // CRITICAL: Only member invitations
         .eq('is_active', true)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
         .limit(1);
 
       if (error) throw error;
+      
+      // Only set the code if we found a member invitation
       if (data && data.length > 0) {
-        setInviteCode(data[0].invite_code);
+        setMemberInviteCode(data[0].invite_code);
+      } else {
+        setMemberInviteCode(""); // Clear any existing code
       }
     } catch (error) {
-      console.error('Error loading invite code:', error);
+      console.error('Error loading member invite code:', error);
+      setMemberInviteCode(""); // Clear on error
     }
   };
 
-  const generateInviteCode = async () => {
+  const generateMemberInviteCode = async () => {
     setGeneratingInvite(true);
     try {
-      const { data: codeData, error: codeError } = await supabase.rpc('generate_invite_code');
-      if (codeError) throw codeError;
-
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7); // 7 days from now
-
-      const { error } = await supabase
-        .from('team_invitations')
-        .insert({
-          team_id: team.id,
-          invite_code: codeData,
-          max_uses: 10,
-          expires_at: expiresAt.toISOString(),
-        });
+      // Use the existing function that creates member invitations
+      const { data, error } = await supabase.rpc('create_member_invitation_for_team', {
+        team_id_param: team.id
+      });
 
       if (error) throw error;
-      
-      setInviteCode(codeData);
-      toast.success('Invite code generated successfully');
+
+      const result = data as any;
+      if (result.success) {
+        setMemberInviteCode(result.invite_code);
+        toast.success('Member invite code generated successfully');
+      } else {
+        toast.error(result.error || 'Failed to generate member invite code');
+      }
     } catch (error) {
-      console.error('Error generating invite code:', error);
-      toast.error('Failed to generate invite code');
+      console.error('Error generating member invite code:', error);
+      toast.error('Failed to generate member invite code');
     } finally {
       setGeneratingInvite(false);
     }
   };
 
   const copyInviteCode = () => {
-    navigator.clipboard.writeText(inviteCode);
-    toast.success('Invite code copied to clipboard');
+    if (memberInviteCode) {
+      navigator.clipboard.writeText(memberInviteCode);
+      toast.success('Member invite code copied to clipboard');
+    }
   };
 
   const handleRemoveMember = async (memberId: string, memberName: string) => {
@@ -204,7 +208,7 @@ export function SuperAdminTeamMembersDialog({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Invite Section */}
+          {/* Member Invite Section - STRICTLY for member invitations only */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -213,11 +217,11 @@ export function SuperAdminTeamMembersDialog({
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {inviteCode ? (
+              {memberInviteCode ? (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Input
-                      value={inviteCode}
+                      value={memberInviteCode}
                       readOnly
                       className="font-mono"
                     />
@@ -226,18 +230,25 @@ export function SuperAdminTeamMembersDialog({
                     </Button>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Share this code with new members to join the team
+                    Share this code with new members to join the team as regular members
                   </p>
                 </div>
               ) : (
-                <Button 
-                  onClick={generateInviteCode} 
-                  disabled={generatingInvite}
-                  className="w-full"
-                >
-                  {generatingInvite && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Generate Invite Code
-                </Button>
+                <div className="space-y-3">
+                  <div className="text-center py-6 border-2 border-dashed rounded-lg">
+                    <UserPlus className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-muted-foreground mb-2">No active member invitation</p>
+                    <p className="text-sm text-muted-foreground">Generate a member invite code to allow new users to join as team members</p>
+                  </div>
+                  <Button 
+                    onClick={generateMemberInviteCode} 
+                    disabled={generatingInvite}
+                    className="w-full"
+                  >
+                    {generatingInvite && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Generate Member Invite Code
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
