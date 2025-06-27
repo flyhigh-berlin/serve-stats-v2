@@ -16,7 +16,7 @@ interface TeamMember {
   user_profiles: {
     email: string;
     full_name: string | null;
-  };
+  } | null;
 }
 
 interface TeamMembersManagementProps {
@@ -38,25 +38,45 @@ export function TeamMembersManagement({ teamId, teamName, currentUserId, isTeamA
   const loadTeamMembers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First get team members
+      const { data: teamMembersData, error: membersError } = await supabase
         .from('team_members')
-        .select(`
-          id,
-          user_id,
-          role,
-          joined_at,
-          user_profiles (
-            email,
-            full_name
-          )
-        `)
+        .select('id, user_id, role, joined_at')
         .eq('team_id', teamId)
         .order('role', { ascending: false }) // Admins first
         .order('joined_at', { ascending: true });
 
-      if (error) throw error;
+      if (membersError) throw membersError;
 
-      setMembers(data || []);
+      if (!teamMembersData || teamMembersData.length === 0) {
+        setMembers([]);
+        return;
+      }
+
+      // Get user IDs
+      const userIds = teamMembersData.map(member => member.user_id);
+
+      // Then get user profiles for those user IDs
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('user_id, email, full_name')
+        .in('user_id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const membersWithProfiles = teamMembersData.map(member => {
+        const profile = profilesData?.find(p => p.user_id === member.user_id);
+        return {
+          ...member,
+          user_profiles: profile ? {
+            email: profile.email,
+            full_name: profile.full_name
+          } : null
+        };
+      });
+
+      setMembers(membersWithProfiles);
     } catch (error) {
       console.error('Error loading team members:', error);
       toast.error('Failed to load team members');
@@ -121,7 +141,7 @@ export function TeamMembersManagement({ teamId, teamName, currentUserId, isTeamA
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">
-                        {member.user_profiles.full_name || member.user_profiles.email}
+                        {member.user_profiles?.full_name || member.user_profiles?.email || 'Unknown User'}
                       </span>
                       {member.role === 'admin' && (
                         <Crown className="h-4 w-4 text-yellow-600" />
@@ -130,10 +150,12 @@ export function TeamMembersManagement({ teamId, teamName, currentUserId, isTeamA
                         <Badge variant="outline" className="text-xs">You</Badge>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Mail className="h-3 w-3" />
-                      {member.user_profiles.email}
-                    </div>
+                    {member.user_profiles && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Mail className="h-3 w-3" />
+                        {member.user_profiles.email}
+                      </div>
+                    )}
                     <div className="text-xs text-muted-foreground">
                       Joined {formatDate(member.joined_at)}
                     </div>
@@ -164,14 +186,14 @@ export function TeamMembersManagement({ teamId, teamName, currentUserId, isTeamA
                         <AlertDialogHeader>
                           <AlertDialogTitle>Remove Team Member?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to remove {member.user_profiles.full_name || member.user_profiles.email} from the team? 
+                            Are you sure you want to remove {member.user_profiles?.full_name || member.user_profiles?.email || 'this user'} from the team? 
                             This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction 
-                            onClick={() => removeMember(member.id, member.user_profiles.full_name || member.user_profiles.email)}
+                            onClick={() => removeMember(member.id, member.user_profiles?.full_name || member.user_profiles?.email || 'Unknown User')}
                             className="bg-red-600 hover:bg-red-700"
                           >
                             Remove Member
