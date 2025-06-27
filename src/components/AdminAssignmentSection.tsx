@@ -6,44 +6,108 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { X, Plus, UserPlus, Copy, Clock } from "lucide-react";
+import { X, Plus, UserPlus, Copy, Clock, CheckCircle, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AdminAssignment {
   email: string;
   type: 'existing' | 'invitation';
   inviteCode?: string;
   expiresAt?: string;
+  userId?: string;
+  fullName?: string;
+  isValidating?: boolean;
 }
 
 interface AdminAssignmentSectionProps {
   adminAssignments: AdminAssignment[];
   onAdminAssignmentsChange: (assignments: AdminAssignment[]) => void;
+  teamId?: string;
+  onTeamCreated?: (teamId: string) => void;
 }
 
 export function AdminAssignmentSection({ 
   adminAssignments, 
-  onAdminAssignmentsChange 
+  onAdminAssignmentsChange,
+  teamId,
+  onTeamCreated
 }: AdminAssignmentSectionProps) {
   const [emailInput, setEmailInput] = useState("");
-  const [generatedInvite, setGeneratedInvite] = useState<{
-    code: string;
-    email: string;
-    expiresAt: string;
+  const [isValidatingEmail, setIsValidatingEmail] = useState(false);
+  const [emailValidation, setEmailValidation] = useState<{
+    exists: boolean;
+    fullName?: string;
   } | null>(null);
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  const addAdminEmail = () => {
-    if (!emailInput.trim()) {
-      toast.error("Please enter an email address");
-      return;
-    }
+  const validateEmail = async (email: string) => {
+    if (!isValidEmail(email)) return null;
+    
+    setIsValidatingEmail(true);
+    try {
+      const { data, error } = await supabase.rpc('check_user_exists_by_email', {
+        email_param: email
+      });
 
-    if (!isValidEmail(emailInput)) {
-      toast.error("Please enter a valid email address");
+      if (error) throw error;
+      
+      const validation = { exists: data.exists, fullName: data.full_name };
+      setEmailValidation(validation);
+      return validation;
+    } catch (error) {
+      console.error('Error validating email:', error);
+      toast.error('Failed to validate email');
+      return null;
+    } finally {
+      setIsValidatingEmail(false);
+    }
+  };
+
+  const handleEmailChange = async (email: string) => {
+    setEmailInput(email);
+    setEmailValidation(null);
+    
+    if (email && isValidEmail(email)) {
+      await validateEmail(email);
+    }
+  };
+
+  const createTeamIfNeeded = async (teamName: string): Promise<string | null> => {
+    if (teamId) return teamId;
+
+    try {
+      const { data, error } = await supabase.rpc('create_team_with_admin_invites', {
+        team_name_param: teamName,
+        team_description_param: null
+      });
+
+      if (error) throw error;
+
+      const result = data as any;
+      if (result.success) {
+        const newTeamId = result.team_id;
+        if (onTeamCreated) {
+          onTeamCreated(newTeamId);
+        }
+        return newTeamId;
+      } else {
+        toast.error(result.error || 'Failed to create team');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error creating team:', error);
+      toast.error('Failed to create team');
+      return null;
+    }
+  };
+
+  const addExistingAdmin = async () => {
+    if (!emailInput.trim() || !emailValidation?.exists) {
+      toast.error("Please enter a valid existing user email");
       return;
     }
 
@@ -58,19 +122,17 @@ export function AdminAssignmentSection({
 
     const newAssignment: AdminAssignment = {
       email: emailInput.trim(),
-      type: 'existing' // Will be determined during team creation
+      type: 'existing',
+      fullName: emailValidation.fullName
     };
 
     onAdminAssignmentsChange([...adminAssignments, newAssignment]);
     setEmailInput("");
+    setEmailValidation(null);
+    toast.success("Existing admin added successfully");
   };
 
-  const removeAdminEmail = (email: string) => {
-    const filtered = adminAssignments.filter(admin => admin.email !== email);
-    onAdminAssignmentsChange(filtered);
-  };
-
-  const generateInviteCode = () => {
+  const generateInviteCode = async () => {
     if (!emailInput.trim()) {
       toast.error("Please enter an email address first");
       return;
@@ -81,26 +143,57 @@ export function AdminAssignmentSection({
       return;
     }
 
-    // Generate a mock invite code for preview (real one will be generated server-side)
-    const mockInviteCode = Math.random().toString(36).substring(2, 15);
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    if (emailValidation?.exists) {
+      toast.error("User already exists. Use 'Add Admin' instead.");
+      return;
+    }
 
-    setGeneratedInvite({
-      code: mockInviteCode,
-      email: emailInput.trim(),
-      expiresAt
-    });
+    const emailExists = adminAssignments.some(
+      admin => admin.email.toLowerCase() === emailInput.toLowerCase()
+    );
 
-    const newAssignment: AdminAssignment = {
-      email: emailInput.trim(),
-      type: 'invitation',
-      inviteCode: mockInviteCode,
-      expiresAt
-    };
+    if (emailExists) {
+      toast.error("This email has already been added");
+      return;
+    }
 
-    onAdminAssignmentsChange([...adminAssignments, newAssignment]);
-    setEmailInput("");
-    toast.success("Admin invitation prepared");
+    // Create team first if it doesn't exist
+    const currentTeamId = await createTeamIfNeeded("New Team");
+    if (!currentTeamId) return;
+
+    try {
+      const { data, error } = await supabase.rpc('create_admin_invitation_for_team', {
+        team_id_param: currentTeamId,
+        admin_email: emailInput.trim()
+      });
+
+      if (error) throw error;
+
+      const result = data as any;
+      if (result.success) {
+        const newAssignment: AdminAssignment = {
+          email: emailInput.trim(),
+          type: 'invitation',
+          inviteCode: result.invite_code,
+          expiresAt: result.expires_at
+        };
+
+        onAdminAssignmentsChange([...adminAssignments, newAssignment]);
+        setEmailInput("");
+        setEmailValidation(null);
+        toast.success("Admin invitation generated successfully");
+      } else {
+        toast.error(result.error || "Failed to generate invitation");
+      }
+    } catch (error) {
+      console.error('Error generating invitation:', error);
+      toast.error("Failed to generate admin invitation");
+    }
+  };
+
+  const removeAdminEmail = (email: string) => {
+    const filtered = adminAssignments.filter(admin => admin.email !== email);
+    onAdminAssignmentsChange(filtered);
   };
 
   const copyInviteCode = (code: string) => {
@@ -111,8 +204,33 @@ export function AdminAssignmentSection({
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      addAdminEmail();
+      if (emailValidation?.exists) {
+        addExistingAdmin();
+      } else if (emailValidation !== null) {
+        generateInviteCode();
+      }
     }
+  };
+
+  const getEmailValidationDisplay = () => {
+    if (isValidatingEmail) {
+      return <span className="text-xs text-muted-foreground">Validating...</span>;
+    }
+    
+    if (emailValidation?.exists) {
+      return (
+        <span className="text-xs text-green-600 flex items-center gap-1">
+          <CheckCircle className="h-3 w-3" />
+          User exists{emailValidation.fullName && `: ${emailValidation.fullName}`}
+        </span>
+      );
+    }
+    
+    if (emailValidation && !emailValidation.exists && emailInput) {
+      return <span className="text-xs text-orange-600">New user - will need invitation</span>;
+    }
+    
+    return null;
   };
 
   return (
@@ -123,34 +241,44 @@ export function AdminAssignmentSection({
           Add users by email to assign as team administrators. At least one admin is required.
         </p>
         
-        <div className="flex gap-2">
+        <div className="space-y-2">
           <Input
             id="admin-email"
             type="email"
             value={emailInput}
-            onChange={(e) => setEmailInput(e.target.value)}
+            onChange={(e) => handleEmailChange(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Enter admin email address"
-            className="flex-1"
+            className="w-full"
           />
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={addAdminEmail}
-            disabled={!emailInput.trim()}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Admin
-          </Button>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={generateInviteCode}
-            disabled={!emailInput.trim()}
-          >
-            <UserPlus className="h-4 w-4 mr-2" />
-            Generate Invite
-          </Button>
+          
+          {getEmailValidationDisplay()}
+          
+          <div className="flex gap-2">
+            {emailValidation?.exists ? (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={addExistingAdmin}
+                disabled={!emailInput.trim() || isValidatingEmail}
+                className="flex-1"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Existing Admin
+              </Button>
+            ) : (
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={generateInviteCode}
+                disabled={!emailInput.trim() || isValidatingEmail || emailValidation?.exists}
+                className="flex-1"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Generate Admin Invite
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -161,31 +289,40 @@ export function AdminAssignmentSection({
           </CardHeader>
           <CardContent className="space-y-2">
             {adminAssignments.map((admin, index) => (
-              <div key={admin.email} className="flex items-center justify-between p-2 border rounded-lg">
-                <div className="flex items-center gap-2">
-                  <div>
+              <div key={admin.email} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="flex-1">
                     <div className="font-medium">{admin.email}</div>
-                    {admin.type === 'invitation' && (
+                    {admin.fullName && (
+                      <div className="text-sm text-muted-foreground">{admin.fullName}</div>
+                    )}
+                    {admin.type === 'invitation' && admin.expiresAt && (
                       <div className="text-sm text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        Invitation expires {new Date(admin.expiresAt!).toLocaleDateString()}
+                        Expires {new Date(admin.expiresAt).toLocaleDateString()}
                       </div>
                     )}
                   </div>
+                  
+                  {admin.inviteCode && (
+                    <div className="flex items-center gap-2 p-2 bg-muted rounded border">
+                      <code className="text-xs font-mono">{admin.inviteCode}</code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyInviteCode(admin.inviteCode!)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
+                
                 <div className="flex items-center gap-2">
                   <Badge variant={admin.type === 'existing' ? 'default' : 'secondary'}>
-                    {admin.type === 'existing' ? 'Direct Assignment' : 'Invitation'}
+                    {admin.type === 'existing' ? 'Existing User' : 'Pending Invite'}
                   </Badge>
-                  {admin.inviteCode && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyInviteCode(admin.inviteCode!)}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  )}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -204,7 +341,7 @@ export function AdminAssignmentSection({
         <div className="text-center py-6 text-muted-foreground border-2 border-dashed rounded-lg">
           <UserPlus className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p>No administrators assigned yet</p>
-          <p className="text-sm">Add at least one admin email to create the team</p>
+          <p className="text-sm">Add at least one admin email to proceed</p>
         </div>
       )}
     </div>

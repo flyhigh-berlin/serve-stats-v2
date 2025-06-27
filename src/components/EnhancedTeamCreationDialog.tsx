@@ -16,6 +16,8 @@ interface AdminAssignment {
   type: 'existing' | 'invitation';
   inviteCode?: string;
   expiresAt?: string;
+  userId?: string;
+  fullName?: string;
 }
 
 interface EnhancedTeamCreationDialogProps {
@@ -33,6 +35,7 @@ export function EnhancedTeamCreationDialog({
   const [teamDescription, setTeamDescription] = useState("");
   const [adminAssignments, setAdminAssignments] = useState<AdminAssignment[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdTeamId, setCreatedTeamId] = useState<string | null>(null);
   const [creationStatus, setCreationStatus] = useState<{
     step: string;
     results: Array<{ email: string; success: boolean; message: string; }>;
@@ -42,6 +45,7 @@ export function EnhancedTeamCreationDialog({
     setTeamName("");
     setTeamDescription("");
     setAdminAssignments([]);
+    setCreatedTeamId(null);
     setCreationStatus(null);
   };
 
@@ -50,7 +54,14 @@ export function EnhancedTeamCreationDialog({
     onClose();
   };
 
-  const createTeamWithAdmins = async (e: React.FormEvent) => {
+  const handleTeamCreated = (teamId: string) => {
+    setCreatedTeamId(teamId);
+    if (!teamName.trim()) {
+      setTeamName("New Team");
+    }
+  };
+
+  const finalizeTeamCreation = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!teamName.trim()) {
@@ -64,36 +75,48 @@ export function EnhancedTeamCreationDialog({
     }
 
     setIsSubmitting(true);
-    setCreationStatus({ step: "Creating team...", results: [] });
+    setCreationStatus({ step: "Finalizing team creation...", results: [] });
 
     try {
-      // Step 1: Create the team
-      const { data: team, error: teamError } = await supabase
-        .from('teams')
-        .insert({ name: teamName.trim() })
-        .select()
-        .single();
+      let currentTeamId = createdTeamId;
 
-      if (teamError) throw teamError;
+      // Create team if not already created
+      if (!currentTeamId) {
+        const { data, error } = await supabase.rpc('create_team_with_admin_invites', {
+          team_name_param: teamName.trim(),
+          team_description_param: teamDescription.trim() || null
+        });
 
-      setCreationStatus({ step: "Assigning administrators...", results: [] });
+        if (error) throw error;
 
-      // Step 2: Process admin assignments
+        const result = data as any;
+        if (result.success) {
+          currentTeamId = result.team_id;
+          setCreatedTeamId(currentTeamId);
+        } else {
+          throw new Error(result.error || 'Failed to create team');
+        }
+      } else {
+        // Update team name if it was created with a placeholder
+        const { error } = await supabase
+          .from('teams')
+          .update({ name: teamName.trim() })
+          .eq('id', currentTeamId);
+
+        if (error) throw error;
+      }
+
+      setCreationStatus({ step: "Processing admin assignments...", results: [] });
+
+      // Process admin assignments
       const assignmentResults: Array<{ email: string; success: boolean; message: string; }> = [];
       
       for (const admin of adminAssignments) {
         try {
-          // Check if user exists first
-          const { data: userExists } = await supabase
-            .from('user_profiles')
-            .select('user_id')
-            .eq('email', admin.email)
-            .single();
-
-          if (userExists) {
-            // User exists - assign directly
+          if (admin.type === 'existing') {
+            // Assign existing user directly
             const { data: result, error } = await supabase.rpc('assign_team_admin_by_email', {
-              team_id_param: team.id,
+              team_id_param: currentTeamId,
               admin_email: admin.email
             });
 
@@ -114,28 +137,12 @@ export function EnhancedTeamCreationDialog({
               });
             }
           } else {
-            // User doesn't exist - create invitation
-            const { data: result, error } = await supabase.rpc('create_admin_invitation', {
-              team_id_param: team.id,
-              admin_email: admin.email
+            // Invitation already created, just track it
+            assignmentResults.push({
+              email: admin.email,
+              success: true,
+              message: `Admin invitation ready (Code: ${admin.inviteCode})`
             });
-
-            if (error) throw error;
-
-            const resultData = result as any;
-            if (resultData.success) {
-              assignmentResults.push({
-                email: admin.email,
-                success: true,
-                message: `Admin invitation sent (Code: ${resultData.invite_code})`
-              });
-            } else {
-              assignmentResults.push({
-                email: admin.email,
-                success: false,
-                message: resultData.error || "Failed to create admin invitation"
-              });
-            }
           }
         } catch (error) {
           console.error('Error processing admin assignment:', error);
@@ -161,13 +168,16 @@ export function EnhancedTeamCreationDialog({
       }
 
     } catch (error) {
-      console.error('Error creating team:', error);
-      toast.error('Failed to create team');
+      console.error('Error finalizing team creation:', error);
+      toast.error('Failed to finalize team creation');
       setCreationStatus(null);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const hasValidAssignments = adminAssignments.length > 0;
+  const canSubmit = teamName.trim() && hasValidAssignments && !isSubmitting;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -209,7 +219,7 @@ export function EnhancedTeamCreationDialog({
             )}
           </div>
         ) : (
-          <form onSubmit={createTeamWithAdmins}>
+          <form onSubmit={finalizeTeamCreation}>
             <div className="space-y-6">
               <div className="space-y-4">
                 <div>
@@ -240,7 +250,17 @@ export function EnhancedTeamCreationDialog({
               <AdminAssignmentSection
                 adminAssignments={adminAssignments}
                 onAdminAssignmentsChange={setAdminAssignments}
+                teamId={createdTeamId}
+                onTeamCreated={handleTeamCreated}
               />
+
+              {createdTeamId && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-700">
+                    Team created successfully! You can continue adding admins or finalize the setup.
+                  </p>
+                </div>
+              )}
             </div>
 
             <DialogFooter className="mt-6">
@@ -249,10 +269,10 @@ export function EnhancedTeamCreationDialog({
               </Button>
               <Button 
                 type="submit" 
-                disabled={isSubmitting || !teamName.trim() || adminAssignments.length === 0}
+                disabled={!canSubmit}
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Create Team
+                {createdTeamId ? 'Finalize Team Setup' : 'Create Team'}
               </Button>
             </DialogFooter>
           </form>

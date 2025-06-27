@@ -448,8 +448,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_user_exists_by_email: {
+        Args: { email_param: string }
+        Returns: Json
+      }
       create_admin_invitation: {
         Args: { team_id_param: string; admin_email: string }
+        Returns: Json
+      }
+      create_admin_invitation_for_team: {
+        Args: { team_id_param: string; admin_email: string }
+        Returns: Json
+      }
+      create_team_with_admin_invites: {
+        Args: { team_name_param: string; team_description_param?: string }
         Returns: Json
       }
       delete_team_and_data: {
