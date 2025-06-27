@@ -23,10 +23,9 @@ interface TeamMemberInvitation {
 interface TeamMemberInvitationManagementProps {
   teamId: string;
   teamName: string;
-  onInvitationChange?: () => void;
 }
 
-export function TeamMemberInvitationManagement({ teamId, teamName, onInvitationChange }: TeamMemberInvitationManagementProps) {
+export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberInvitationManagementProps) {
   const [invitation, setInvitation] = useState<TeamMemberInvitation | null>(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -39,12 +38,12 @@ export function TeamMemberInvitationManagement({ teamId, teamName, onInvitationC
   const loadMemberInvitation = async () => {
     setLoading(true);
     try {
-      // STRICTLY load only member invitations - never admin invitations
+      // Strictly load only member invitations, never admin invitations
       const { data, error } = await supabase
         .from('team_invitations')
         .select('*')
         .eq('team_id', teamId)
-        .eq('invitation_type', 'member') // STRICT filter for member invitations only
+        .eq('invitation_type', 'member')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1);
@@ -54,7 +53,7 @@ export function TeamMemberInvitationManagement({ teamId, teamName, onInvitationC
         throw error;
       }
 
-      // Double-check: ensure we only process member invitations
+      // Validate that we only have member invitations
       const memberInvitation = data?.find(inv => inv.invitation_type === 'member');
       
       if (memberInvitation) {
@@ -63,11 +62,6 @@ export function TeamMemberInvitationManagement({ teamId, teamName, onInvitationC
       } else {
         setInvitation(null);
         console.log('No active member invitation found');
-      }
-      
-      // Call the callback to notify parent of data change
-      if (onInvitationChange) {
-        onInvitationChange();
       }
     } catch (error) {
       console.error('Error loading member invitation:', error);
