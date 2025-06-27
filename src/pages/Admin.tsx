@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Users, Settings, Shield, BarChart3 } from "lucide-react";
+import { Loader2, UsersRound, User, Settings, Shield, BarChart3 } from "lucide-react";
 import { SuperAdminTeamManagement } from "@/components/SuperAdminTeamManagement";
 import { SuperAdminUserManagement } from "@/components/SuperAdminUserManagement";
 import { SuperAdminAnalytics } from "@/components/SuperAdminAnalytics";
@@ -61,11 +61,11 @@ const Admin = () => {
       <Tabs defaultValue="teams" className="w-full">
         <TabsList className="mb-6 w-full grid grid-cols-4 h-auto">
           <TabsTrigger value="teams" className="text-xs sm:text-sm py-2">
-            <Users className="h-4 w-4 mr-2" />
+            <UsersRound className="h-4 w-4 mr-2" />
             Teams
           </TabsTrigger>
           <TabsTrigger value="users" className="text-xs sm:text-sm py-2">
-            <Users className="h-4 w-4 mr-2" />
+            <User className="h-4 w-4 mr-2" />
             Users
           </TabsTrigger>
           <TabsTrigger value="analytics" className="text-xs sm:text-sm py-2">
@@ -96,9 +96,27 @@ const Admin = () => {
               <CardTitle>Platform Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Platform-wide configuration options will be available here.
-              </p>
+              <div className="space-y-4">
+                <div className="text-muted-foreground mb-4">
+                  Configure platform-wide settings and preferences.
+                </div>
+                <div className="grid gap-4">
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h4 className="font-medium">Date Format</h4>
+                      <p className="text-sm text-muted-foreground">Currently set to DD.MM.YYYY format</p>
+                    </div>
+                    <Badge variant="outline">Active</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h4 className="font-medium">System Maintenance</h4>
+                      <p className="text-sm text-muted-foreground">Platform maintenance tools</p>
+                    </div>
+                    <Badge variant="secondary">Available</Badge>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, Shield, User, Crown } from "lucide-react";
+import { Loader2, Search, Shield, User, Crown, UserCheck } from "lucide-react";
 import { toast } from "sonner";
+import { formatDate } from "@/utils/dateUtils";
 
 interface UserProfile {
   id: string;
@@ -95,6 +96,40 @@ export function SuperAdminUserManagement() {
     }
   };
 
+  const getUserRoleBadges = (user: UserProfile) => {
+    const badges = [];
+    
+    if (user.is_super_admin) {
+      badges.push(
+        <Badge key="super-admin" variant="destructive" className="text-xs">
+          <Crown className="h-3 w-3 mr-1" />
+          Super Admin
+        </Badge>
+      );
+    }
+    
+    if (user.admin_team_count > 0) {
+      badges.push(
+        <Badge key="admin" variant="default" className="text-xs bg-blue-100 text-blue-800 hover:bg-blue-200">
+          <Shield className="h-3 w-3 mr-1" />
+          Admin ({user.admin_team_count})
+        </Badge>
+      );
+    }
+    
+    const memberTeamCount = user.team_count - user.admin_team_count;
+    if (memberTeamCount > 0) {
+      badges.push(
+        <Badge key="member" variant="secondary" className="text-xs">
+          <UserCheck className="h-3 w-3 mr-1" />
+          Member ({memberTeamCount})
+        </Badge>
+      );
+    }
+    
+    return badges;
+  };
+
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -150,34 +185,26 @@ export function SuperAdminUserManagement() {
                   <div>
                     <CardTitle className="text-lg flex items-center gap-2">
                       {user.full_name || user.email}
-                      {user.is_super_admin && (
-                        <Badge variant="destructive" className="text-xs">
-                          <Shield className="h-3 w-3 mr-1" />
-                          Super Admin
-                        </Badge>
-                      )}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {user.email}
                     </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      {getUserRoleBadges(user)}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">
                     {user.team_count} teams
                   </Badge>
-                  {user.admin_team_count > 0 && (
-                    <Badge variant="outline">
-                      Admin in {user.admin_team_count}
-                    </Badge>
-                  )}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
-                  Joined {new Date(user.created_at).toLocaleDateString()}
+                  Joined {formatDate(user.created_at)}
                 </div>
                 <Button
                   variant={user.is_super_admin ? "destructive" : "default"}

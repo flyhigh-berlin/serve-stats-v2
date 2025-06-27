@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Copy, Clock, Mail, Trash2, RefreshCw, Users, Send, Calendar, User, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { formatDateTime } from "@/utils/dateUtils";
 
 interface TeamInvitation {
   id: string;
@@ -170,10 +171,6 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
   const getStatusCounts = () => {
     const counts = {
       all: invitations.length,
@@ -305,13 +302,13 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <Calendar className="h-3 w-3" />
-                          {formatDate(invitation.created_at)}
+                          {formatDateTime(invitation.created_at)}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          {formatDate(invitation.expires_at)}
+                          {formatDateTime(invitation.expires_at)}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -319,7 +316,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
                           <div className="space-y-1">
                             <div className="flex items-center gap-1 text-sm text-green-600">
                               <User className="h-3 w-3" />
-                              {formatDate(invitation.accepted_at)}
+                              {formatDateTime(invitation.accepted_at)}
                             </div>
                             {invitation.accepted_user_name && (
                               <div className="text-xs text-muted-foreground">

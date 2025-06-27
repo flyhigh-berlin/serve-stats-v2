@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
@@ -30,13 +29,14 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
-    size?: "default" | "large" | "extra-large"
+    size?: "default" | "large" | "extra-large" | "full-width"
   }
 >(({ className, children, size = "default", ...props }, ref) => {
   const sizeClasses = {
     default: "w-[95vw] max-w-[700px] sm:w-full",
     large: "w-[95vw] max-w-[900px] sm:w-full", 
-    "extra-large": "w-[95vw] max-w-[1000px] sm:w-full"
+    "extra-large": "w-[95vw] max-w-[1000px] sm:w-full",
+    "full-width": "w-[95vw] max-w-[95vw] sm:w-[95vw]"
   }
 
   return (

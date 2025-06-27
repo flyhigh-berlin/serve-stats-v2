@@ -2,6 +2,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TeamInvitationsTabs } from "./TeamInvitationsTabs";
+import { formatDate } from "@/utils/dateUtils";
 
 interface SuperAdminTeamManagementDialogProps {
   team: {
@@ -25,7 +26,7 @@ export function SuperAdminTeamManagementDialog({
 }: SuperAdminTeamManagementDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent size="full-width" className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Manage Team: {team.name}</DialogTitle>
         </DialogHeader>
@@ -38,7 +39,7 @@ export function SuperAdminTeamManagementDialog({
             </div>
             <div>
               <div className="text-sm font-medium text-muted-foreground">Created</div>
-              <div className="text-sm">{new Date(team.created_at).toLocaleDateString()}</div>
+              <div className="text-sm">{formatDate(team.created_at)}</div>
             </div>
             <div>
               <div className="text-sm font-medium text-muted-foreground">Total Members</div>

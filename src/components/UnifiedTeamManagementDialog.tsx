@@ -26,7 +26,7 @@ export function UnifiedTeamManagementDialog({ children }: UnifiedTeamManagementD
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent size="extra-large" className="flex flex-col max-h-[90vh]">
+      <DialogContent size="full-width" className="flex flex-col max-h-[90vh]">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Settings className="h-5 w-5" />
