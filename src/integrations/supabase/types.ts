@@ -253,6 +253,7 @@ export type Database = {
           current_uses: number | null
           expires_at: string | null
           id: string
+          invitation_type: Database["public"]["Enums"]["invitation_type"]
           invite_code: string
           invited_email: string | null
           is_active: boolean | null
@@ -269,6 +270,7 @@ export type Database = {
           current_uses?: number | null
           expires_at?: string | null
           id?: string
+          invitation_type?: Database["public"]["Enums"]["invitation_type"]
           invite_code: string
           invited_email?: string | null
           is_active?: boolean | null
@@ -285,6 +287,7 @@ export type Database = {
           current_uses?: number | null
           expires_at?: string | null
           id?: string
+          invitation_type?: Database["public"]["Enums"]["invitation_type"]
           invite_code?: string
           invited_email?: string | null
           is_active?: boolean | null
@@ -477,8 +480,16 @@ export type Database = {
         Args: { team_id_param: string; admin_email: string }
         Returns: Json
       }
+      create_member_invitation_for_team: {
+        Args: { team_id_param: string }
+        Returns: Json
+      }
       create_team_with_admin_invites: {
         Args: { team_name_param: string; team_description_param?: string }
+        Returns: Json
+      }
+      deactivate_member_invitation: {
+        Args: { team_id_param: string }
         Returns: Json
       }
       delete_team_and_data: {
@@ -488,6 +499,10 @@ export type Database = {
       generate_invite_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_team_member_invitation: {
+        Args: { team_id_param: string }
+        Returns: Json
       }
       get_user_teams: {
         Args: { check_user_id: string }
@@ -526,10 +541,12 @@ export type Database = {
           error_message: string
           admin_role: boolean
           invited_email: string
+          invitation_type: string
         }[]
       }
     }
     Enums: {
+      invitation_type: "admin" | "member"
       serve_quality: "good" | "neutral" | "bad"
       serve_type: "fail" | "ace"
       team_member_role: "admin" | "member"
@@ -648,6 +665,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      invitation_type: ["admin", "member"],
       serve_quality: ["good", "neutral", "bad"],
       serve_type: ["fail", "ace"],
       team_member_role: ["admin", "member"],

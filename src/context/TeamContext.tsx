@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
@@ -157,7 +156,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
 
     const invitation = validation[0];
     
-    // Determine role based on invitation type
+    // Determine role based on invitation type and admin_role flag
     const memberRole = invitation.admin_role ? 'admin' : 'member';
     
     // Check if user is already a team member
