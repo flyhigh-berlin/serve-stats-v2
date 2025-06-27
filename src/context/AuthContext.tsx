@@ -24,10 +24,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Handle invitation acceptance after successful signup
+        if (event === 'SIGNED_IN' && session?.user) {
+          const pendingInviteCode = localStorage.getItem('pendingInviteCode');
+          if (pendingInviteCode) {
+            localStorage.removeItem('pendingInviteCode');
+            await handleInvitationAcceptance(pendingInviteCode, session.user);
+          }
+        }
+        
         setLoading(false);
       }
     );
@@ -41,6 +51,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const handleInvitationAcceptance = async (inviteCode: string, user: User) => {
+    try {
+      const { data, error } = await supabase.rpc('accept_invitation_signup', {
+        invitation_code: inviteCode,
+        user_email: user.email!,
+        user_id_param: user.id
+      });
+
+      if (error) throw error;
+
+      const result = data as any;
+      if (result.success) {
+        toast.success(`Successfully joined ${result.team_name} as ${result.role}!`);
+        // Refresh the page to load the team data
+        window.location.reload();
+      } else {
+        toast.error(result.error || 'Failed to accept invitation');
+      }
+    } catch (error) {
+      console.error('Error accepting invitation:', error);
+      toast.error('Failed to accept team invitation');
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({

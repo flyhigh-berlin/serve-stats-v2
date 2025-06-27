@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
@@ -159,6 +160,19 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     // Determine role based on invitation type
     const memberRole = invitation.admin_role ? 'admin' : 'member';
     
+    // Check if user is already a team member
+    const { data: existingMember } = await supabase
+      .from('team_members')
+      .select('id')
+      .eq('team_id', invitation.team_id)
+      .eq('user_id', user.id)
+      .single();
+
+    if (existingMember) {
+      toast.error('You are already a member of this team');
+      return { error: 'Already a member' };
+    }
+
     // Add user to team with appropriate role
     const { error: memberError } = await supabase
       .from('team_members')
@@ -178,26 +192,15 @@ export function TeamProvider({ children }: { children: ReactNode }) {
       return { error: memberError };
     }
 
-    // Get the current usage count from the invitations table
-    const { data: inviteData, error: inviteError } = await supabase
-      .from('team_invitations')
-      .select('current_uses')
-      .eq('id', invitation.invitation_id)
-      .single();
+    // Mark invitation as accepted using the new function
+    const { error: acceptError } = await supabase.rpc('mark_invitation_accepted', {
+      invitation_code: inviteCode,
+      user_id_param: user.id
+    });
 
-    if (!inviteError && inviteData) {
-      // Update invitation usage
-      const { error: updateError } = await supabase
-        .from('team_invitations')
-        .update({ 
-          current_uses: inviteData.current_uses + 1,
-          last_used_at: new Date().toISOString()
-        })
-        .eq('id', invitation.invitation_id);
-
-      if (updateError) {
-        console.error('Failed to update invitation usage:', updateError);
-      }
+    if (acceptError) {
+      console.error('Failed to mark invitation as accepted:', acceptError);
+      // Don't fail the join process if this fails, just log it
     }
 
     await refreshTeams();

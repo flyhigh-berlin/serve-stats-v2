@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Copy, Clock, Mail, Trash2, RefreshCw, Users, Send, Calendar, User } from "lucide-react";
+import { Copy, Clock, Mail, Trash2, RefreshCw, Users, Send, Calendar, User, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface TeamInvitation {
@@ -23,6 +23,7 @@ interface TeamInvitation {
   last_used_at?: string;
   accepted_at?: string;
   accepted_by?: string;
+  accepted_user_name?: string;
 }
 
 interface TeamInvitationsManagementProps {
@@ -50,15 +51,28 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
   const loadInvitations = async () => {
     setLoading(true);
     try {
+      // Load invitations with user profile information for accepted invitations
       const { data, error } = await supabase
         .from('team_invitations')
-        .select('*')
+        .select(`
+          *,
+          accepted_user:accepted_by (
+            full_name
+          )
+        `)
         .eq('team_id', teamId)
         .eq('admin_role', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setInvitations(data || []);
+      
+      // Transform the data to include user names
+      const processedInvitations = (data || []).map(invitation => ({
+        ...invitation,
+        accepted_user_name: invitation.accepted_user?.full_name || null
+      }));
+      
+      setInvitations(processedInvitations);
     } catch (error) {
       console.error('Error loading invitations:', error);
       toast.error('Failed to load team invitations');
@@ -98,6 +112,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
     const config = statusConfig[status];
     return (
       <Badge variant={config.variant} className={config.className}>
+        <CheckCircle className="h-3 w-3 mr-1" />
         {config.label}
       </Badge>
     );
@@ -286,9 +301,16 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
                       </TableCell>
                       <TableCell>
                         {isAccepted && invitation.accepted_at ? (
-                          <div className="flex items-center gap-1 text-sm text-green-600">
-                            <User className="h-3 w-3" />
-                            {formatDate(invitation.accepted_at)}
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-sm text-green-600">
+                              <User className="h-3 w-3" />
+                              {formatDate(invitation.accepted_at)}
+                            </div>
+                            {invitation.accepted_user_name && (
+                              <div className="text-xs text-muted-foreground">
+                                by {invitation.accepted_user_name}
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <span className="text-sm text-muted-foreground">-</span>
@@ -308,7 +330,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
                             </Button>
                           )}
                           
-                          {invitation.is_active && (
+                          {invitation.is_active && !isAccepted && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="outline" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700">

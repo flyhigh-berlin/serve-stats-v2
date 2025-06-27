@@ -446,6 +446,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation_signup: {
+        Args: {
+          invitation_code: string
+          user_email: string
+          user_id_param: string
+        }
+        Returns: Json
+      }
       assign_team_admin_by_email: {
         Args: { team_id_param: string; admin_email: string }
         Returns: Json
@@ -496,6 +504,10 @@ export type Database = {
         Args: { check_user_id: string; check_team_id: string }
         Returns: boolean
       }
+      mark_invitation_accepted: {
+        Args: { invitation_code: string; user_id_param: string }
+        Returns: Json
+      }
       remove_team_member: {
         Args: { member_id_param: string }
         Returns: boolean
@@ -513,6 +525,7 @@ export type Database = {
           is_valid: boolean
           error_message: string
           admin_role: boolean
+          invited_email: string
         }[]
       }
     }
