@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "../context/AuthContext";
-import { Loader2, Mail } from "lucide-react";
+import { Loader2, Mail, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 const Auth = () => {
@@ -20,6 +20,8 @@ const Auth = () => {
     teamName: string;
     role: string;
     email: string;
+    isValidating?: boolean;
+    error?: string;
   } | null>(null);
 
   // Check for invitation code in URL
@@ -35,6 +37,8 @@ const Auth = () => {
   const validateInviteCode = async (code: string) => {
     if (!code) return;
     
+    setInviteInfo(prev => ({ ...prev, isValidating: true, error: undefined }) as any);
+    
     try {
       const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase.rpc('validate_invite_code', {
@@ -48,19 +52,32 @@ const Auth = () => {
         setInviteInfo({
           teamName: invitation.team_name,
           role: invitation.admin_role ? 'Administrator' : 'Member',
-          email: invitation.invited_email || ''
+          email: invitation.invited_email || '',
+          isValidating: false
         });
         toast.success(`Valid invitation for ${invitation.team_name}!`);
       } else {
-        toast.error(data[0]?.error_message || 'Invalid invitation code');
-        setInviteCode("");
-        setInviteInfo(null);
+        const errorMessage = data[0]?.error_message || 'Invalid invitation code';
+        setInviteInfo({
+          teamName: '',
+          role: '',
+          email: '',
+          isValidating: false,
+          error: errorMessage
+        });
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error('Error validating invite code:', error);
-      toast.error('Failed to validate invitation code');
-      setInviteCode("");
-      setInviteInfo(null);
+      const errorMessage = 'Failed to validate invitation code';
+      setInviteInfo({
+        teamName: '',
+        role: '',
+        email: '',
+        isValidating: false,
+        error: errorMessage
+      });
+      toast.error(errorMessage);
     }
   };
 
@@ -105,13 +122,19 @@ const Auth = () => {
       setIsSubmitting(false);
       return;
     }
+
+    // Check for invitation errors
+    if (inviteCodeValue && inviteInfo?.error) {
+      toast.error(inviteInfo.error);
+      setIsSubmitting(false);
+      return;
+    }
     
     try {
       const { error } = await signUp(email, password, fullName);
       
       if (!error && inviteCodeValue) {
-        // If there's an invitation code, we'll handle team joining after successful signup
-        // The signup process will trigger the user creation, and we'll handle the invitation in the auth context
+        // Store the invitation code for processing after signup
         localStorage.setItem('pendingInviteCode', inviteCodeValue);
       }
     } catch (error) {
@@ -141,7 +164,7 @@ const Auth = () => {
           <p className="text-muted-foreground mt-2">Track your volleyball serving performance</p>
         </div>
 
-        {inviteInfo && (
+        {inviteInfo && !inviteInfo.error && (
           <Card className="mb-6 border-green-200 bg-green-50">
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -156,6 +179,20 @@ const Auth = () => {
                       Use email: {inviteInfo.email}
                     </p>
                   )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {inviteInfo?.error && (
+          <Card className="mb-6 border-red-200 bg-red-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-red-600" />
+                <div>
+                  <p className="font-medium text-red-800">Invalid Invitation</p>
+                  <p className="text-sm text-red-700">{inviteInfo.error}</p>
                 </div>
               </div>
             </CardContent>
@@ -258,11 +295,17 @@ const Auth = () => {
                         }
                       }}
                     />
+                    {inviteInfo?.isValidating && (
+                      <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Validating invitation code...
+                      </div>
+                    )}
                   </div>
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || inviteInfo?.isValidating || (inviteCode && inviteInfo?.error)}
                   >
                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign Up

@@ -208,7 +208,7 @@ export function AdminAssignmentSection({
       e.stopPropagation();
     }
     navigator.clipboard.writeText(code);
-    toast.success("Invitation code copied to clipboard");
+    toast.success("Admin invitation code copied to clipboard");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -316,12 +316,14 @@ export function AdminAssignmentSection({
                   
                   {admin.inviteCode && (
                     <div className="flex items-center gap-2 p-2 bg-muted rounded border">
+                      <div className="text-xs text-muted-foreground font-medium">Admin Invite:</div>
                       <code className="text-xs font-mono">{admin.inviteCode}</code>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => copyInviteCode(admin.inviteCode!)}
+                        onClick={(e) => copyInviteCode(admin.inviteCode!, e)}
                         className="h-6 w-6 p-0"
+                        type="button"
                       >
                         <Copy className="h-3 w-3" />
                       </Button>
@@ -331,12 +333,13 @@ export function AdminAssignmentSection({
                 
                 <div className="flex items-center gap-2">
                   <Badge variant={admin.type === 'existing' ? 'default' : 'secondary'}>
-                    {admin.type === 'existing' ? 'Existing User' : 'Pending Invite'}
+                    {admin.type === 'existing' ? 'Existing User' : 'Pending Admin Invite'}
                   </Badge>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => removeAdminEmail(admin.email)}
+                    type="button"
                   >
                     <X className="h-4 w-4" />
                   </Button>

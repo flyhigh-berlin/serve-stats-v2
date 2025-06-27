@@ -34,7 +34,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const pendingInviteCode = localStorage.getItem('pendingInviteCode');
           if (pendingInviteCode) {
             localStorage.removeItem('pendingInviteCode');
-            await handleInvitationAcceptance(pendingInviteCode, session.user);
+            // Use setTimeout to avoid potential deadlock
+            setTimeout(() => {
+              handleInvitationAcceptance(pendingInviteCode, session.user);
+            }, 100);
           }
         }
         
@@ -54,22 +57,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleInvitationAcceptance = async (inviteCode: string, user: User) => {
     try {
-      const { data, error } = await supabase.rpc('accept_invitation_signup', {
+      // Validate the invitation code first
+      const { data: validationData, error: validationError } = await supabase
+        .rpc('validate_invite_code', { code: inviteCode });
+
+      if (validationError) {
+        console.error('Error validating invite code:', validationError);
+        toast.error('Failed to validate invitation code');
+        return;
+      }
+
+      if (!validationData || !validationData[0]?.is_valid) {
+        toast.error(validationData[0]?.error_message || 'Invalid invitation code');
+        return;
+      }
+
+      const invitation = validationData[0];
+      
+      // Validate email matches invitation if specified
+      if (invitation.invited_email && invitation.invited_email.toLowerCase() !== user.email?.toLowerCase()) {
+        toast.error('Email must match the invitation email address');
+        return;
+      }
+
+      // Determine role based on invitation type and admin_role flag
+      const memberRole = invitation.admin_role ? 'admin' : 'member';
+      
+      // Check if user is already a team member
+      const { data: existingMember } = await supabase
+        .from('team_members')
+        .select('id')
+        .eq('team_id', invitation.team_id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingMember) {
+        toast.error('You are already a member of this team');
+        return;
+      }
+
+      // Add user to team with appropriate role
+      const { error: memberError } = await supabase
+        .from('team_members')
+        .insert({
+          team_id: invitation.team_id,
+          user_id: user.id,
+          role: memberRole,
+          joined_at: new Date().toISOString()
+        });
+
+      if (memberError) {
+        if (memberError.code === '23505') { // Unique violation
+          toast.error('You are already a member of this team');
+        } else {
+          console.error('Error adding user to team:', memberError);
+          toast.error('Failed to join team');
+        }
+        return;
+      }
+
+      // Mark invitation as accepted
+      const { error: acceptError } = await supabase.rpc('mark_invitation_accepted', {
         invitation_code: inviteCode,
-        user_email: user.email!,
         user_id_param: user.id
       });
 
-      if (error) throw error;
-
-      const result = data as any;
-      if (result.success) {
-        toast.success(`Successfully joined ${result.team_name} as ${result.role}!`);
-        // Refresh the page to load the team data
-        window.location.reload();
-      } else {
-        toast.error(result.error || 'Failed to accept invitation');
+      if (acceptError) {
+        console.error('Failed to mark invitation as accepted:', acceptError);
+        // Don't fail the join process if this fails, just log it
       }
+
+      const roleMessage = memberRole === 'admin' ? 'as an administrator' : 'as a member';
+      toast.success(`Successfully joined ${invitation.team_name} ${roleMessage}!`);
+      
+      // Refresh the page to load the team data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
     } catch (error) {
       console.error('Error accepting invitation:', error);
       toast.error('Failed to accept team invitation');

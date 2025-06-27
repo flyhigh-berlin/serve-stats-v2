@@ -106,9 +106,13 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
     }
   };
 
-  const copyInviteCode = (code: string) => {
+  const copyInviteCode = (code: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     navigator.clipboard.writeText(code);
-    toast.success("Invitation code copied to clipboard");
+    toast.success("Member invitation code copied to clipboard");
   };
 
   const formatDate = (dateString: string) => {
@@ -167,7 +171,7 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
             <div className="border rounded-lg p-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">Active</Badge>
+                  <Badge variant="secondary">Active Member Invitation</Badge>
                   <Badge variant="outline">
                     {invitation.current_uses} / {invitation.max_uses} uses
                   </Badge>
@@ -206,7 +210,7 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Invitation Code</label>
+                  <label className="text-sm font-medium text-muted-foreground">Member Invitation Code</label>
                   <div className="flex items-center gap-2 mt-1">
                     <code className="flex-1 text-sm font-mono bg-muted px-3 py-2 rounded border">
                       {invitation.invite_code}
@@ -214,7 +218,8 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => copyInviteCode(invitation.invite_code)}
+                      onClick={(e) => copyInviteCode(invitation.invite_code, e)}
+                      type="button"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -250,7 +255,8 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
               </div>
             </div>
 
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="font-medium text-blue-800 mb-1">Member Invitation Info:</p>
               <p>• This invitation code can be used by multiple people to join as team members</p>
               <p>• Members can view and participate in team activities but cannot manage team settings</p>
               <p>• Share this code with users you want to join your team</p>

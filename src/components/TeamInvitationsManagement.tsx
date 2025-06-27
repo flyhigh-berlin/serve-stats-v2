@@ -51,12 +51,13 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
   const loadInvitations = async () => {
     setLoading(true);
     try {
-      // First, load invitations
+      // Load admin invitations only
       const { data: invitationsData, error: invitationsError } = await supabase
         .from('team_invitations')
         .select('*')
         .eq('team_id', teamId)
         .eq('admin_role', true)
+        .eq('invitation_type', 'admin')
         .order('created_at', { ascending: false });
 
       if (invitationsError) throw invitationsError;
@@ -88,7 +89,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
       setInvitations(processedInvitations);
     } catch (error) {
       console.error('Error loading invitations:', error);
-      toast.error('Failed to load team invitations');
+      toast.error('Failed to load admin invitations');
     } finally {
       setLoading(false);
     }
@@ -137,7 +138,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
       e.stopPropagation();
     }
     navigator.clipboard.writeText(code);
-    toast.success("Invitation code copied to clipboard");
+    toast.success("Admin invitation code copied to clipboard");
   };
 
   const resendInvitation = async (invitation: TeamInvitation) => {
@@ -145,7 +146,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
       // For now, just copy the code and show a message
       // In the future, this could integrate with an email service
       await copyInviteCode(invitation.invite_code);
-      toast.success(`Invitation code copied. Send this to ${invitation.invited_email || 'the admin'}`);
+      toast.success(`Admin invitation code copied. Send this to ${invitation.invited_email || 'the admin'}`);
     } catch (error) {
       console.error('Error resending invitation:', error);
       toast.error('Failed to resend invitation');
@@ -161,7 +162,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
 
       if (error) throw error;
       
-      toast.success("Invitation deactivated");
+      toast.success("Admin invitation deactivated");
       loadInvitations();
     } catch (error) {
       console.error('Error deactivating invitation:', error);
@@ -204,7 +205,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
         <CardContent>
           <div className="flex items-center gap-2">
             <RefreshCw className="h-4 w-4 animate-spin" />
-            Loading invitations...
+            Loading admin invitations...
           </div>
         </CardContent>
       </Card>
@@ -258,7 +259,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
-                  <TableHead>Invitation Code</TableHead>
+                  <TableHead>Admin Invitation Code</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Expires</TableHead>
@@ -292,6 +293,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
                             size="sm"
                             onClick={(e) => copyInviteCode(invitation.invite_code, e)}
                             className="h-6 w-6 p-0"
+                            type="button"
                           >
                             <Copy className="h-3 w-3" />
                           </Button>
@@ -337,6 +339,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
                               size="sm"
                               onClick={() => resendInvitation(invitation)}
                               className="h-8 px-2"
+                              type="button"
                             >
                               <Send className="h-3 w-3 mr-1" />
                               Resend
@@ -346,13 +349,13 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
                           {invitation.is_active && !isAccepted && (
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700">
+                                <Button variant="outline" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700" type="button">
                                   <Trash2 className="h-3 w-3" />
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Deactivate Invitation?</AlertDialogTitle>
+                                  <AlertDialogTitle>Deactivate Admin Invitation?</AlertDialogTitle>
                                   <AlertDialogDescription>
                                     This will prevent the invitation code from being used. This action cannot be undone.
                                     {invitation.invited_email && (
