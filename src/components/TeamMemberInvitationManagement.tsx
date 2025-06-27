@@ -37,17 +37,27 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
   const loadMemberInvitation = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc('get_team_member_invitation', {
-        team_id_param: teamId
-      });
+      // Only load invitations that are specifically for members (not admin invitations)
+      const { data, error } = await supabase
+        .from('team_invitations')
+        .select('*')
+        .eq('team_id', teamId)
+        .eq('invitation_type', 'member')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading member invitation:', error);
+        throw error;
+      }
 
-      const result = data as any;
-      if (result.success && result.invitation) {
-        setInvitation(result.invitation);
+      if (data && data.length > 0) {
+        setInvitation(data[0]);
+        console.log('Loaded member invitation:', data[0]);
       } else {
         setInvitation(null);
+        console.log('No active member invitation found');
       }
     } catch (error) {
       console.error('Error loading member invitation:', error);

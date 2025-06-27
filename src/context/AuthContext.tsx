@@ -45,6 +45,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const processInvitation = async (inviteCode: string, user: User): Promise<{ success: boolean; error?: string }> => {
     try {
+      console.log('Processing invitation with code:', inviteCode);
+      
       // Validate the invitation code first
       const { data: validationData, error: validationError } = await supabase
         .rpc('validate_invite_code', { code: inviteCode });
@@ -59,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const invitation = validationData[0];
+      console.log('Invitation details:', invitation);
       
       // Validate email matches invitation if specified
       if (invitation.invited_email && invitation.invited_email.toLowerCase() !== user.email?.toLowerCase()) {
@@ -111,6 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const roleMessage = memberRole === 'admin' ? 'as an administrator' : 'as a member';
+      console.log(`Successfully joined ${invitation.team_name} ${roleMessage}`);
+      
       return { 
         success: true, 
         error: `Successfully joined ${invitation.team_name} ${roleMessage}!` 
@@ -156,15 +161,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error };
     }
 
-    // If signup was successful and we have an invite code, process it immediately
+    // If signup was successful and we have an invite code, process it after a delay
+    // to ensure the user session is fully established
     if (data.user && inviteCode) {
-      const inviteResult = await processInvitation(inviteCode, data.user);
-      if (inviteResult.success) {
-        toast.success(inviteResult.error); // error field contains success message in this case
-      } else {
-        toast.error(inviteResult.error || 'Failed to process invitation');
-        return { error: inviteResult.error };
-      }
+      console.log('User created, processing invitation after delay...');
+      
+      // Wait for the auth state to settle
+      setTimeout(async () => {
+        try {
+          const inviteResult = await processInvitation(inviteCode, data.user);
+          if (inviteResult.success) {
+            toast.success(inviteResult.error); // error field contains success message in this case
+            // Trigger a refresh of teams after successful invitation processing
+            window.dispatchEvent(new CustomEvent('teamJoined'));
+          } else {
+            toast.error(inviteResult.error || 'Failed to process invitation');
+          }
+        } catch (err) {
+          console.error('Error processing invitation after signup:', err);
+          toast.error('Failed to process invitation');
+        }
+      }, 2000); // 2 second delay to ensure session is established
     } else {
       toast.success('Check your email to confirm your account!');
     }

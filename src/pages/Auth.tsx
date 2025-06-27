@@ -109,8 +109,13 @@ const Auth = () => {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     
-    await signIn(email, password);
-    setIsSubmitting(false);
+    try {
+      await signIn(email, password);
+    } catch (error) {
+      console.error('Sign in error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -145,9 +150,9 @@ const Auth = () => {
       }
     } catch (error) {
       console.error('Signup error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
   const handleResetPassword = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -157,8 +162,13 @@ const Auth = () => {
     const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     
-    await resetPassword(email);
-    setIsSubmitting(false);
+    try {
+      await resetPassword(email);
+    } catch (error) {
+      console.error('Reset password error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

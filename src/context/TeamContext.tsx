@@ -45,6 +45,17 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }
   }, [user]);
 
+  // Listen for team join events
+  useEffect(() => {
+    const handleTeamJoined = () => {
+      console.log('Team joined event received, refreshing teams...');
+      loadUserTeams();
+    };
+
+    window.addEventListener('teamJoined', handleTeamJoined);
+    return () => window.removeEventListener('teamJoined', handleTeamJoined);
+  }, []);
+
   const checkSuperAdmin = async () => {
     if (!user) return;
     
@@ -64,39 +75,49 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     
     setLoading(true);
     
-    const { data, error } = await supabase
-      .from('team_members')
-      .select(`
-        team_id,
-        role,
-        teams:team_id (
-          id,
-          name,
-          created_at
-        )
-      `)
-      .eq('user_id', user.id);
+    try {
+      const { data, error } = await supabase
+        .from('team_members')
+        .select(`
+          team_id,
+          role,
+          teams:team_id (
+            id,
+            name,
+            created_at
+          )
+        `)
+        .eq('user_id', user.id);
 
-    if (error) {
+      if (error) {
+        console.error('Error loading teams:', error);
+        toast.error('Failed to load teams');
+      } else if (data) {
+        const userTeams = data.map(item => ({
+          id: item.teams.id,
+          name: item.teams.name,
+          created_at: item.teams.created_at,
+          role: item.role
+        }));
+        
+        console.log('Loaded teams:', userTeams);
+        setTeams(userTeams);
+        
+        // Set current team if none selected or if current team is no longer available
+        if (!currentTeam || !userTeams.find(t => t.id === currentTeam.id)) {
+          if (userTeams.length > 0) {
+            setCurrentTeam(userTeams[0]);
+          } else {
+            setCurrentTeam(null);
+          }
+        }
+      }
+    } catch (error) {
       console.error('Error loading teams:', error);
       toast.error('Failed to load teams');
-    } else if (data) {
-      const userTeams = data.map(item => ({
-        id: item.teams.id,
-        name: item.teams.name,
-        created_at: item.teams.created_at,
-        role: item.role
-      }));
-      
-      setTeams(userTeams);
-      
-      // Set current team if none selected
-      if (!currentTeam && userTeams.length > 0) {
-        setCurrentTeam(userTeams[0]);
-      }
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const switchTeam = (teamId: string) => {
