@@ -51,26 +51,39 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
   const loadInvitations = async () => {
     setLoading(true);
     try {
-      // Load invitations with user profile information for accepted invitations
-      const { data, error } = await supabase
+      // First, load invitations
+      const { data: invitationsData, error: invitationsError } = await supabase
         .from('team_invitations')
-        .select(`
-          *,
-          accepted_user:accepted_by (
-            full_name
-          )
-        `)
+        .select('*')
         .eq('team_id', teamId)
         .eq('admin_role', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      
-      // Transform the data to include user names
-      const processedInvitations = (data || []).map(invitation => ({
-        ...invitation,
-        accepted_user_name: invitation.accepted_user?.full_name || null
-      }));
+      if (invitationsError) throw invitationsError;
+
+      // Then, for accepted invitations, fetch user names
+      const processedInvitations = await Promise.all(
+        (invitationsData || []).map(async (invitation) => {
+          let accepted_user_name = null;
+          
+          if (invitation.accepted_by) {
+            const { data: userData, error: userError } = await supabase
+              .from('user_profiles')
+              .select('full_name')
+              .eq('user_id', invitation.accepted_by)
+              .single();
+            
+            if (!userError && userData) {
+              accepted_user_name = userData.full_name;
+            }
+          }
+
+          return {
+            ...invitation,
+            accepted_user_name
+          };
+        })
+      );
       
       setInvitations(processedInvitations);
     } catch (error) {
