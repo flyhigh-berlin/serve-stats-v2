@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2, CheckCircle, AlertCircle, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { AdminAssignmentSection } from "./AdminAssignmentSection";
 
@@ -69,13 +70,8 @@ export function EnhancedTeamCreationDialog({
       return;
     }
 
-    if (adminAssignments.length === 0) {
-      toast.error("At least one administrator must be assigned");
-      return;
-    }
-
     setIsSubmitting(true);
-    setCreationStatus({ step: "Finalizing team creation...", results: [] });
+    setCreationStatus({ step: "Creating team...", results: [] });
 
     try {
       let currentTeamId = createdTeamId;
@@ -106,51 +102,53 @@ export function EnhancedTeamCreationDialog({
         if (error) throw error;
       }
 
-      setCreationStatus({ step: "Processing admin assignments...", results: [] });
-
-      // Process admin assignments
+      // Process admin assignments if any
       const assignmentResults: Array<{ email: string; success: boolean; message: string; }> = [];
       
-      for (const admin of adminAssignments) {
-        try {
-          if (admin.type === 'existing') {
-            // Assign existing user directly
-            const { data: result, error } = await supabase.rpc('assign_team_admin_by_email', {
-              team_id_param: currentTeamId,
-              admin_email: admin.email
-            });
+      if (adminAssignments.length > 0) {
+        setCreationStatus({ step: "Processing admin assignments...", results: [] });
+        
+        for (const admin of adminAssignments) {
+          try {
+            if (admin.type === 'existing') {
+              // Assign existing user directly
+              const { data: result, error } = await supabase.rpc('assign_team_admin_by_email', {
+                team_id_param: currentTeamId,
+                admin_email: admin.email
+              });
 
-            if (error) throw error;
+              if (error) throw error;
 
-            const resultData = result as any;
-            if (resultData.success) {
+              const resultData = result as any;
+              if (resultData.success) {
+                assignmentResults.push({
+                  email: admin.email,
+                  success: true,
+                  message: "Successfully assigned as admin"
+                });
+              } else {
+                assignmentResults.push({
+                  email: admin.email,
+                  success: false,
+                  message: resultData.error || "Failed to assign admin"
+                });
+              }
+            } else {
+              // Invitation already created, just track it
               assignmentResults.push({
                 email: admin.email,
                 success: true,
-                message: "Successfully assigned as admin"
-              });
-            } else {
-              assignmentResults.push({
-                email: admin.email,
-                success: false,
-                message: resultData.error || "Failed to assign admin"
+                message: `Admin invitation ready (Code: ${admin.inviteCode})`
               });
             }
-          } else {
-            // Invitation already created, just track it
+          } catch (error) {
+            console.error('Error processing admin assignment:', error);
             assignmentResults.push({
               email: admin.email,
-              success: true,
-              message: `Admin invitation ready (Code: ${admin.inviteCode})`
+              success: false,
+              message: "Error processing admin assignment"
             });
           }
-        } catch (error) {
-          console.error('Error processing admin assignment:', error);
-          assignmentResults.push({
-            email: admin.email,
-            success: false,
-            message: "Error processing admin assignment"
-          });
         }
       }
 
@@ -159,13 +157,19 @@ export function EnhancedTeamCreationDialog({
         results: assignmentResults 
       });
 
-      const successCount = assignmentResults.filter(r => r.success).length;
-      if (successCount > 0) {
-        toast.success(`Team "${teamName}" created with ${successCount} admin(s) assigned!`);
-        onTeamCreated();
+      if (adminAssignments.length > 0) {
+        const successCount = assignmentResults.filter(r => r.success).length;
+        if (successCount > 0) {
+          toast.success(`Team "${teamName}" created with ${successCount} admin(s) assigned!`);
+        } else {
+          toast.warning(`Team "${teamName}" created but no admins were assigned successfully`);
+        }
       } else {
-        toast.error("Team created but no admins were assigned successfully");
+        toast.success(`Team "${teamName}" created successfully!`);
+        toast.warning("Remember to assign at least one administrator to manage this team");
       }
+      
+      onTeamCreated();
 
     } catch (error) {
       console.error('Error finalizing team creation:', error);
@@ -176,8 +180,8 @@ export function EnhancedTeamCreationDialog({
     }
   };
 
-  const hasValidAssignments = adminAssignments.length > 0;
-  const canSubmit = teamName.trim() && hasValidAssignments && !isSubmitting;
+  const canSubmit = teamName.trim() && !isSubmitting;
+  const hasNoAdmins = adminAssignments.length === 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -254,6 +258,17 @@ export function EnhancedTeamCreationDialog({
                 onTeamCreated={handleTeamCreated}
               />
 
+              {hasNoAdmins && (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Warning:</strong> No administrators have been assigned to this team. 
+                    Teams should have at least one administrator to manage members and settings. 
+                    You can assign administrators later from the team management page.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {createdTeamId && (
                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-700">
@@ -270,9 +285,10 @@ export function EnhancedTeamCreationDialog({
               <Button 
                 type="submit" 
                 disabled={!canSubmit}
+                className={hasNoAdmins ? 'bg-orange-600 hover:bg-orange-700' : undefined}
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {createdTeamId ? 'Finalize Team Setup' : 'Create Team'}
+                {hasNoAdmins ? 'Create Team (No Admin)' : (createdTeamId ? 'Finalize Team Setup' : 'Create Team')}
               </Button>
             </DialogFooter>
           </form>

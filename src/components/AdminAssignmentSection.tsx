@@ -60,7 +60,7 @@ export function AdminAssignmentSection({
 
       if (error) throw error;
       
-      const result = data as UserExistsResponse;
+      const result = data as unknown as UserExistsResponse;
       const validation = { exists: result.exists, fullName: result.full_name };
       setEmailValidation(validation);
       return validation;
@@ -202,7 +202,11 @@ export function AdminAssignmentSection({
     onAdminAssignmentsChange(filtered);
   };
 
-  const copyInviteCode = (code: string) => {
+  const copyInviteCode = (code: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     navigator.clipboard.writeText(code);
     toast.success("Invitation code copied to clipboard");
   };
