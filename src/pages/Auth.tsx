@@ -20,6 +20,7 @@ const Auth = () => {
     teamName: string;
     role: string;
     email: string;
+    invitationType: string;
     isValidating?: boolean;
     error?: string;
   } | null>(null);
@@ -49,19 +50,24 @@ const Auth = () => {
       
       if (data && data[0]?.is_valid) {
         const invitation = data[0];
+        const role = invitation.admin_role ? 'Administrator' : 'Member';
+        const invitationType = invitation.admin_role ? 'Admin' : 'Member';
+        
         setInviteInfo({
           teamName: invitation.team_name,
-          role: invitation.admin_role ? 'Administrator' : 'Member',
+          role: role,
           email: invitation.invited_email || '',
+          invitationType: invitationType,
           isValidating: false
         });
-        toast.success(`Valid invitation for ${invitation.team_name}!`);
+        toast.success(`Valid ${invitationType.toLowerCase()} invitation for ${invitation.team_name}!`);
       } else {
         const errorMessage = data[0]?.error_message || 'Invalid invitation code';
         setInviteInfo({
           teamName: '',
           role: '',
           email: '',
+          invitationType: '',
           isValidating: false,
           error: errorMessage
         });
@@ -74,6 +80,7 @@ const Auth = () => {
         teamName: '',
         role: '',
         email: '',
+        invitationType: '',
         isValidating: false,
         error: errorMessage
       });
@@ -131,11 +138,10 @@ const Auth = () => {
     }
     
     try {
-      const { error } = await signUp(email, password, fullName);
+      const { error } = await signUp(email, password, fullName, inviteCodeValue);
       
-      if (!error && inviteCodeValue) {
-        // Store the invitation code for processing after signup
-        localStorage.setItem('pendingInviteCode', inviteCodeValue);
+      if (error) {
+        console.error('Signup error:', error);
       }
     } catch (error) {
       console.error('Signup error:', error);
@@ -170,7 +176,7 @@ const Auth = () => {
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-green-600" />
                 <div>
-                  <p className="font-medium text-green-800">Team Invitation</p>
+                  <p className="font-medium text-green-800">{inviteInfo.invitationType} Team Invitation</p>
                   <p className="text-sm text-green-700">
                     You're invited to join <strong>{inviteInfo.teamName}</strong> as a <strong>{inviteInfo.role}</strong>
                   </p>
@@ -279,7 +285,9 @@ const Auth = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="signup-invite">Invitation Code (Optional)</Label>
+                    <Label htmlFor="signup-invite">
+                      {inviteInfo?.invitationType ? `${inviteInfo.invitationType} Invitation Code` : 'Invitation Code (Optional)'}
+                    </Label>
                     <Input
                       id="signup-invite"
                       name="inviteCode"

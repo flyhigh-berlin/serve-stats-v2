@@ -44,15 +44,15 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
       if (error) throw error;
 
       const result = data as any;
-      if (result.success) {
+      if (result.success && result.invitation) {
         setInvitation(result.invitation);
       } else {
-        console.error('Error loading member invitation:', result.error);
-        toast.error('Failed to load member invitation');
+        setInvitation(null);
       }
     } catch (error) {
       console.error('Error loading member invitation:', error);
       toast.error('Failed to load member invitation');
+      setInvitation(null);
     } finally {
       setLoading(false);
     }
@@ -259,7 +259,7 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
               <p className="font-medium text-blue-800 mb-1">Member Invitation Info:</p>
               <p>• This invitation code can be used by multiple people to join as team members</p>
               <p>• Members can view and participate in team activities but cannot manage team settings</p>
-              <p>• Share this code with users you want to join your team</p>
+              <p>• Share this code with users you want to join your team as members</p>
             </div>
           </div>
         )}

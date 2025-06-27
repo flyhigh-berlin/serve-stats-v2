@@ -9,9 +9,10 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName?: string, inviteCode?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
+  processInvitation: (inviteCode: string, user: User) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,19 +29,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // Handle invitation acceptance after successful signup
-        if (event === 'SIGNED_IN' && session?.user) {
-          const pendingInviteCode = localStorage.getItem('pendingInviteCode');
-          if (pendingInviteCode) {
-            localStorage.removeItem('pendingInviteCode');
-            // Use setTimeout to avoid potential deadlock
-            setTimeout(() => {
-              handleInvitationAcceptance(pendingInviteCode, session.user);
-            }, 100);
-          }
-        }
-        
         setLoading(false);
       }
     );
@@ -55,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleInvitationAcceptance = async (inviteCode: string, user: User) => {
+  const processInvitation = async (inviteCode: string, user: User): Promise<{ success: boolean; error?: string }> => {
     try {
       // Validate the invitation code first
       const { data: validationData, error: validationError } = await supabase
@@ -63,21 +51,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (validationError) {
         console.error('Error validating invite code:', validationError);
-        toast.error('Failed to validate invitation code');
-        return;
+        return { success: false, error: 'Failed to validate invitation code' };
       }
 
       if (!validationData || !validationData[0]?.is_valid) {
-        toast.error(validationData[0]?.error_message || 'Invalid invitation code');
-        return;
+        return { success: false, error: validationData[0]?.error_message || 'Invalid invitation code' };
       }
 
       const invitation = validationData[0];
       
       // Validate email matches invitation if specified
       if (invitation.invited_email && invitation.invited_email.toLowerCase() !== user.email?.toLowerCase()) {
-        toast.error('Email must match the invitation email address');
-        return;
+        return { success: false, error: 'Email must match the invitation email address' };
       }
 
       // Determine role based on invitation type and admin_role flag
@@ -92,8 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (existingMember) {
-        toast.error('You are already a member of this team');
-        return;
+        return { success: false, error: 'You are already a member of this team' };
       }
 
       // Add user to team with appropriate role
@@ -108,12 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (memberError) {
         if (memberError.code === '23505') { // Unique violation
-          toast.error('You are already a member of this team');
+          return { success: false, error: 'You are already a member of this team' };
         } else {
           console.error('Error adding user to team:', memberError);
-          toast.error('Failed to join team');
+          return { success: false, error: 'Failed to join team' };
         }
-        return;
       }
 
       // Mark invitation as accepted
@@ -128,16 +111,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const roleMessage = memberRole === 'admin' ? 'as an administrator' : 'as a member';
-      toast.success(`Successfully joined ${invitation.team_name} ${roleMessage}!`);
-      
-      // Refresh the page to load the team data
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      return { 
+        success: true, 
+        error: `Successfully joined ${invitation.team_name} ${roleMessage}!` 
+      };
       
     } catch (error) {
-      console.error('Error accepting invitation:', error);
-      toast.error('Failed to accept team invitation');
+      console.error('Error processing invitation:', error);
+      return { success: false, error: 'Failed to process team invitation' };
     }
   };
 
@@ -156,10 +137,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string, inviteCode?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -172,11 +153,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (error) {
       toast.error(error.message);
+      return { error };
+    }
+
+    // If signup was successful and we have an invite code, process it immediately
+    if (data.user && inviteCode) {
+      const inviteResult = await processInvitation(inviteCode, data.user);
+      if (inviteResult.success) {
+        toast.success(inviteResult.error); // error field contains success message in this case
+      } else {
+        toast.error(inviteResult.error || 'Failed to process invitation');
+        return { error: inviteResult.error };
+      }
     } else {
       toast.success('Check your email to confirm your account!');
     }
     
-    return { error };
+    return { error: null };
   };
 
   const signOut = async () => {
@@ -210,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     resetPassword,
+    processInvitation,
   };
 
   return (
