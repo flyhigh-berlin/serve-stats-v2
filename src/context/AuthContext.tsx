@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from "@/integrations/supabase/client";
@@ -82,6 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      // Clear super admin redirect flag
+      sessionStorage.removeItem('super-admin-redirected');
+      
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Sign out error:', error);

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Copy, Users, UserPlus, Trash2, RefreshCw, Calendar, Clock, Info } from "lucide-react";
+import { Copy, Users, UserPlus, Trash2, RefreshCw, Calendar, Clock, Info, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface TeamMemberInvitation {
@@ -17,6 +17,7 @@ interface TeamMemberInvitation {
   max_uses: number;
   created_at: string;
   last_used_at?: string;
+  invitation_type: string;
 }
 
 interface TeamMemberInvitationManagementProps {
@@ -37,7 +38,7 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
   const loadMemberInvitation = async () => {
     setLoading(true);
     try {
-      // Only load invitations that are specifically for members (not admin invitations)
+      // Strictly load only member invitations, never admin invitations
       const { data, error } = await supabase
         .from('team_invitations')
         .select('*')
@@ -52,9 +53,12 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
         throw error;
       }
 
-      if (data && data.length > 0) {
-        setInvitation(data[0]);
-        console.log('Loaded member invitation:', data[0]);
+      // Validate that we only have member invitations
+      const memberInvitation = data?.find(inv => inv.invitation_type === 'member');
+      
+      if (memberInvitation) {
+        setInvitation(memberInvitation);
+        console.log('Loaded member invitation:', memberInvitation);
       } else {
         setInvitation(null);
         console.log('No active member invitation found');
@@ -164,16 +168,30 @@ export function TeamMemberInvitationManagement({ teamId, teamName }: TeamMemberI
       </CardHeader>
       <CardContent>
         {!invitation ? (
-          <div className="text-center py-8">
-            <UserPlus className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">No Active Member Invitation</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create a reusable invitation code that allows multiple users to join as team members
+          <div className="text-center py-12">
+            <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-6">
+              <Users className="h-12 w-12 text-muted-foreground" />
+            </div>
+            
+            <h3 className="text-xl font-semibold mb-2">No Active Member Invitation</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              No member invitation code currently exists for this team. Generate a member invite to allow new users to join as team members.
             </p>
-            <Button onClick={createMemberInvitation} disabled={creating}>
+            
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 max-w-md mx-auto">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-amber-800">
+                  <p className="font-medium mb-1">Please generate a member invite</p>
+                  <p>Member invitations are separate from admin invitations and allow multiple users to join with member-level permissions.</p>
+                </div>
+              </div>
+            </div>
+            
+            <Button onClick={createMemberInvitation} disabled={creating} size="lg">
               {creating && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
               <UserPlus className="h-4 w-4 mr-2" />
-              Create Member Invitation
+              Generate Member Invitation
             </Button>
           </div>
         ) : (

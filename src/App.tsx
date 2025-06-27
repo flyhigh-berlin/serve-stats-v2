@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
@@ -33,9 +34,32 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function SuperAdminRedirect() {
+  const { user, loading } = useAuth();
+  const { isSuperAdmin, loading: teamsLoading } = useTeam();
+  
+  useEffect(() => {
+    // Auto-redirect super admins to admin panel after login
+    if (!loading && !teamsLoading && user && isSuperAdmin) {
+      const hasRedirected = sessionStorage.getItem('super-admin-redirected');
+      if (!hasRedirected) {
+        sessionStorage.setItem('super-admin-redirected', 'true');
+        window.location.href = '/admin';
+      }
+    }
+  }, [user, isSuperAdmin, loading, teamsLoading]);
+
+  return null;
+}
+
 function SuperAdminRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const { isSuperAdmin } = useTeam();
+  
+  useEffect(() => {
+    // Clear redirect flag when accessing admin panel directly
+    sessionStorage.removeItem('super-admin-redirected');
+  }, []);
   
   if (loading) {
     return (
@@ -54,7 +78,7 @@ function SuperAdminRoute({ children }: { children: React.ReactNode }) {
 
 function TeamFlow({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { teams, loading: teamsLoading } = useTeam();
+  const { teams, loading: teamsLoading, isSuperAdmin } = useTeam();
   
   if (loading || teamsLoading) {
     return (
@@ -66,6 +90,11 @@ function TeamFlow({ children }: { children: React.ReactNode }) {
   
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+  
+  // Super admins get redirected automatically, but if they're here, show the app
+  if (isSuperAdmin && teams.length > 0) {
+    return <>{children}</>;
   }
   
   // If user has teams, show the main app
@@ -95,6 +124,7 @@ function AppRoutes() {
       } />
       <Route path="/" element={
         <ProtectedRoute>
+          <SuperAdminRedirect />
           <TeamFlow>
             <Index />
           </TeamFlow>
