@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamInvitationsManagement } from "./TeamInvitationsManagement";
 import { TeamMemberInvitationManagement } from "./TeamMemberInvitationManagement";
@@ -11,8 +11,15 @@ interface TeamInvitationsTabsProps {
 }
 
 export function TeamInvitationsTabs({ teamId, teamName }: TeamInvitationsTabsProps) {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleInvitationChange = () => {
+    // Force refresh of both invitation components
+    setRefreshKey(prev => prev + 1);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" key={refreshKey}>
       <Tabs defaultValue="admin" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="admin" className="flex items-center gap-2">
@@ -26,11 +33,19 @@ export function TeamInvitationsTabs({ teamId, teamName }: TeamInvitationsTabsPro
         </TabsList>
         
         <TabsContent value="admin" className="mt-6">
-          <TeamInvitationsManagement teamId={teamId} teamName={teamName} />
+          <TeamInvitationsManagement 
+            teamId={teamId} 
+            teamName={teamName} 
+            onInvitationChange={handleInvitationChange}
+          />
         </TabsContent>
         
         <TabsContent value="member" className="mt-6">
-          <TeamMemberInvitationManagement teamId={teamId} teamName={teamName} />
+          <TeamMemberInvitationManagement 
+            teamId={teamId} 
+            teamName={teamName} 
+            onInvitationChange={handleInvitationChange}
+          />
         </TabsContent>
       </Tabs>
 
