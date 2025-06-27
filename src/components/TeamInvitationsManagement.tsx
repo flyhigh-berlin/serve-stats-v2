@@ -4,13 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Copy, Clock, Mail, Trash2, RefreshCw, Users } from "lucide-react";
+import { Copy, Clock, Mail, Trash2, RefreshCw, Users, Send, Calendar, User } from "lucide-react";
 import { toast } from "sonner";
 
 interface TeamInvitation {
   id: string;
   invite_code: string;
+  invited_email: string | null;
   admin_role: boolean;
   expires_at: string;
   is_active: boolean;
@@ -18,6 +21,8 @@ interface TeamInvitation {
   max_uses: number;
   created_at: string;
   last_used_at?: string;
+  accepted_at?: string;
+  accepted_by?: string;
 }
 
 interface TeamInvitationsManagementProps {
@@ -25,13 +30,22 @@ interface TeamInvitationsManagementProps {
   teamName: string;
 }
 
+type InvitationStatus = 'pending' | 'accepted' | 'expired' | 'inactive';
+type StatusFilter = 'all' | 'pending' | 'accepted' | 'expired' | 'inactive';
+
 export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsManagementProps) {
   const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
+  const [filteredInvitations, setFilteredInvitations] = useState<TeamInvitation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
 
   useEffect(() => {
     loadInvitations();
   }, [teamId]);
+
+  useEffect(() => {
+    filterInvitations();
+  }, [invitations, statusFilter]);
 
   const loadInvitations = async () => {
     setLoading(true);
@@ -40,7 +54,7 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
         .from('team_invitations')
         .select('*')
         .eq('team_id', teamId)
-        .eq('is_active', true)
+        .eq('admin_role', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -53,9 +67,61 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
     }
   };
 
-  const copyInviteCode = (code: string) => {
+  const filterInvitations = () => {
+    if (statusFilter === 'all') {
+      setFilteredInvitations(invitations);
+      return;
+    }
+
+    const filtered = invitations.filter(invitation => {
+      const status = getInvitationStatus(invitation);
+      return status === statusFilter;
+    });
+    setFilteredInvitations(filtered);
+  };
+
+  const getInvitationStatus = (invitation: TeamInvitation): InvitationStatus => {
+    if (!invitation.is_active) return 'inactive';
+    if (invitation.accepted_at) return 'accepted';
+    if (new Date(invitation.expires_at) < new Date()) return 'expired';
+    return 'pending';
+  };
+
+  const getStatusBadge = (status: InvitationStatus) => {
+    const statusConfig = {
+      pending: { label: 'Pending', variant: 'default' as const, className: 'bg-yellow-100 text-yellow-800' },
+      accepted: { label: 'Accepted', variant: 'default' as const, className: 'bg-green-100 text-green-800' },
+      expired: { label: 'Expired', variant: 'destructive' as const, className: 'bg-red-100 text-red-800' },
+      inactive: { label: 'Inactive', variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800' }
+    };
+
+    const config = statusConfig[status];
+    return (
+      <Badge variant={config.variant} className={config.className}>
+        {config.label}
+      </Badge>
+    );
+  };
+
+  const copyInviteCode = (code: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     navigator.clipboard.writeText(code);
     toast.success("Invitation code copied to clipboard");
+  };
+
+  const resendInvitation = async (invitation: TeamInvitation) => {
+    try {
+      // For now, just copy the code and show a message
+      // In the future, this could integrate with an email service
+      await copyInviteCode(invitation.invite_code);
+      toast.success(`Invitation code copied. Send this to ${invitation.invited_email || 'the admin'}`);
+    } catch (error) {
+      console.error('Error resending invitation:', error);
+      toast.error('Failed to resend invitation');
+    }
   };
 
   const deactivateInvitation = async (invitationId: string) => {
@@ -75,20 +141,28 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
     }
   };
 
-  const isExpired = (expiresAt: string) => {
-    return new Date(expiresAt) < new Date();
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
   };
 
-  const isUsedUp = (invitation: TeamInvitation) => {
-    return invitation.current_uses >= invitation.max_uses;
+  const getStatusCounts = () => {
+    const counts = {
+      all: invitations.length,
+      pending: 0,
+      accepted: 0,
+      expired: 0,
+      inactive: 0
+    };
+
+    invitations.forEach(invitation => {
+      const status = getInvitationStatus(invitation);
+      counts[status]++;
+    });
+
+    return counts;
   };
 
-  const getInvitationStatus = (invitation: TeamInvitation) => {
-    if (!invitation.is_active) return { label: 'Inactive', variant: 'secondary' as const };
-    if (isExpired(invitation.expires_at)) return { label: 'Expired', variant: 'destructive' as const };
-    if (isUsedUp(invitation)) return { label: 'Used Up', variant: 'secondary' as const };
-    return { label: 'Active', variant: 'default' as const };
-  };
+  const statusCounts = getStatusCounts();
 
   if (loading) {
     return (
@@ -109,10 +183,6 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
     );
   }
 
-  const activeInvitations = invitations.filter(inv => 
-    inv.is_active && !isExpired(inv.expires_at) && !isUsedUp(inv)
-  );
-
   return (
     <Card>
       <CardHeader>
@@ -121,129 +191,161 @@ export function TeamInvitationsManagement({ teamId, teamName }: TeamInvitationsM
             <Mail className="h-5 w-5" />
             Admin Invitations for {teamName}
           </CardTitle>
-          <Button variant="outline" size="sm" onClick={loadInvitations}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All ({statusCounts.all})</SelectItem>
+                <SelectItem value="pending">Pending ({statusCounts.pending})</SelectItem>
+                <SelectItem value="accepted">Accepted ({statusCounts.accepted})</SelectItem>
+                <SelectItem value="expired">Expired ({statusCounts.expired})</SelectItem>
+                <SelectItem value="inactive">Inactive ({statusCounts.inactive})</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm" onClick={loadInvitations}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         {invitations.length === 0 ? (
-          <div className="text-center py-6 text-muted-foreground">
-            <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>No admin invitations found</p>
+          <div className="text-center py-8 text-muted-foreground">
+            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium">No admin invitations found</p>
             <p className="text-sm">Create invitations when setting up the team</p>
           </div>
+        ) : filteredInvitations.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium">No invitations match the current filter</p>
+            <p className="text-sm">Try selecting a different status filter</p>
+          </div>
         ) : (
-          <div className="space-y-3">
-            {activeInvitations.length > 0 && (
-              <div className="mb-4">
-                <h4 className="font-medium text-green-700 mb-2">Active Invitations ({activeInvitations.length})</h4>
-                <div className="space-y-2">
-                  {activeInvitations.map((invitation) => (
-                    <div key={invitation.id} className="flex items-center justify-between p-3 border border-green-200 bg-green-50 rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge variant="default">Admin Invitation</Badge>
-                          <Badge variant={getInvitationStatus(invitation).variant}>
-                            {getInvitationStatus(invitation).label}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-muted-foreground flex items-center gap-4">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Expires {new Date(invitation.expires_at).toLocaleDateString()}
+          <div className="space-y-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Invitation Code</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Expires</TableHead>
+                  <TableHead>Accepted</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredInvitations.map((invitation) => {
+                  const status = getInvitationStatus(invitation);
+                  const isPending = status === 'pending';
+                  const isAccepted = status === 'accepted';
+                  
+                  return (
+                    <TableRow key={invitation.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">
+                            {invitation.invited_email || 'Unknown'}
                           </span>
-                          <span>Uses: {invitation.current_uses}/{invitation.max_uses}</span>
                         </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2 p-2 bg-white rounded border">
-                          <code className="text-xs font-mono">{invitation.invite_code}</code>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                            {invitation.invite_code}
+                          </code>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => copyInviteCode(invitation.invite_code)}
+                            onClick={(e) => copyInviteCode(invitation.invite_code, e)}
                             className="h-6 w-6 p-0"
                           >
                             <Copy className="h-3 w-3" />
                           </Button>
                         </div>
-                        
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm" className="text-red-600">
-                              <Trash2 className="h-4 w-4" />
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(status)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Calendar className="h-3 w-3" />
+                          {formatDate(invitation.created_at)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {formatDate(invitation.expires_at)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {isAccepted && invitation.accepted_at ? (
+                          <div className="flex items-center gap-1 text-sm text-green-600">
+                            <User className="h-3 w-3" />
+                            {formatDate(invitation.accepted_at)}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          {isPending && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => resendInvitation(invitation)}
+                              className="h-8 px-2"
+                            >
+                              <Send className="h-3 w-3 mr-1" />
+                              Resend
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Deactivate Invitation?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will prevent the invitation code from being used. This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
-                                onClick={() => deactivateInvitation(invitation.id)}
-                                className="bg-red-600"
-                              >
-                                Deactivate
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {invitations.filter(inv => !activeInvitations.includes(inv)).length > 0 && (
-              <div>
-                <h4 className="font-medium text-muted-foreground mb-2">
-                  Inactive/Expired Invitations ({invitations.filter(inv => !activeInvitations.includes(inv)).length})
-                </h4>
-                <div className="space-y-2">
-                  {invitations
-                    .filter(inv => !activeInvitations.includes(inv))
-                    .map((invitation) => (
-                      <div key={invitation.id} className="flex items-center justify-between p-3 border rounded-lg opacity-60">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="secondary">Admin Invitation</Badge>
-                            <Badge variant={getInvitationStatus(invitation).variant}>
-                              {getInvitationStatus(invitation).label}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {isExpired(invitation.expires_at) ? 
-                              `Expired ${new Date(invitation.expires_at).toLocaleDateString()}` :
-                              `Uses: ${invitation.current_uses}/${invitation.max_uses}`
-                            }
-                          </div>
+                          )}
+                          
+                          {invitation.is_active && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-8 px-2 text-red-600 hover:text-red-700">
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Deactivate Invitation?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This will prevent the invitation code from being used. This action cannot be undone.
+                                    {invitation.invited_email && (
+                                      <div className="mt-2 font-medium">
+                                        Email: {invitation.invited_email}
+                                      </div>
+                                    )}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction 
+                                    onClick={() => deactivateInvitation(invitation.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Deactivate
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
                         </div>
-                        
-                        <div className="flex items-center gap-2 p-2 bg-muted rounded border">
-                          <code className="text-xs font-mono">{invitation.invite_code}</code>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyInviteCode(invitation.invite_code)}
-                            className="h-6 w-6 p-0"
-                            disabled={!invitation.is_active}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
         )}
       </CardContent>

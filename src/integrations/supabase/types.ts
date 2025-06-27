@@ -245,6 +245,8 @@ export type Database = {
       }
       team_invitations: {
         Row: {
+          accepted_at: string | null
+          accepted_by: string | null
           admin_role: boolean | null
           created_at: string | null
           created_by: string | null
@@ -252,12 +254,15 @@ export type Database = {
           expires_at: string | null
           id: string
           invite_code: string
+          invited_email: string | null
           is_active: boolean | null
           last_used_at: string | null
           max_uses: number | null
           team_id: string
         }
         Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
           admin_role?: boolean | null
           created_at?: string | null
           created_by?: string | null
@@ -265,12 +270,15 @@ export type Database = {
           expires_at?: string | null
           id?: string
           invite_code: string
+          invited_email?: string | null
           is_active?: boolean | null
           last_used_at?: string | null
           max_uses?: number | null
           team_id: string
         }
         Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
           admin_role?: boolean | null
           created_at?: string | null
           created_by?: string | null
@@ -278,6 +286,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           invite_code?: string
+          invited_email?: string | null
           is_active?: boolean | null
           last_used_at?: string | null
           max_uses?: number | null
