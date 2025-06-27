@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +24,12 @@ interface AdminAssignmentSectionProps {
   onAdminAssignmentsChange: (assignments: AdminAssignment[]) => void;
   teamId?: string;
   onTeamCreated?: (teamId: string) => void;
+}
+
+interface UserExistsResponse {
+  exists: boolean;
+  user_id?: string;
+  full_name?: string;
 }
 
 export function AdminAssignmentSection({ 
@@ -55,7 +60,8 @@ export function AdminAssignmentSection({
 
       if (error) throw error;
       
-      const validation = { exists: data.exists, fullName: data.full_name };
+      const result = data as UserExistsResponse;
+      const validation = { exists: result.exists, fullName: result.full_name };
       setEmailValidation(validation);
       return validation;
     } catch (error) {
