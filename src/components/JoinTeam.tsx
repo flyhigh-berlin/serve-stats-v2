@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTeam } from "@/context/TeamContext";
-import { Loader2, Users, UserPlus, AlertCircle, CheckCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Loader2, Users, UserPlus, AlertCircle, CheckCircle, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 interface JoinTeamProps {
@@ -14,6 +15,7 @@ interface JoinTeamProps {
 
 export function JoinTeam({ onSuccess }: JoinTeamProps) {
   const { joinTeam } = useTeam();
+  const { signOut } = useAuth();
   const [inviteCode, setInviteCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inviteInfo, setInviteInfo] = useState<{
@@ -100,9 +102,25 @@ export function JoinTeam({ onSuccess }: JoinTeamProps) {
     }
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
   return (
     <div className="container flex items-center justify-center min-h-screen py-8">
       <div className="w-full max-w-2xl">
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSignOut}
+            className="flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+        </div>
+
         <div className="text-center mb-8">
           <Users className="h-16 w-16 mx-auto mb-4 text-team-primary" />
           <h1 className="text-3xl font-bold text-team-primary">Join a Team</h1>

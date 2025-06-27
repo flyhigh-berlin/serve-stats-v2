@@ -81,11 +81,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success('Successfully signed out!');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+        toast.error('Failed to sign out');
+      } else {
+        // Clear local state immediately
+        setSession(null);
+        setUser(null);
+        toast.success('Successfully signed out!');
+        // Force reload to clear any cached state
+        window.location.href = '/auth';
+      }
+    } catch (error) {
+      console.error('Sign out error:', error);
+      toast.error('Failed to sign out');
     }
   };
 
