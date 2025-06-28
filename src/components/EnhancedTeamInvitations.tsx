@@ -211,128 +211,138 @@ export function EnhancedTeamInvitations({ teamId, teamName }: EnhancedTeamInvita
           ) : (
             <div className="space-y-4">
               {memberInvitations.map((invitation) => (
-                <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary">
-                        <Users className="h-3 w-3 mr-1" />
-                        Member Invitation
-                      </Badge>
-                      <Badge variant="outline">
-                        Uses: {invitation.current_uses}/{invitation.max_uses}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Created: {formatDateTime(invitation.created_at)}
-                      {invitation.expires_at && (
-                        <span className="ml-2">
-                          • Expires: {formatDateTime(invitation.expires_at)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="font-mono text-xs bg-muted p-2 rounded mt-2">
-                      {invitation.invite_code}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyInviteCode(invitation.invite_code)}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Deactivate Invitation</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to deactivate this invitation? This will prevent anyone from using this invite code to join the team.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleDeactivateInvite(invitation.id)}
-                            className="bg-destructive hover:bg-destructive/90"
+                <div key={invitation.id} className="p-4 border rounded-lg">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="secondary">
+                          <Users className="h-3 w-3 mr-1" />
+                          Member Invitation
+                        </Badge>
+                        <Badge variant="outline">
+                          Uses: {invitation.current_uses}/{invitation.max_uses}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground mb-3">
+                        Created: {formatDateTime(invitation.created_at)}
+                        {invitation.expires_at && (
+                          <span className="ml-2">
+                            • Expires: {formatDateTime(invitation.expires_at)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-mono text-xs bg-muted p-2 rounded flex-1 min-w-0">
+                          {invitation.invite_code}
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyInviteCode(invitation.invite_code)}
+                            className="h-8 w-8 p-0"
                           >
-                            Deactivate
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="text-destructive hover:text-destructive h-8 w-8 p-0">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Deactivate Invitation</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to deactivate this invitation? This will prevent anyone from using this invite code to join the team.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeactivateInvite(invitation.id)}
+                                  className="bg-destructive hover:bg-destructive/90"
+                                >
+                                  Deactivate
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
 
               {adminInvitations.map((invitation) => (
-                <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="default">
-                        <Crown className="h-3 w-3 mr-1" />
-                        Admin Invitation
-                      </Badge>
-                      <Badge variant="outline">
-                        {invitation.invited_email}
-                      </Badge>
-                      {invitation.accepted_at && (
-                        <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">
-                          Accepted
+                <div key={invitation.id} className="p-4 border rounded-lg">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="default">
+                          <Crown className="h-3 w-3 mr-1" />
+                          Admin Invitation
                         </Badge>
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Created: {formatDateTime(invitation.created_at)}
-                      {invitation.expires_at && (
-                        <span className="ml-2">
-                          • Expires: {formatDateTime(invitation.expires_at)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="font-mono text-xs bg-muted p-2 rounded mt-2">
-                      {invitation.invite_code}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyInviteCode(invitation.invite_code)}
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    {!invitation.accepted_at && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
+                        <Badge variant="outline">
+                          {invitation.invited_email}
+                        </Badge>
+                        {invitation.accepted_at && (
+                          <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">
+                            Accepted
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground mb-3">
+                        Created: {formatDateTime(invitation.created_at)}
+                        {invitation.expires_at && (
+                          <span className="ml-2">
+                            • Expires: {formatDateTime(invitation.expires_at)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-mono text-xs bg-muted p-2 rounded flex-1 min-w-0">
+                          {invitation.invite_code}
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyInviteCode(invitation.invite_code)}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Copy className="h-4 w-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Deactivate Invitation</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to deactivate this admin invitation for {invitation.invited_email}?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeactivateInvite(invitation.id)}
-                              className="bg-destructive hover:bg-destructive/90"
-                            >
-                              Deactivate
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )}
+                          {!invitation.accepted_at && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive h-8 w-8 p-0">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Deactivate Invitation</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to deactivate this admin invitation for {invitation.invited_email}?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeactivateInvite(invitation.id)}
+                                    className="bg-destructive hover:bg-destructive/90"
+                                  >
+                                    Deactivate
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

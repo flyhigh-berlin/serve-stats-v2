@@ -26,7 +26,7 @@ export function SuperAdminTeamManagementDialog({
 }: SuperAdminTeamManagementDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent size="full-width" className="max-h-[90vh] overflow-y-auto">
+      <DialogContent size="adaptive" className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Manage Team: {team.name}</DialogTitle>
         </DialogHeader>
