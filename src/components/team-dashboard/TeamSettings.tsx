@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,11 +44,15 @@ export function TeamSettings({ teamId }: TeamSettingsProps) {
       return data;
     },
     enabled: !!teamId,
-    onSuccess: (data) => {
-      setTeamName(data.name);
-      setTeamDescription(data.description || "");
-    },
   });
+
+  // Update form when data is loaded
+  useEffect(() => {
+    if (teamDetails) {
+      setTeamName(teamDetails.name);
+      setTeamDescription(teamDetails.description || "");
+    }
+  }, [teamDetails]);
 
   const updateTeamMutation = useMutation({
     mutationFn: async ({ name, description }: { name: string; description: string }) => {
@@ -79,12 +83,20 @@ export function TeamSettings({ teamId }: TeamSettingsProps) {
 
   const deleteTeamMutation = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.rpc('delete_team_and_data', {
-        team_id_param: teamId
-      });
+      // Delete team members first
+      await supabase.from('team_members').delete().eq('team_id', teamId);
       
+      // Delete team invitations
+      await supabase.from('team_invitations').delete().eq('team_id', teamId);
+      
+      // Delete team activity
+      await supabase.from('team_activity_audit').delete().eq('team_id', teamId);
+      
+      // Finally delete the team
+      const { error } = await supabase.from('teams').delete().eq('id', teamId);
       if (error) throw error;
-      return data;
+      
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries();

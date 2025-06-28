@@ -15,12 +15,12 @@ interface ActivityRecord {
   id: string;
   action: string;
   details: any;
-  performed_by: string;
+  performed_by: string | null;
   created_at: string;
   user_profiles?: {
     full_name: string;
     email: string;
-  };
+  } | null;
 }
 
 export function TeamActivity({ teamId }: TeamActivityProps) {
@@ -35,7 +35,7 @@ export function TeamActivity({ teamId }: TeamActivityProps) {
           details,
           performed_by,
           created_at,
-          user_profiles:performed_by (
+          user_profiles!left (
             full_name,
             email
           )

@@ -39,7 +39,7 @@ interface TeamMember {
   user_profiles: {
     email: string;
     full_name: string;
-  };
+  } | null;
 }
 
 export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
@@ -57,7 +57,7 @@ export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
           user_id,
           role,
           joined_at,
-          user_profiles:user_id (
+          user_profiles!inner (
             email,
             full_name
           )
@@ -73,13 +73,14 @@ export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
 
   const updateRoleMutation = useMutation({
     mutationFn: async ({ memberId, newRole }: { memberId: string; newRole: 'admin' | 'member' }) => {
-      const { data, error } = await supabase.rpc('update_member_role', {
-        member_id_param: memberId,
-        new_role: newRole
-      });
+      const { data, error } = await supabase
+        .from('team_members')
+        .update({ role: newRole })
+        .eq('id', memberId)
+        .select()
+        .single();
       
       if (error) throw error;
-      if (!data.success) throw new Error(data.error);
       return data;
     },
     onSuccess: () => {
@@ -94,13 +95,13 @@ export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
 
   const removeMemberMutation = useMutation({
     mutationFn: async (memberId: string) => {
-      const { data, error } = await supabase.rpc('remove_team_member', {
-        member_id_param: memberId
-      });
+      const { error } = await supabase
+        .from('team_members')
+        .delete()
+        .eq('id', memberId);
       
       if (error) throw error;
-      if (!data.success) throw new Error(data.error);
-      return data;
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
@@ -114,8 +115,8 @@ export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
   });
 
   const filteredMembers = members?.filter(member => 
-    member.user_profiles.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.user_profiles.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    member.user_profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.user_profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   if (isLoading) {
@@ -157,10 +158,10 @@ export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
                 <div className="flex items-center gap-3">
                   <div>
                     <div className="font-medium">
-                      {member.user_profiles.full_name || member.user_profiles.email}
+                      {member.user_profiles?.full_name || member.user_profiles?.email}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {member.user_profiles.email}
+                      {member.user_profiles?.email}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       Joined: {formatDate(member.joined_at)}
@@ -240,7 +241,7 @@ export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove {memberToRemove?.user_profiles.full_name || memberToRemove?.user_profiles.email} from the team? This action cannot be undone.
+              Are you sure you want to remove {memberToRemove?.user_profiles?.full_name || memberToRemove?.user_profiles?.email} from the team? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

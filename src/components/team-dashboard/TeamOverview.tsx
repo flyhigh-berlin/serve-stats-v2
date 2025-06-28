@@ -12,18 +12,46 @@ interface TeamOverviewProps {
   teamId: string;
 }
 
+interface TeamStats {
+  total_members: number;
+  admin_count: number;
+  member_count: number;
+  recent_activity_count: number;
+}
+
 export function TeamOverview({ teamId }: TeamOverviewProps) {
   const { currentTeam } = useTeam();
 
   const { data: teamStats } = useQuery({
     queryKey: ['team-stats', teamId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_team_stats', {
-        team_id_param: teamId
-      });
+      // Get team member counts
+      const { data: members, error: membersError } = await supabase
+        .from('team_members')
+        .select('role')
+        .eq('team_id', teamId);
       
-      if (error) throw error;
-      return data;
+      if (membersError) throw membersError;
+      
+      const total_members = members?.length || 0;
+      const admin_count = members?.filter(m => m.role === 'admin').length || 0;
+      const member_count = members?.filter(m => m.role === 'member').length || 0;
+      
+      // Get recent activity count
+      const { data: activity, error: activityError } = await supabase
+        .from('team_activity_audit')
+        .select('id')
+        .eq('team_id', teamId)
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+      
+      if (activityError) console.error('Activity query error:', activityError);
+      
+      return {
+        total_members,
+        admin_count,
+        member_count,
+        recent_activity_count: activity?.length || 0
+      } as TeamStats;
     },
     enabled: !!teamId,
   });
