@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -283,7 +282,9 @@ export function EnhancedTeamInvitations({ teamId, teamName }: EnhancedTeamInvita
                         {invitation.invited_email}
                       </Badge>
                       {invitation.accepted_at && (
-                        <Badge variant="success">Accepted</Badge>
+                        <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">
+                          Accepted
+                        </Badge>
                       )}
                     </div>
                     <div className="text-sm text-muted-foreground">
