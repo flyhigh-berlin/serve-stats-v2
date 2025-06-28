@@ -36,10 +36,8 @@ interface TeamMember {
   user_id: string;
   role: 'admin' | 'member';
   joined_at: string;
-  user_profiles: {
-    email: string;
-    full_name: string;
-  } | null;
+  email?: string;
+  full_name?: string;
 }
 
 export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
@@ -50,23 +48,39 @@ export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
   const { data: members, isLoading } = useQuery({
     queryKey: ['team-members', teamId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get team members
+      const { data: memberData, error: memberError } = await supabase
         .from('team_members')
-        .select(`
-          id,
-          user_id,
-          role,
-          joined_at,
-          user_profiles!inner (
-            email,
-            full_name
-          )
-        `)
+        .select('*')
         .eq('team_id', teamId)
         .order('joined_at', { ascending: false });
       
-      if (error) throw error;
-      return data as TeamMember[];
+      if (memberError) throw memberError;
+      
+      if (!memberData || memberData.length === 0) {
+        return [];
+      }
+
+      // Get user profile details
+      const userIds = memberData.map(member => member.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('user_id, email, full_name')
+        .in('user_id', userIds);
+      
+      if (profilesError) throw profilesError;
+
+      // Combine member data with profile data
+      const profileMap = profiles?.reduce((acc, profile) => {
+        acc[profile.user_id] = profile;
+        return acc;
+      }, {} as Record<string, { email: string; full_name: string | null }>) || {};
+
+      return memberData.map(member => ({
+        ...member,
+        email: profileMap[member.user_id]?.email,
+        full_name: profileMap[member.user_id]?.full_name,
+      })) as TeamMember[];
     },
     enabled: !!teamId,
   });
@@ -115,8 +129,8 @@ export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
   });
 
   const filteredMembers = members?.filter(member => 
-    member.user_profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.user_profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
   if (isLoading) {
@@ -158,10 +172,10 @@ export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
                 <div className="flex items-center gap-3">
                   <div>
                     <div className="font-medium">
-                      {member.user_profiles?.full_name || member.user_profiles?.email}
+                      {member.full_name || member.email}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {member.user_profiles?.email}
+                      {member.email}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       Joined: {formatDate(member.joined_at)}
@@ -241,7 +255,7 @@ export function TeamMemberList({ teamId, isAdmin }: TeamMemberListProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to remove {memberToRemove?.user_profiles?.full_name || memberToRemove?.user_profiles?.email} from the team? This action cannot be undone.
+              Are you sure you want to remove {memberToRemove?.full_name || memberToRemove?.email} from the team? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

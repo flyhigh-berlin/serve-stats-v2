@@ -17,35 +17,59 @@ interface ActivityRecord {
   details: any;
   performed_by: string | null;
   created_at: string;
-  user_profiles?: {
-    full_name: string;
-    email: string;
-  } | null;
+  performer_email?: string;
+  performer_name?: string;
 }
 
 export function TeamActivity({ teamId }: TeamActivityProps) {
   const { data: activities, isLoading } = useQuery({
     queryKey: ['team-activity', teamId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get the activity records
+      const { data: activityData, error: activityError } = await supabase
         .from('team_activity_audit')
-        .select(`
-          id,
-          action,
-          details,
-          performed_by,
-          created_at,
-          user_profiles!left (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('team_id', teamId)
         .order('created_at', { ascending: false })
         .limit(50);
       
-      if (error) throw error;
-      return data as ActivityRecord[];
+      if (activityError) throw activityError;
+      
+      if (!activityData || activityData.length === 0) {
+        return [];
+      }
+
+      // Get unique performer IDs
+      const performerIds = [...new Set(activityData
+        .map(activity => activity.performed_by)
+        .filter(Boolean))] as string[];
+
+      // Get performer details if any exist
+      let performerDetails: Record<string, { email: string; full_name: string | null }> = {};
+      
+      if (performerIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('user_profiles')
+          .select('user_id, email, full_name')
+          .in('user_id', performerIds);
+        
+        if (!profilesError && profiles) {
+          performerDetails = profiles.reduce((acc, profile) => {
+            acc[profile.user_id] = {
+              email: profile.email,
+              full_name: profile.full_name
+            };
+            return acc;
+          }, {} as Record<string, { email: string; full_name: string | null }>);
+        }
+      }
+
+      // Combine activity data with performer details
+      return activityData.map(activity => ({
+        ...activity,
+        performer_email: activity.performed_by ? performerDetails[activity.performed_by]?.email : null,
+        performer_name: activity.performed_by ? performerDetails[activity.performed_by]?.full_name : null,
+      })) as ActivityRecord[];
     },
     enabled: !!teamId,
   });
@@ -64,7 +88,7 @@ export function TeamActivity({ teamId }: TeamActivityProps) {
   };
 
   const getActivityDescription = (activity: ActivityRecord) => {
-    const performedBy = activity.user_profiles?.full_name || activity.user_profiles?.email || 'System';
+    const performedBy = activity.performer_name || activity.performer_email || 'System';
     
     switch (activity.action) {
       case 'role_changed':

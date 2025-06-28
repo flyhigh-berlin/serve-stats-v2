@@ -92,8 +92,8 @@ export function TeamOverview({ teamId }: TeamOverviewProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <h3 className="font-semibold text-lg">{teamDetails.name}</h3>
-              {teamDetails.description && (
-                <p className="text-muted-foreground mt-1">{teamDetails.description}</p>
+              {(teamDetails as any).description && (
+                <p className="text-muted-foreground mt-1">{(teamDetails as any).description}</p>
               )}
             </div>
             <div className="space-y-2">

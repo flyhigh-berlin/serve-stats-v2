@@ -50,7 +50,7 @@ export function TeamSettings({ teamId }: TeamSettingsProps) {
   useEffect(() => {
     if (teamDetails) {
       setTeamName(teamDetails.name);
-      setTeamDescription(teamDetails.description || "");
+      setTeamDescription((teamDetails as any).description || "");
     }
   }, [teamDetails]);
 
@@ -62,7 +62,7 @@ export function TeamSettings({ teamId }: TeamSettingsProps) {
           name: name.trim(), 
           description: description.trim() || null,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('id', teamId)
         .select()
         .single();
