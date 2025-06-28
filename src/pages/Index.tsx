@@ -1,97 +1,112 @@
 
-import { useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { useTeam } from "@/context/TeamContext";
-import { useVolleyball } from "@/context/VolleyballContext";
-import { Navbar } from "@/components/Navbar";
+import React from "react";
+import { useAuth } from "../context/AuthContext";
+import { useTeam } from "../context/TeamContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { TeamSelector } from "@/components/TeamSelector";
-import { GameDaySelector } from "@/components/GameDaySelector";
 import { PlayerList } from "@/components/PlayerList";
+import { GameDaySelector } from "@/components/GameDaySelector";
 import { Scoreboard } from "@/components/Scoreboard";
 import { GameHistory } from "@/components/GameHistory";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Navigate, Link } from "react-router-dom";
-import { Settings, BarChart3 } from "lucide-react";
+import { StatsDescription } from "@/components/StatsDescription";
+import { VolleyballProvider } from "../context/VolleyballContext";
+import { LogOut, Settings, Shield } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
-  const { user, loading: authLoading } = useAuth();
-  const { currentTeam, loading: teamLoading } = useTeam();
-  const { currentGameDay, setCurrentGameDay } = useVolleyball();
+  const { user, signOut } = useAuth();
+  const { currentTeam, loading, isSuperAdmin, isTeamAdmin } = useTeam();
 
-  useEffect(() => {
-    if (currentGameDay) {
-      setCurrentGameDay(null);
-    }
-  }, [currentTeam]);
-
-  if (authLoading || teamLoading) {
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="container py-4 px-2 sm:px-4 max-w-7xl">
+        <div className="text-center">Loading...</div>
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
-      <div className="container mx-auto p-4 space-y-6">
-        {/* Team Dashboard Link */}
-        {currentTeam && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Team Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-4">
-                Access your team's comprehensive dashboard to manage members, view analytics, and configure settings.
-              </p>
-              <Link to="/team-dashboard">
-                <Button className="w-full sm:w-auto">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Open Team Dashboard
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="space-y-6">
-            <TeamSelector />
-            {currentTeam && <GameDaySelector />}
+    <div className="container py-4 px-2 sm:px-4 max-w-7xl">
+      <header className="mb-4">
+        <div className="flex flex-col items-center justify-center gap-2 mb-4">
+          <img src="/lovable-uploads/9d00919c-607d-49af-87e1-11c7dc280cba.png" alt="Serve Stats Logo" className="h-16 md:h-24" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-team-primary">Serve Stats</h1>
+        </div>
+        
+        {/* User info and actions */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            Welcome, <strong>{user?.email}</strong>
+            {isSuperAdmin && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                <Shield className="h-3 w-3 mr-1" />
+                Super Admin
+              </span>
+            )}
+            {isTeamAdmin && !isSuperAdmin && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
+                <Settings className="h-3 w-3 mr-1" />
+                Team Admin
+              </span>
+            )}
           </div>
-          
-          <div className="lg:col-span-2 space-y-6">
-            {currentTeam && currentGameDay && (
-              <>
-                <Scoreboard />
-                <PlayerList />
-              </>
+          <div className="flex items-center gap-2">
+            {isSuperAdmin && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/admin">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Panel
+                </Link>
+              </Button>
             )}
-            
-            {currentTeam && <GameHistory />}
-            
-            {!currentTeam && (
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-semibold mb-2">Welcome to Volleyball Tracker</h2>
-                <p className="text-muted-foreground">
-                  Select or create a team to get started with tracking your volleyball games.
-                </p>
-              </div>
-            )}
+            <Button variant="outline" size="sm" onClick={signOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
           </div>
         </div>
+      </header>
+
+      {/* Team Selection */}
+      <div className="mb-4">
+        <TeamSelector />
       </div>
+
+      {/* Show volleyball tracking only when a team is selected */}
+      {currentTeam ? (
+        <VolleyballProvider>
+          <div className="mb-4">
+            <GameDaySelector />
+          </div>
+          
+          <Tabs defaultValue="players" className="w-full">
+            <StatsDescription />
+            
+            <TabsList className="mb-4 w-full grid grid-cols-3 h-auto">
+              <TabsTrigger value="players" className="text-xs sm:text-sm py-2">Players</TabsTrigger>
+              <TabsTrigger value="scoreboard" className="text-xs sm:text-sm py-2">Scoreboard</TabsTrigger>
+              <TabsTrigger value="history" className="text-xs sm:text-sm py-2">Game History</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="players" className="mt-0">
+              <PlayerList />
+            </TabsContent>
+            
+            <TabsContent value="scoreboard" className="mt-0">
+              <Scoreboard />
+            </TabsContent>
+            
+            <TabsContent value="history" className="mt-0">
+              <GameHistory />
+            </TabsContent>
+          </Tabs>
+        </VolleyballProvider>
+      ) : (
+        <div className="text-center py-8 text-muted-foreground">
+          Select or create a team to start tracking volleyball statistics.
+        </div>
+      )}
     </div>
   );
 };
