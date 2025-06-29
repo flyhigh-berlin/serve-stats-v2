@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +11,7 @@ import { Users, Settings, Plus, Crown, Shield } from "lucide-react";
 
 export function TeamSelector() {
   const { teams, currentTeam, switchTeam, isSuperAdmin, isTeamAdmin } = useTeam();
+  const [isManagementDialogOpen, setIsManagementDialogOpen] = useState(false);
 
   const handleTeamChange = (teamId: string) => {
     switchTeam(teamId);
@@ -52,12 +53,26 @@ export function TeamSelector() {
           
           <div className="flex gap-2">
             {currentTeam && (
-              <UnifiedTeamManagementDialog>
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-2"
+                  onClick={() => setIsManagementDialogOpen(true)}
+                >
                   <Settings className="h-4 w-4" />
                   Manage Team
                 </Button>
-              </UnifiedTeamManagementDialog>
+                
+                <UnifiedTeamManagementDialog
+                  isOpen={isManagementDialogOpen}
+                  onClose={() => setIsManagementDialogOpen(false)}
+                  teamId={currentTeam.id}
+                  teamName={currentTeam.name}
+                  teamDescription={currentTeam.description}
+                  teamLogoUrl={currentTeam.logo_url}
+                />
+              </>
             )}
             
             {isSuperAdmin && (

@@ -28,6 +28,18 @@ interface Invitation {
   is_active: boolean;
 }
 
+interface InvitationResponse {
+  success: boolean;
+  error?: string;
+  invite_code?: string;
+  expires_at?: string;
+}
+
+interface MemberInvitationResponse {
+  success: boolean;
+  invitation?: Invitation;
+}
+
 export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
   const [adminEmail, setAdminEmail] = useState('');
   const queryClient = useQueryClient();
@@ -53,7 +65,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
         team_id_param: teamId
       });
       if (error) throw error;
-      return data;
+      return data as MemberInvitationResponse;
     }
   });
 
@@ -64,7 +76,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
         admin_email: email
       });
       if (error) throw error;
-      return data;
+      return data as InvitationResponse;
     },
     onSuccess: (data) => {
       if (data.success) {
@@ -87,7 +99,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
         team_id_param: teamId
       });
       if (error) throw error;
-      return data;
+      return data as InvitationResponse;
     },
     onSuccess: (data) => {
       if (data.success) {
@@ -110,7 +122,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
         team_id_param: teamId
       });
       if (error) throw error;
-      return data;
+      return data as InvitationResponse;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['member-invitation', teamId] });
