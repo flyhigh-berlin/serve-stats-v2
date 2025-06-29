@@ -392,23 +392,38 @@ export type Database = {
       }
       teams: {
         Row: {
+          admin_count: number | null
           created_at: string | null
           created_by: string | null
+          description: string | null
           id: string
+          last_activity_at: string | null
+          logo_url: string | null
+          member_count: number | null
           name: string
           updated_at: string | null
         }
         Insert: {
+          admin_count?: number | null
           created_at?: string | null
           created_by?: string | null
+          description?: string | null
           id?: string
+          last_activity_at?: string | null
+          logo_url?: string | null
+          member_count?: number | null
           name: string
           updated_at?: string | null
         }
         Update: {
+          admin_count?: number | null
           created_at?: string | null
           created_by?: string | null
+          description?: string | null
           id?: string
+          last_activity_at?: string | null
+          logo_url?: string | null
+          member_count?: number | null
           name?: string
           updated_at?: string | null
         }
@@ -461,6 +476,14 @@ export type Database = {
         Args: { team_id_param: string; admin_email: string }
         Returns: Json
       }
+      bulk_update_members: {
+        Args: {
+          member_ids: string[]
+          operation: string
+          new_role?: Database["public"]["Enums"]["team_member_role"]
+        }
+        Returns: Json
+      }
       change_member_role: {
         Args: {
           member_id_param: string
@@ -500,6 +523,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_team_analytics: {
+        Args: { team_id_param: string }
+        Returns: Json
+      }
       get_team_member_invitation: {
         Args: { team_id_param: string }
         Returns: Json
@@ -519,6 +546,14 @@ export type Database = {
         Args: { check_user_id: string; check_team_id: string }
         Returns: boolean
       }
+      log_team_activity: {
+        Args: {
+          team_id_param: string
+          action_param: string
+          details_param?: Json
+        }
+        Returns: undefined
+      }
       mark_invitation_accepted: {
         Args: { invitation_code: string; user_id_param: string }
         Returns: Json
@@ -530,6 +565,15 @@ export type Database = {
       reset_team_data: {
         Args: { team_id_param: string; preserve_players?: boolean }
         Returns: boolean
+      }
+      update_team_settings: {
+        Args: {
+          team_id_param: string
+          team_name?: string
+          team_description?: string
+          team_logo_url?: string
+        }
+        Returns: Json
       }
       validate_invite_code: {
         Args: { code: string }
