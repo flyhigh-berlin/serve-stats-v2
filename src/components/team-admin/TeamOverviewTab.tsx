@@ -52,7 +52,7 @@ export function TeamOverviewTab({ teamId }: TeamOverviewTabProps) {
         team_id_param: teamId
       });
       if (error) throw error;
-      return data as TeamAnalytics;
+      return data as unknown as TeamAnalytics;
     }
   });
 
@@ -83,6 +83,8 @@ export function TeamOverviewTab({ teamId }: TeamOverviewTabProps) {
       
       // Get user profiles
       const userIds = activityData?.map(a => a.performed_by).filter(Boolean) || [];
+      if (userIds.length === 0) return [];
+      
       const { data: profiles, error: profilesError } = await supabase
         .from('user_profiles')
         .select('user_id, full_name, email')

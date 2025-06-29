@@ -58,6 +58,8 @@ export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManag
       
       // Then get user profiles for each member
       const memberIds = teamMembers?.map(m => m.user_id) || [];
+      if (memberIds.length === 0) return [];
+      
       const { data: profiles, error: profilesError } = await supabase
         .from('user_profiles')
         .select('user_id, full_name, email')
@@ -102,7 +104,7 @@ export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManag
         new_role: newRole as any
       });
       if (error) throw error;
-      return data as BulkUpdateResult;
+      return data as unknown as BulkUpdateResult;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
