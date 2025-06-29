@@ -26,18 +26,23 @@ export function TeamSettingsTab({ teamId, teamName, teamDescription, teamLogoUrl
 
   const updateTeamMutation = useMutation({
     mutationFn: async (updates: { name?: string; description?: string; logoUrl?: string }) => {
-      const { data, error } = await supabase.rpc('update_team_settings', {
-        team_id_param: teamId,
-        team_name: updates.name,
-        team_description: updates.description,
-        team_logo_url: updates.logoUrl
-      });
+      const { error } = await supabase
+        .from('teams')
+        .update({
+          name: updates.name,
+          description: updates.description,
+          logo_url: updates.logoUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', teamId);
+      
       if (error) throw error;
-      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-info', teamId] });
       queryClient.invalidateQueries({ queryKey: ['team-analytics', teamId] });
+      // Refresh team context
+      window.dispatchEvent(new CustomEvent('teamUpdated'));
       toast.success('Team settings updated successfully');
     },
     onError: (error) => {
@@ -49,7 +54,19 @@ export function TeamSettingsTab({ teamId, teamName, teamDescription, teamLogoUrl
   const uploadLogoMutation = useMutation({
     mutationFn: async (file: File) => {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${teamId}/logo.${fileExt}`;
+      const fileName = `${teamId}/logo-${Date.now()}.${fileExt}`;
+      
+      // Create team-logos bucket if it doesn't exist
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(bucket => bucket.name === 'team-logos');
+      
+      if (!bucketExists) {
+        await supabase.storage.createBucket('team-logos', {
+          public: true,
+          allowedMimeTypes: ['image/*'],
+          fileSizeLimit: 5242880 // 5MB
+        });
+      }
       
       const { error: uploadError } = await supabase.storage
         .from('team-logos')
@@ -64,7 +81,11 @@ export function TeamSettingsTab({ teamId, teamName, teamDescription, teamLogoUrl
       return data.publicUrl;
     },
     onSuccess: (logoUrl) => {
-      updateTeamMutation.mutate({ logoUrl });
+      updateTeamMutation.mutate({ 
+        name: name.trim(),
+        description: description.trim(),
+        logoUrl 
+      });
     },
     onError: (error) => {
       console.error('Error uploading logo:', error);

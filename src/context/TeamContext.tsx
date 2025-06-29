@@ -54,8 +54,18 @@ export function TeamProvider({ children }: { children: ReactNode }) {
       loadUserTeams();
     };
 
+    const handleTeamUpdated = () => {
+      console.log('Team updated event received, refreshing teams...');
+      loadUserTeams();
+    };
+
     window.addEventListener('teamJoined', handleTeamJoined);
-    return () => window.removeEventListener('teamJoined', handleTeamJoined);
+    window.addEventListener('teamUpdated', handleTeamUpdated);
+    
+    return () => {
+      window.removeEventListener('teamJoined', handleTeamJoined);
+      window.removeEventListener('teamUpdated', handleTeamUpdated);
+    };
   }, []);
 
   const checkSuperAdmin = async () => {

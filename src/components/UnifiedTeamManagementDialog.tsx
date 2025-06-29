@@ -5,10 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TeamOverviewTab } from "./team-admin/TeamOverviewTab";
 import { TeamMembersTab } from "./team-admin/TeamMembersTab";
 import { TeamInvitationsTab } from "./team-admin/TeamInvitationsTab";
-import { TeamActivityLogTab } from "./team-admin/TeamActivityLogTab";
-import { TeamGameTypesTab } from "./team-admin/TeamGameTypesTab";
 import { TeamSettingsTab } from "./team-admin/TeamSettingsTab";
-import { BarChart3, Users, Mail, Activity, Gamepad2, Settings } from "lucide-react";
+import { BarChart3, Users, Mail, Settings } from "lucide-react";
 
 interface UnifiedTeamManagementDialogProps {
   isOpen: boolean;
@@ -38,7 +36,7 @@ export function UnifiedTeamManagementDialog({
         
         <div className="flex-1 overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview" className="flex items-center gap-1">
                 <BarChart3 className="h-4 w-4" />
                 <span className="hidden sm:inline">Overview</span>
@@ -50,14 +48,6 @@ export function UnifiedTeamManagementDialog({
               <TabsTrigger value="invites" className="flex items-center gap-1">
                 <Mail className="h-4 w-4" />
                 <span className="hidden sm:inline">Invites</span>
-              </TabsTrigger>
-              <TabsTrigger value="activity" className="flex items-center gap-1">
-                <Activity className="h-4 w-4" />
-                <span className="hidden sm:inline">Activity</span>
-              </TabsTrigger>
-              <TabsTrigger value="game-types" className="flex items-center gap-1">
-                <Gamepad2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Game Types</span>
               </TabsTrigger>
               <TabsTrigger value="settings" className="flex items-center gap-1">
                 <Settings className="h-4 w-4" />
@@ -76,14 +66,6 @@ export function UnifiedTeamManagementDialog({
               
               <TabsContent value="invites" className="mt-0">
                 <TeamInvitationsTab teamId={teamId} />
-              </TabsContent>
-              
-              <TabsContent value="activity" className="mt-0">
-                <TeamActivityLogTab teamId={teamId} />
-              </TabsContent>
-              
-              <TabsContent value="game-types" className="mt-0">
-                <TeamGameTypesTab teamId={teamId} />
               </TabsContent>
               
               <TabsContent value="settings" className="mt-0">

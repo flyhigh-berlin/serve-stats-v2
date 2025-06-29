@@ -25,50 +25,37 @@ interface TeamMember {
   email?: string;
 }
 
-interface BulkUpdateResult {
-  success: boolean;
-  affected_count: number;
-  operation: string;
-  error?: string;
-}
-
 export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
-  const [bulkAction, setBulkAction] = useState<string>('');
-  const [newRole, setNewRole] = useState<'admin' | 'member'>('member');
   const queryClient = useQueryClient();
 
   const { data: members, isLoading } = useQuery({
     queryKey: ['team-members', teamId],
     queryFn: async () => {
-      // First get team members
-      const { data: teamMembers, error } = await supabase
+      const { data, error } = await supabase
         .from('team_members')
-        .select('*')
+        .select(`
+          id,
+          user_id,
+          role,
+          joined_at,
+          user_profiles!inner(
+            full_name,
+            email
+          )
+        `)
         .eq('team_id', teamId);
       
       if (error) throw error;
       
-      // Then get user profiles for each member
-      const memberIds = teamMembers?.map(m => m.user_id) || [];
-      if (memberIds.length === 0) return [];
-      
-      const { data: profiles, error: profilesError } = await supabase
-        .from('user_profiles')
-        .select('user_id, full_name, email')
-        .in('user_id', memberIds);
-      
-      if (profilesError) throw profilesError;
-      
-      // Combine team member data with profile data
-      const membersWithProfiles: TeamMember[] = teamMembers?.map(member => {
-        const profile = profiles?.find(p => p.user_id === member.user_id);
-        return {
-          ...member,
-          full_name: profile?.full_name || null,
-          email: profile?.email || 'Unknown'
-        };
-      }) || [];
+      const membersWithProfiles: TeamMember[] = data?.map(member => ({
+        id: member.id,
+        user_id: member.user_id,
+        role: member.role,
+        joined_at: member.joined_at,
+        full_name: member.user_profiles?.full_name || null,
+        email: member.user_profiles?.email || 'No email'
+      })) || [];
       
       return membersWithProfiles;
     }
@@ -76,9 +63,10 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
 
   const removeMemberMutation = useMutation({
     mutationFn: async (memberId: string) => {
-      const { error } = await supabase.rpc('remove_team_member', {
-        member_id_param: memberId
-      });
+      const { error } = await supabase
+        .from('team_members')
+        .delete()
+        .eq('id', memberId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -93,10 +81,10 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
 
   const changeRoleMutation = useMutation({
     mutationFn: async ({ memberId, role }: { memberId: string; role: 'admin' | 'member' }) => {
-      const { error } = await supabase.rpc('change_member_role', {
-        member_id_param: memberId,
-        new_role: role
-      });
+      const { error } = await supabase
+        .from('team_members')
+        .update({ role })
+        .eq('id', memberId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -109,25 +97,22 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
     }
   });
 
-  const bulkUpdateMutation = useMutation({
-    mutationFn: async (operation: string) => {
-      const { data, error } = await supabase.rpc('bulk_update_members', {
-        member_ids: selectedMembers,
-        operation: operation,
-        new_role: newRole as any
-      });
+  const bulkRemoveMutation = useMutation({
+    mutationFn: async (memberIds: string[]) => {
+      const { error } = await supabase
+        .from('team_members')
+        .delete()
+        .in('id', memberIds);
       if (error) throw error;
-      return data as unknown as BulkUpdateResult;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
-      toast.success(`${data.operation} completed for ${data.affected_count} members`);
+      toast.success(`${selectedMembers.length} members removed successfully`);
       setSelectedMembers([]);
-      setBulkAction('');
     },
     onError: (error) => {
-      console.error('Error with bulk operation:', error);
-      toast.error('Failed to complete bulk operation');
+      console.error('Error removing members:', error);
+      toast.error('Failed to remove members');
     }
   });
 
@@ -143,10 +128,10 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
     setSelectedMembers(checked ? (members?.map(m => m.id) || []) : []);
   };
 
-  const handleBulkAction = () => {
-    if (bulkAction && selectedMembers.length > 0) {
-      bulkUpdateMutation.mutate(bulkAction);
-    }
+  const getDisplayName = (member: TeamMember) => {
+    if (member.full_name) return member.full_name;
+    if (member.email && member.email !== 'No email') return member.email;
+    return 'Profile incomplete';
   };
 
   if (isLoading) {
@@ -183,34 +168,31 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
               <span className="text-sm text-muted-foreground">
                 {selectedMembers.length} members selected
               </span>
-              <Select value={bulkAction} onValueChange={setBulkAction}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Choose action" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="remove">Remove</SelectItem>
-                  <SelectItem value="change_role">Change Role</SelectItem>
-                </SelectContent>
-              </Select>
-              {bulkAction === 'change_role' && (
-                <Select value={newRole} onValueChange={(value: 'admin' | 'member') => setNewRole(value)}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="member">Member</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-              <Button 
-                onClick={handleBulkAction} 
-                disabled={!bulkAction || bulkUpdateMutation.isPending}
-                variant={bulkAction === 'remove' ? 'destructive' : 'default'}
-              >
-                {bulkUpdateMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Apply
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" disabled={bulkRemoveMutation.isPending}>
+                    {bulkRemoveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Remove Selected
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Remove Members</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to remove {selectedMembers.length} selected members from the team?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => bulkRemoveMutation.mutate(selectedMembers)}
+                      className="bg-red-600"
+                    >
+                      Remove
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </CardContent>
         </Card>
@@ -238,7 +220,7 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
                   />
                   <div>
                     <p className="font-medium">
-                      {member.full_name || member.email || 'Unknown User'}
+                      {getDisplayName(member)}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {member.email}
@@ -277,7 +259,7 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Remove Member</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to remove {member.full_name || member.email} from the team?
+                          Are you sure you want to remove {getDisplayName(member)} from the team?
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -294,6 +276,12 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
                 </div>
               </div>
             ))}
+            {(!members || members.length === 0) && (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No team members found</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
