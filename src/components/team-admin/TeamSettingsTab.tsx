@@ -17,6 +17,11 @@ interface TeamSettingsTabProps {
   teamLogoUrl?: string;
 }
 
+interface UpdateTeamSettingsResponse {
+  success: boolean;
+  error?: string;
+}
+
 export function TeamSettingsTab({ teamId, teamName, teamDescription, teamLogoUrl }: TeamSettingsTabProps) {
   const [name, setName] = useState(teamName);
   const [description, setDescription] = useState(teamDescription || '');
@@ -40,11 +45,13 @@ export function TeamSettingsTab({ teamId, teamName, teamDescription, teamLogoUrl
         throw error;
       }
       
-      if (data && !data.success) {
-        throw new Error(data.error || 'Failed to update team settings');
+      // Type cast the response to our expected structure
+      const response = data as UpdateTeamSettingsResponse;
+      if (response && !response.success) {
+        throw new Error(response.error || 'Failed to update team settings');
       }
       
-      return data;
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-info', teamId] });
