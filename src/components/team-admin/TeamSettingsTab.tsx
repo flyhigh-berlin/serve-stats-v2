@@ -45,8 +45,8 @@ export function TeamSettingsTab({ teamId, teamName, teamDescription, teamLogoUrl
         throw error;
       }
       
-      // Type cast the response to our expected structure
-      const response = data as UpdateTeamSettingsResponse;
+      // Safely cast the response with proper type checking
+      const response = data as unknown as UpdateTeamSettingsResponse;
       if (response && !response.success) {
         throw new Error(response.error || 'Failed to update team settings');
       }
