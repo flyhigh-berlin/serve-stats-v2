@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,7 +64,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
         team_id_param: teamId
       });
       if (error) throw error;
-      return data as MemberInvitationResponse;
+      return data as unknown as MemberInvitationResponse;
     }
   });
 
@@ -76,7 +75,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
         admin_email: email
       });
       if (error) throw error;
-      return data as InvitationResponse;
+      return data as unknown as InvitationResponse;
     },
     onSuccess: (data) => {
       if (data.success) {
@@ -99,7 +98,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
         team_id_param: teamId
       });
       if (error) throw error;
-      return data as InvitationResponse;
+      return data as unknown as InvitationResponse;
     },
     onSuccess: (data) => {
       if (data.success) {
@@ -122,7 +121,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
         team_id_param: teamId
       });
       if (error) throw error;
-      return data as InvitationResponse;
+      return data as unknown as InvitationResponse;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['member-invitation', teamId] });

@@ -6,6 +6,8 @@ import { toast } from "sonner";
 interface Team {
   id: string;
   name: string;
+  description?: string;
+  logo_url?: string;
   created_at: string;
   role: 'admin' | 'member';
 }
@@ -84,7 +86,9 @@ export function TeamProvider({ children }: { children: ReactNode }) {
           teams:team_id (
             id,
             name,
-            created_at
+            created_at,
+            description,
+            logo_url
           )
         `)
         .eq('user_id', user.id);
@@ -96,6 +100,8 @@ export function TeamProvider({ children }: { children: ReactNode }) {
         const userTeams = data.map(item => ({
           id: item.teams.id,
           name: item.teams.name,
+          description: item.teams.description,
+          logo_url: item.teams.logo_url,
           created_at: item.teams.created_at,
           role: item.role
         }));
