@@ -39,8 +39,10 @@ interface RecentJoin {
   user_id: string;
   joined_at: string;
   role: string;
-  full_name?: string;
-  email?: string;
+  user_profiles: {
+    full_name: string | null;
+    email: string;
+  } | null;
 }
 
 export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
@@ -67,7 +69,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
           user_id,
           joined_at,
           role,
-          user_profiles!inner(
+          user_profiles (
             full_name,
             email
           )
@@ -77,17 +79,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
         .limit(10);
       
       if (error) throw error;
-      
-      const joins: RecentJoin[] = data?.map(join => ({
-        id: join.id,
-        user_id: join.user_id,
-        joined_at: join.joined_at,
-        role: join.role,
-        full_name: join.user_profiles?.full_name || null,
-        email: join.user_profiles?.email || 'No email'
-      })) || [];
-      
-      return joins;
+      return data as RecentJoin[];
     }
   });
 
@@ -145,9 +137,13 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
   };
 
   const getDisplayName = (join: RecentJoin) => {
-    if (join.full_name) return join.full_name;
-    if (join.email && join.email !== 'No email') return join.email;
+    if (join.user_profiles?.full_name) return join.user_profiles.full_name;
+    if (join.user_profiles?.email) return join.user_profiles.email;
     return 'Profile incomplete';
+  };
+
+  const getDisplayEmail = (join: RecentJoin) => {
+    return join.user_profiles?.email || 'No email';
   };
 
   return (
@@ -159,7 +155,6 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
         </p>
       </div>
 
-      {/* Member Invitation */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -171,17 +166,17 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
           {memberInvitation?.invitation ? (
             <div className="space-y-4">
               <div>
-                <Label>Current Member Invitation</Label>
+                <Label>Current Member Invitation Code</Label>
                 <div className="flex items-center gap-2 mt-2">
                   <Input
-                    value={getInviteUrl(memberInvitation.invitation.invite_code)}
+                    value={memberInvitation.invitation.invite_code}
                     readOnly
-                    className="flex-1"
+                    className="flex-1 font-mono"
                   />
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => copyToClipboard(getInviteUrl(memberInvitation.invitation.invite_code))}
+                    onClick={() => copyToClipboard(memberInvitation.invitation.invite_code)}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -190,6 +185,9 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
                   <span>Expires: {formatDate(memberInvitation.invitation.expires_at)}</span>
                   <span>Uses: {memberInvitation.invitation.current_uses}/{memberInvitation.invitation.max_uses}</span>
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Share this code with new members. They can join by going to the homepage and entering this code.
+                </p>
               </div>
               <Button
                 variant="destructive"
@@ -198,7 +196,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
               >
                 {deactivateInviteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 <Trash2 className="mr-2 h-4 w-4" />
-                Deactivate Link
+                Deactivate Code
               </Button>
             </div>
           ) : (
@@ -209,13 +207,12 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
             >
               {createMemberInviteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               <Plus className="mr-2 h-4 w-4" />
-              Create Member Invitation Link
+              Create Member Invitation Code
             </Button>
           )}
         </CardContent>
       </Card>
 
-      {/* Recent Joins */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -229,7 +226,7 @@ export function TeamInvitationsTab({ teamId }: TeamInvitationsTabProps) {
               <div key={join.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div>
                   <p className="font-medium">{getDisplayName(join)}</p>
-                  <p className="text-sm text-muted-foreground">{join.email}</p>
+                  <p className="text-sm text-muted-foreground">{getDisplayEmail(join)}</p>
                   <p className="text-xs text-muted-foreground">
                     Joined {formatDate(join.joined_at)}
                   </p>

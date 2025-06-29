@@ -21,8 +21,10 @@ interface TeamMember {
   user_id: string;
   role: 'admin' | 'member';
   joined_at: string;
-  full_name?: string;
-  email?: string;
+  user_profiles: {
+    full_name: string | null;
+    email: string;
+  } | null;
 }
 
 export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
@@ -39,7 +41,7 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
           user_id,
           role,
           joined_at,
-          user_profiles!inner(
+          user_profiles (
             full_name,
             email
           )
@@ -47,17 +49,7 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
         .eq('team_id', teamId);
       
       if (error) throw error;
-      
-      const membersWithProfiles: TeamMember[] = data?.map(member => ({
-        id: member.id,
-        user_id: member.user_id,
-        role: member.role,
-        joined_at: member.joined_at,
-        full_name: member.user_profiles?.full_name || null,
-        email: member.user_profiles?.email || 'No email'
-      })) || [];
-      
-      return membersWithProfiles;
+      return data as TeamMember[];
     }
   });
 
@@ -129,9 +121,13 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
   };
 
   const getDisplayName = (member: TeamMember) => {
-    if (member.full_name) return member.full_name;
-    if (member.email && member.email !== 'No email') return member.email;
+    if (member.user_profiles?.full_name) return member.user_profiles.full_name;
+    if (member.user_profiles?.email) return member.user_profiles.email;
     return 'Profile incomplete';
+  };
+
+  const getDisplayEmail = (member: TeamMember) => {
+    return member.user_profiles?.email || 'No email';
   };
 
   if (isLoading) {
@@ -157,7 +153,6 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
         </Badge>
       </div>
 
-      {/* Bulk Actions */}
       {selectedMembers.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -198,7 +193,6 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
         </Card>
       )}
 
-      {/* Members List */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -223,7 +217,7 @@ export function TeamMembersTab({ teamId }: TeamMembersTabProps) {
                       {getDisplayName(member)}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {member.email}
+                      {getDisplayEmail(member)}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Joined {formatDate(member.joined_at)}

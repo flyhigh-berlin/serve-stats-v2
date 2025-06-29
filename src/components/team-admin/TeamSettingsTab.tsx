@@ -41,7 +41,7 @@ export function TeamSettingsTab({ teamId, teamName, teamDescription, teamLogoUrl
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-info', teamId] });
       queryClient.invalidateQueries({ queryKey: ['team-analytics', teamId] });
-      // Refresh team context
+      // Refresh team context - dispatch event to update all team references
       window.dispatchEvent(new CustomEvent('teamUpdated'));
       toast.success('Team settings updated successfully');
     },
