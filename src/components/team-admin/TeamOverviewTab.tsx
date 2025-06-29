@@ -12,6 +12,38 @@ interface TeamOverviewTabProps {
   teamId: string;
 }
 
+interface TeamAnalytics {
+  members: {
+    total: number;
+    admins: number;
+    members: number;
+    new_30d: number;
+  };
+  activity: {
+    total: number;
+    recent_7d: number;
+    last_activity: string | null;
+  };
+  games: {
+    total_games: number;
+    total_serves: number;
+    total_aces: number;
+    total_fails: number;
+    total_players: number;
+  };
+  error?: string;
+}
+
+interface ActivityLog {
+  id: string;
+  action: string;
+  created_at: string;
+  user_profiles: {
+    full_name: string | null;
+    email: string;
+  } | null;
+}
+
 export function TeamOverviewTab({ teamId }: TeamOverviewTabProps) {
   const { data: analytics, isLoading: analyticsLoading } = useQuery({
     queryKey: ['team-analytics', teamId],
@@ -20,7 +52,7 @@ export function TeamOverviewTab({ teamId }: TeamOverviewTabProps) {
         team_id_param: teamId
       });
       if (error) throw error;
-      return data;
+      return data as TeamAnalytics;
     }
   });
 
@@ -40,17 +72,31 @@ export function TeamOverviewTab({ teamId }: TeamOverviewTabProps) {
   const { data: recentActivity } = useQuery({
     queryKey: ['recent-activity', teamId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get recent activity
+      const { data: activityData, error } = await supabase
         .from('team_activity_audit')
-        .select(`
-          *,
-          user_profiles!team_activity_audit_performed_by_fkey(full_name, email)
-        `)
+        .select('*')
         .eq('team_id', teamId)
         .order('created_at', { ascending: false })
         .limit(5);
       if (error) throw error;
-      return data;
+      
+      // Get user profiles
+      const userIds = activityData?.map(a => a.performed_by).filter(Boolean) || [];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds);
+      
+      if (profilesError) throw profilesError;
+      
+      // Combine data
+      const activitiesWithProfiles: ActivityLog[] = activityData?.map(activity => ({
+        ...activity,
+        user_profiles: profiles?.find(p => p.user_id === activity.performed_by) || null
+      })) || [];
+      
+      return activitiesWithProfiles;
     }
   });
 
@@ -207,18 +253,18 @@ export function TeamOverviewTab({ teamId }: TeamOverviewTabProps) {
                 <span className="text-sm text-muted-foreground">Active Players</span>
                 <span className="font-medium">{analytics?.games?.total_players || 0}</span>
               </div>
-              {analytics?.games?.total_serves > 0 && (
+              {analytics?.games && analytics.games.total_serves > 0 && (
                 <>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Ace Rate</span>
                     <span className="font-medium">
-                      {Math.round((analytics?.games?.total_aces / analytics?.games?.total_serves) * 100)}%
+                      {Math.round((analytics.games.total_aces / analytics.games.total_serves) * 100)}%
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Success Rate</span>
                     <span className="font-medium">
-                      {Math.round(((analytics?.games?.total_serves - analytics?.games?.total_fails) / analytics?.games?.total_serves) * 100)}%
+                      {Math.round(((analytics.games.total_serves - analytics.games.total_fails) / analytics.games.total_serves) * 100)}%
                     </span>
                   </div>
                 </>

@@ -17,6 +17,25 @@ interface EnhancedTeamMemberManagementProps {
   teamId: string;
 }
 
+interface TeamMember {
+  id: string;
+  user_id: string;
+  team_id: string;
+  role: 'admin' | 'member';
+  joined_at: string;
+  user_profiles: {
+    full_name: string | null;
+    email: string;
+  } | null;
+}
+
+interface BulkUpdateResult {
+  success: boolean;
+  affected_count: number;
+  operation: string;
+  error?: string;
+}
+
 export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManagementProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
@@ -28,17 +47,31 @@ export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManag
   const { data: members, isLoading } = useQuery({
     queryKey: ['team-members', teamId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get team members
+      const { data: teamMembers, error: membersError } = await supabase
         .from('team_members')
-        .select(`
-          *,
-          user_profiles!team_members_user_id_fkey(full_name, email)
-        `)
+        .select('*')
         .eq('team_id', teamId)
         .order('joined_at', { ascending: false });
       
-      if (error) throw error;
-      return data;
+      if (membersError) throw membersError;
+      
+      // Then get user profiles for each member
+      const memberIds = teamMembers?.map(m => m.user_id) || [];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', memberIds);
+      
+      if (profilesError) throw profilesError;
+      
+      // Combine the data
+      const membersWithProfiles: TeamMember[] = teamMembers?.map(member => ({
+        ...member,
+        user_profiles: profiles?.find(p => p.user_id === member.user_id) || null
+      })) || [];
+      
+      return membersWithProfiles;
     }
   });
 
@@ -69,7 +102,7 @@ export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManag
         new_role: newRole as any
       });
       if (error) throw error;
-      return data;
+      return data as BulkUpdateResult;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
@@ -77,7 +110,7 @@ export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManag
       setBulkAction("");
       toast.success(`Successfully ${data.operation.replace('_', ' ')} ${data.affected_count} member(s)`);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error('Failed to update members: ' + error.message);
     }
   });
@@ -93,7 +126,7 @@ export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManag
       queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
       toast.success('Member removed successfully');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error('Failed to remove member: ' + error.message);
     }
   });
@@ -110,7 +143,7 @@ export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManag
       queryClient.invalidateQueries({ queryKey: ['team-members', teamId] });
       toast.success('Member role updated successfully');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error('Failed to change role: ' + error.message);
     }
   });
@@ -265,7 +298,7 @@ export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManag
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium">
-                        {member.user_profiles?.full_name || member.user_profiles?.email}
+                        {member.user_profiles?.full_name || member.user_profiles?.email || 'Unknown User'}
                       </p>
                       <Badge variant={member.role === 'admin' ? 'default' : 'secondary'}>
                         {member.role === 'admin' ? (
@@ -276,7 +309,7 @@ export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManag
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {member.user_profiles?.email}
+                      {member.user_profiles?.email || 'No email'}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Joined {formatDate(member.joined_at)}
@@ -311,7 +344,7 @@ export function EnhancedTeamMemberManagement({ teamId }: EnhancedTeamMemberManag
                       <AlertDialogHeader>
                         <AlertDialogTitle>Remove Member</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to remove {member.user_profiles?.full_name || member.user_profiles?.email} from the team?
+                          Are you sure you want to remove {member.user_profiles?.full_name || member.user_profiles?.email || 'this member'} from the team?
                           This action cannot be undone.
                         </AlertDialogDescription>
                       </AlertDialogHeader>

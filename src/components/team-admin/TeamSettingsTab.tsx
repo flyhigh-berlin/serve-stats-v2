@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -34,13 +34,17 @@ export function TeamSettingsTab({ teamId }: TeamSettingsTabProps) {
         .single();
       if (error) throw error;
       return data;
-    },
-    onSuccess: (data) => {
-      setTeamName(data.name || "");
-      setTeamDescription(data.description || "");
-      setLogoPreview(data.logo_url || null);
     }
   });
+
+  // Update form when data loads
+  useEffect(() => {
+    if (teamInfo) {
+      setTeamName(teamInfo.name || "");
+      setTeamDescription(teamInfo.description || "");
+      setLogoPreview(teamInfo.logo_url || null);
+    }
+  }, [teamInfo]);
 
   const updateSettingsMutation = useMutation({
     mutationFn: async () => {
@@ -80,7 +84,7 @@ export function TeamSettingsTab({ teamId }: TeamSettingsTabProps) {
       setLogoFile(null);
       toast.success('Team settings updated successfully');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error('Failed to update settings: ' + error.message);
     }
   });

@@ -15,6 +15,19 @@ interface TeamActivityLogTabProps {
   teamId: string;
 }
 
+interface ActivityLog {
+  id: string;
+  action: string;
+  details: any;
+  created_at: string;
+  team_id: string;
+  performed_by: string | null;
+  user_profiles: {
+    full_name: string | null;
+    email: string;
+  } | null;
+}
+
 const actionLabels: Record<string, string> = {
   'team_settings_updated': 'Settings Updated',
   'bulk_member_removal': 'Bulk Member Removal',
@@ -51,12 +64,10 @@ export function TeamActivityLogTab({ teamId }: TeamActivityLogTabProps) {
   const { data: activities, isLoading } = useQuery({
     queryKey: ['team-activity', teamId, dateRange],
     queryFn: async () => {
+      // First get activity logs
       let query = supabase
         .from('team_activity_audit')
-        .select(`
-          *,
-          user_profiles!team_activity_audit_performed_by_fkey(full_name, email)
-        `)
+        .select('*')
         .eq('team_id', teamId)
         .order('created_at', { ascending: false });
       
@@ -82,9 +93,25 @@ export function TeamActivityLogTab({ teamId }: TeamActivityLogTabProps) {
         query = query.gte('created_at', startDate.toISOString());
       }
       
-      const { data, error } = await query.limit(100);
+      const { data: activityData, error } = await query.limit(100);
       if (error) throw error;
-      return data;
+      
+      // Get user profiles for performed_by users
+      const userIds = activityData?.map(a => a.performed_by).filter(Boolean) || [];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds);
+      
+      if (profilesError) throw profilesError;
+      
+      // Combine data
+      const activitiesWithProfiles: ActivityLog[] = activityData?.map(activity => ({
+        ...activity,
+        user_profiles: profiles?.find(p => p.user_id === activity.performed_by) || null
+      })) || [];
+      
+      return activitiesWithProfiles;
     }
   });
 
