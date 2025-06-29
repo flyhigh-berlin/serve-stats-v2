@@ -26,17 +26,25 @@ export function TeamSettingsTab({ teamId, teamName, teamDescription, teamLogoUrl
 
   const updateTeamMutation = useMutation({
     mutationFn: async (updates: { name?: string; description?: string; logoUrl?: string }) => {
-      const { error } = await supabase
-        .from('teams')
-        .update({
-          name: updates.name,
-          description: updates.description,
-          logo_url: updates.logoUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', teamId);
+      console.log('Updating team settings:', updates);
       
-      if (error) throw error;
+      const { data, error } = await supabase.rpc('update_team_settings', {
+        team_id_param: teamId,
+        team_name: updates.name,
+        team_description: updates.description,
+        team_logo_url: updates.logoUrl
+      });
+      
+      if (error) {
+        console.error('Team update error:', error);
+        throw error;
+      }
+      
+      if (data && !data.success) {
+        throw new Error(data.error || 'Failed to update team settings');
+      }
+      
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['team-info', teamId] });
@@ -45,51 +53,59 @@ export function TeamSettingsTab({ teamId, teamName, teamDescription, teamLogoUrl
       window.dispatchEvent(new CustomEvent('teamUpdated'));
       toast.success('Team settings updated successfully');
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error updating team settings:', error);
-      toast.error('Failed to update settings');
+      const errorMessage = error?.message || 'Failed to update settings';
+      
+      if (errorMessage.includes('Access denied')) {
+        toast.error('You do not have permission to update team settings');
+      } else {
+        toast.error(errorMessage);
+      }
     }
   });
 
   const uploadLogoMutation = useMutation({
     mutationFn: async (file: File) => {
+      console.log('Uploading team logo for team:', teamId);
+      
       const fileExt = file.name.split('.').pop();
       const fileName = `${teamId}/logo-${Date.now()}.${fileExt}`;
       
-      // Create team-logos bucket if it doesn't exist
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(bucket => bucket.name === 'team-logos');
-      
-      if (!bucketExists) {
-        await supabase.storage.createBucket('team-logos', {
-          public: true,
-          allowedMimeTypes: ['image/*'],
-          fileSizeLimit: 5242880 // 5MB
-        });
-      }
-      
+      // Upload the file to the team-logos bucket
       const { error: uploadError } = await supabase.storage
         .from('team-logos')
         .upload(fileName, file, { upsert: true });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Logo upload error:', uploadError);
+        throw uploadError;
+      }
 
       const { data } = supabase.storage
         .from('team-logos')
         .getPublicUrl(fileName);
 
+      console.log('Logo uploaded successfully, URL:', data.publicUrl);
       return data.publicUrl;
     },
     onSuccess: (logoUrl) => {
+      console.log('Logo upload successful, updating team settings with URL:', logoUrl);
       updateTeamMutation.mutate({ 
         name: name.trim(),
         description: description.trim(),
         logoUrl 
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Error uploading logo:', error);
-      toast.error('Failed to upload logo');
+      const errorMessage = error?.message || 'Failed to upload logo';
+      
+      if (errorMessage.includes('policy')) {
+        toast.error('You do not have permission to upload team logos');
+      } else {
+        toast.error(errorMessage);
+      }
     }
   });
 
@@ -118,6 +134,8 @@ export function TeamSettingsTab({ teamId, teamName, teamDescription, teamLogoUrl
   };
 
   const handleSaveSettings = () => {
+    console.log('Saving team settings - Logo file:', logoFile, 'Name:', name, 'Description:', description);
+    
     if (logoFile) {
       uploadLogoMutation.mutate(logoFile);
     } else {
