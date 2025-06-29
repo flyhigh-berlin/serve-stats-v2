@@ -10,13 +10,16 @@ import { GameDaySelector } from "@/components/GameDaySelector";
 import { Scoreboard } from "@/components/Scoreboard";
 import { GameHistory } from "@/components/GameHistory";
 import { StatsDescription } from "@/components/StatsDescription";
+import { UnifiedTeamManagementDialog } from "@/components/UnifiedTeamManagementDialog";
 import { VolleyballProvider } from "../context/VolleyballContext";
 import { LogOut, Settings, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
 const Index = () => {
   const { user, signOut } = useAuth();
   const { currentTeam, loading, isSuperAdmin, isTeamAdmin } = useTeam();
+  const [isTeamManagementOpen, setIsTeamManagementOpen] = useState(false);
 
   if (loading) {
     return (
@@ -58,6 +61,12 @@ const Index = () => {
                   <Shield className="h-4 w-4 mr-2" />
                   Admin Panel
                 </Link>
+              </Button>
+            )}
+            {isTeamAdmin && currentTeam && (
+              <Button variant="outline" size="sm" onClick={() => setIsTeamManagementOpen(true)}>
+                <Settings className="h-4 w-4 mr-2" />
+                Team Admin
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={signOut}>
@@ -106,6 +115,16 @@ const Index = () => {
         <div className="text-center py-8 text-muted-foreground">
           Select or create a team to start tracking volleyball statistics.
         </div>
+      )}
+
+      {/* Team Management Dialog */}
+      {currentTeam && (
+        <UnifiedTeamManagementDialog
+          isOpen={isTeamManagementOpen}
+          onClose={() => setIsTeamManagementOpen(false)}
+          teamId={currentTeam.id}
+          teamName={currentTeam.name}
+        />
       )}
     </div>
   );
