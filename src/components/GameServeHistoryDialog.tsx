@@ -166,8 +166,12 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
     ? playerStatsWithRanking.reduce((sum, p) => sum + p.aeRatio, 0) / playerStatsWithRanking.length
     : 0;
   
-  const avgQualityScore = playerStatsWithRanking.length > 0
-    ? playerStatsWithRanking.reduce((sum, p) => sum + p.qualityScore, 0) / playerStatsWithRanking.length
+  // Calculate overall Quality Score from all serves (not averaged per player)
+  const overallQualityScore = sortedServes.length > 0
+    ? sortedServes.reduce((sum, serve) => {
+        const qualityValue = serve.quality === "good" ? 1 : serve.quality === "neutral" ? 0 : -1;
+        return sum + qualityValue;
+      }, 0) / sortedServes.length
     : 0;
 
   // Calculate quality breakdown for all serves
@@ -278,8 +282,8 @@ export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHis
                   <div className="text-center">
                     <div className="font-medium text-muted-foreground mb-2 text-xs">Quality Score</div>
                     <div className="bg-slate-200 dark:bg-slate-800 rounded-full px-4 py-2 w-20 mx-auto flex items-center justify-center">
-                      <span className={`text-lg font-bold ${getQualityScoreColor(avgQualityScore)}`}>
-                        {formatValue(avgQualityScore, true)}
+                      <span className={`text-lg font-bold ${getQualityScoreColor(overallQualityScore)}`}>
+                        {formatValue(overallQualityScore, true)}
                       </span>
                     </div>
                   </div>
