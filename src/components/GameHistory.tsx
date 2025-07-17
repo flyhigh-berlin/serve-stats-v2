@@ -46,54 +46,51 @@ export function GameHistory() {
     let totalErrors = 0;
     let totalAces = 0;
 
-    // Get players who participated in this game
-    const gamePlayerIds = [...new Set(players.flatMap(player => 
+    // Get all serves for this game from all players
+    const gameServes = players.flatMap(player => 
       player.serves
         .filter(serve => serve.gameId === gameId)
-        .map(() => player.id)
-    ))];
-    
+        .map(serve => ({
+          ...serve,
+          playerName: player.name,
+          playerId: player.id
+        }))
+    );
+
+    // Count aces and errors
+    totalAces = gameServes.filter(s => s.type === "ace").length;
+    totalErrors = gameServes.filter(s => s.type === "fail").length;
+
+    // Get players who participated in this game
+    const gamePlayerIds = [...new Set(gameServes.map(serve => serve.playerId))];
     const gamePlayers = players.filter(p => gamePlayerIds.includes(p.id));
     
-    // Calculate stats for each player in this game
+    // Calculate stats for each player in this game (for A/E ratio average)
     const playerStats = gamePlayers.map(player => {
       const stats = getPlayerStats(player.id, gameId);
-      
-      totalAces += stats.aces;
-      totalErrors += stats.errors;
       
       // Calculate A/E Ratio
       const aeRatio = stats.errors === 0 ? stats.aces : stats.aces / stats.errors;
       
-      // Calculate Quality Score
-      const playerServes = players.find(p => p.id === player.id)?.serves.filter(s => s.gameId === gameId) || [];
-      const totalPlayerServes = playerServes.length;
-      
-      let qualityScore = 0;
-      if (totalPlayerServes > 0) {
-        const score = playerServes.reduce((sum, serve) => {
-          const qualityValue = serve.quality === "good" ? 1 : serve.quality === "neutral" ? 0 : -1;
-          return sum + qualityValue;
-        }, 0);
-        qualityScore = score / totalPlayerServes;
-      }
-      
       return {
-        aeRatio,
-        qualityScore
+        aeRatio
       };
     });
     
-    // Calculate averages
+    // Calculate average A/E ratio from individual player ratios
     const avgAERatio = playerStats.length > 0 
       ? playerStats.reduce((sum, p) => sum + p.aeRatio, 0) / playerStats.length
       : 0;
     
-    const avgQualityScore = playerStats.length > 0
-      ? playerStats.reduce((sum, p) => sum + p.qualityScore, 0) / playerStats.length
+    // Calculate overall Quality Score from all serves (not averaged per player)
+    const overallQualityScore = gameServes.length > 0
+      ? gameServes.reduce((sum, serve) => {
+          const qualityValue = serve.quality === "good" ? 1 : serve.quality === "neutral" ? 0 : -1;
+          return sum + qualityValue;
+        }, 0) / gameServes.length
       : 0;
 
-    return { totalErrors, totalAces, avgAERatio, avgQualityScore };
+    return { totalErrors, totalAces, avgAERatio, avgQualityScore: overallQualityScore };
   };
 
   // Color helpers for stats
