@@ -49,6 +49,7 @@ export function useSupabaseVolleyball() {
           .filter(serve => serve.player_id === player.id)
           .map(serve => ({
             id: serve.id,
+            playerId: serve.player_id,
             gameId: serve.game_id,
             type: serve.type as "fail" | "ace",
             quality: serve.quality as "good" | "neutral" | "bad",
@@ -103,7 +104,7 @@ export function useSupabaseVolleyball() {
     }
   };
 
-  // Load serves for current game day or game type filter
+  // Load serves based on current game day or game type filter
   const loadServes = async (gameId?: string) => {
     if (!currentTeamId) return;
     
@@ -111,35 +112,48 @@ export function useSupabaseVolleyball() {
       let query = supabase
         .from('serves')
         .select('*')
-        .eq('team_id', currentTeamId);
+        .eq('team_id', currentTeamId)
+        .order('timestamp', { ascending: false });
 
+      // Apply filtering based on context
       if (gameId) {
+        console.log('Loading serves for specific game:', gameId);
         query = query.eq('game_id', gameId);
+      } else if (currentGameDay) {
+        console.log('Loading serves for current game day:', currentGameDay.id);
+        query = query.eq('game_id', currentGameDay.id);
       } else if (gameTypeFilter) {
-        // Load serves for all games of the selected type
-        const filteredGameDays = gameDays.filter(gd => gd.gameType === gameTypeFilter);
-        const gameIds = filteredGameDays.map(gd => gd.id);
+        console.log('Loading serves for game type filter:', gameTypeFilter);
+        // Get all games of this type
+        const gamesOfType = gameDays.filter(gd => gd.gameType === gameTypeFilter);
+        const gameIds = gamesOfType.map(gd => gd.id);
         if (gameIds.length > 0) {
           query = query.in('game_id', gameIds);
+        } else {
+          // No games of this type exist, return empty
+          setServes([]);
+          return;
         }
       }
+      // If no filters, load all serves for the team
 
-      const { data, error } = await query.order('timestamp', { ascending: true });
-
+      const { data, error } = await query;
+      
       if (error) throw error;
 
-      const formattedServes = data.map(serve => ({
+      const formattedServes: Serve[] = (data || []).map(serve => ({
         id: serve.id,
+        playerId: serve.player_id,
         gameId: serve.game_id,
-        type: serve.type as "fail" | "ace",
-        quality: serve.quality as "good" | "neutral" | "bad",
+        type: serve.type as 'ace' | 'fail',
+        quality: serve.quality as ServeQuality,
         timestamp: serve.timestamp || new Date().toISOString()
       }));
 
+      console.log('Loaded serves:', formattedServes.length);
       setServes(formattedServes);
     } catch (error) {
       console.error('Error loading serves:', error);
-      toast.error('Failed to load serves');
     }
   };
 
@@ -304,6 +318,7 @@ export function useSupabaseVolleyball() {
 
       const newServe: Serve = {
         id: data.id,
+        playerId: data.player_id,
         gameId: data.game_id,
         type: data.type as "fail" | "ace",
         quality: data.quality as "good" | "neutral" | "bad",
@@ -335,6 +350,13 @@ export function useSupabaseVolleyball() {
       setCustomGameTypes({});
     }
   }, [currentTeamId]);
+
+  // Load serves when game day or game type filter changes
+  useEffect(() => {
+    if (currentTeamId) {
+      loadServes();
+    }
+  }, [currentGameDay, gameTypeFilter, gameDays]);
 
   // Set up real-time subscriptions
   useEffect(() => {
@@ -474,15 +496,25 @@ export function useSupabaseVolleyball() {
           console.log('Serve INSERT real-time event:', payload.new);
           const newServe: Serve = {
             id: payload.new.id,
+            playerId: payload.new.player_id,
             gameId: payload.new.game_id,
             type: payload.new.type as "fail" | "ace",
             quality: payload.new.quality as "good" | "neutral" | "bad",
             timestamp: payload.new.timestamp || new Date().toISOString()
           };
           
-          // Add to serves list if it's for current game
-          if (currentGameDay?.id === payload.new.game_id) {
+          // Only add to serves state if it matches current filter context
+          const shouldIncludeServe = currentGameDay 
+            ? newServe.gameId === currentGameDay.id
+            : gameTypeFilter 
+              ? gameDays.some(gd => gd.id === newServe.gameId && gd.gameType === gameTypeFilter)
+              : true; // If no filter, include all serves
+          
+          if (shouldIncludeServe) {
+            console.log('Adding new serve to filtered serves state');
             setServes(prev => [...prev, newServe]);
+          } else {
+            console.log('Serve not added - does not match current filter');
           }
           
           // Update player's serves array immediately
@@ -645,29 +677,33 @@ export function useSupabaseVolleyball() {
     return { ...defaultGameTypes, ...customGameTypes };
   };
 
-  // Get player stats
+  // Get player stats - use database totals for all-time, filtered serves for context-specific
   const getPlayerStats = (playerId: string, gameId?: string, gameType?: GameType | string) => {
     const player = players.find(p => p.id === playerId);
     if (!player) return { errors: 0, aces: 0 };
 
-    let relevantServes = player.serves || [];
+    console.log('getPlayerStats called:', { playerId, gameId, gameType, playerName: player.name });
+    console.log('Current serves state length:', serves.length);
 
-    // If a specific game is selected, show stats for that game only
-    if (gameId) {
-      relevantServes = relevantServes.filter(s => s.gameId === gameId);
+    // If no specific game or game type filter is provided, use database totals
+    if (!gameId && !gameType) {
+      console.log('Using database totals (no filter)');
+      return {
+        aces: player.totalAces,
+        errors: player.totalFails
+      };
     }
-    // If a game type filter is selected but no specific game, show stats for all games of that type
-    else if (gameType) {
-      const filteredGameDays = gameDays.filter(gd => gd.gameType === gameType);
-      const gameIds = filteredGameDays.map(gd => gd.id);
-      relevantServes = relevantServes.filter(s => gameIds.includes(s.gameId));
-    }
-    // If neither, show all-time stats (this is the default behavior)
 
-    return {
-      errors: relevantServes.filter(s => s.type === "fail").length,
-      aces: relevantServes.filter(s => s.type === "ace").length
-    };
+    // For filtered contexts, use the serves state which is already filtered by loadServes()
+    console.log('Using filtered serves state for context-specific stats');
+    const relevantServes = serves.filter(s => s.playerId === playerId);
+
+    console.log('Relevant serves found:', relevantServes.length);
+    const aces = relevantServes.filter(s => s.type === 'ace').length;
+    const errors = relevantServes.filter(s => s.type === 'fail').length;
+    
+    console.log('Calculated stats:', { aces, errors });
+    return { aces, errors };
   };
 
   // Get game day serves

@@ -27,6 +27,7 @@ export interface Player {
 // Serve record
 export interface Serve {
   id: string;
+  playerId: string;
   gameId: string;
   type: "fail" | "ace";
   quality: ServeQuality;
