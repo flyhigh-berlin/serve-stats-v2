@@ -155,7 +155,7 @@ export function useSupabaseVolleyball() {
               : []) as string[]
       };
 
-      setPlayers(prev => [...prev, newPlayer]);
+      // Player will be added via real-time subscription
       toast.success(`Player ${name} added successfully`);
     } catch (error) {
       console.error('Error adding player:', error);
@@ -173,7 +173,7 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      setPlayers(prev => prev.filter(p => p.id !== id));
+      // Player will be removed via real-time subscription
       toast.success('Player removed successfully');
     } catch (error) {
       console.error('Error removing player:', error);
@@ -191,9 +191,7 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      setPlayers(prev => prev.map(p => 
-        p.id === playerId ? { ...p, name: newName } : p
-      ));
+      // Player will be updated via real-time subscription
       toast.success('Player name updated');
     } catch (error) {
       console.error('Error updating player name:', error);
@@ -211,9 +209,7 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      setPlayers(prev => prev.map(p => 
-        p.id === playerId ? { ...p, tags } : p
-      ));
+      // Player will be updated via real-time subscription
       toast.success('Player tags updated');
     } catch (error) {
       console.error('Error updating player tags:', error);
@@ -255,7 +251,7 @@ export function useSupabaseVolleyball() {
         notes: data.notes || undefined
       };
 
-      setGameDays(prev => [newGameDay, ...prev]);
+      // Game day will be added via real-time subscription
       toast.success('Game day added successfully');
     } catch (error) {
       console.error('Error adding game day:', error);
@@ -291,19 +287,7 @@ export function useSupabaseVolleyball() {
         timestamp: data.timestamp || new Date().toISOString()
       };
 
-      setServes(prev => [...prev, newServe]);
-      
-      // Update player stats locally (will be synced by database trigger)
-      setPlayers(prev => prev.map(player => 
-        player.id === playerId 
-          ? {
-              ...player,
-              totalAces: type === 'ace' ? player.totalAces + 1 : player.totalAces,
-              totalFails: type === 'fail' ? player.totalFails + 1 : player.totalFails,
-              serves: [...player.serves, newServe]
-            }
-          : player
-      ));
+      // Serve will be added via real-time subscription
       
       toast.success(`${type === 'ace' ? 'Ace' : 'Fail'} recorded`);
     } catch (error) {
@@ -326,6 +310,234 @@ export function useSupabaseVolleyball() {
       setCustomGameTypes({});
     }
   }, [currentTeamId]);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!currentTeamId) return;
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'players',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          const newPlayer: Player = {
+            id: payload.new.id,
+            name: payload.new.name,
+            totalFails: payload.new.total_fails || 0,
+            totalAces: payload.new.total_aces || 0,
+            serves: [],
+            tags: Array.isArray(payload.new.tags) 
+              ? payload.new.tags as string[]
+              : (typeof payload.new.tags === 'string' 
+                  ? JSON.parse(payload.new.tags) 
+                  : []) as string[]
+          };
+          setPlayers(prev => [...prev, newPlayer]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'players',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          setPlayers(prev => prev.map(player => 
+            player.id === payload.new.id 
+              ? {
+                  ...player,
+                  name: payload.new.name,
+                  totalFails: payload.new.total_fails || 0,
+                  totalAces: payload.new.total_aces || 0,
+                  tags: Array.isArray(payload.new.tags) 
+                    ? payload.new.tags as string[]
+                    : (typeof payload.new.tags === 'string' 
+                        ? JSON.parse(payload.new.tags) 
+                        : []) as string[]
+                }
+              : player
+          ));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'players',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'game_days',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          const newGameDay: GameDay = {
+            id: payload.new.id,
+            date: payload.new.date,
+            gameType: payload.new.game_type,
+            title: payload.new.title || undefined,
+            notes: payload.new.notes || undefined
+          };
+          setGameDays(prev => [newGameDay, ...prev]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'game_days',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          setGameDays(prev => prev.map(gameDay => 
+            gameDay.id === payload.new.id 
+              ? {
+                  ...gameDay,
+                  date: payload.new.date,
+                  gameType: payload.new.game_type,
+                  title: payload.new.title || undefined,
+                  notes: payload.new.notes || undefined
+                }
+              : gameDay
+          ));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'game_days',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          setGameDays(prev => prev.filter(gd => gd.id !== payload.old.id));
+          // Clear current game day if it was deleted
+          if (currentGameDay?.id === payload.old.id) {
+            setCurrentGameDay(null);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'serves',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          const newServe: Serve = {
+            id: payload.new.id,
+            gameId: payload.new.game_id,
+            type: payload.new.type as "fail" | "ace",
+            quality: payload.new.quality as "good" | "neutral" | "bad",
+            timestamp: payload.new.timestamp || new Date().toISOString()
+          };
+          
+          // Add to serves list if it's for current game
+          if (currentGameDay?.id === payload.new.game_id) {
+            setServes(prev => [...prev, newServe]);
+          }
+          
+          // Update player's serves array and stats will be updated by database trigger
+          setPlayers(prev => prev.map(player => 
+            player.id === payload.new.player_id
+              ? { ...player, serves: [...player.serves, newServe] }
+              : player
+          ));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'serves',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          // Remove from serves list
+          setServes(prev => prev.filter(s => s.id !== payload.old.id));
+          
+          // Remove from player's serves array
+          setPlayers(prev => prev.map(player => 
+            player.id === payload.old.player_id
+              ? { ...player, serves: player.serves.filter(s => s.id !== payload.old.id) }
+              : player
+          ));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'custom_game_types',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          setCustomGameTypes(prev => ({ 
+            ...prev, 
+            [payload.new.abbreviation]: payload.new.name 
+          }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'custom_game_types',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          setCustomGameTypes(prev => ({ 
+            ...prev, 
+            [payload.new.abbreviation]: payload.new.name 
+          }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'custom_game_types',
+          filter: `team_id=eq.${currentTeamId}`
+        },
+        (payload) => {
+          setCustomGameTypes(prev => {
+            const newTypes = { ...prev };
+            delete newTypes[payload.old.abbreviation];
+            return newTypes;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentTeamId, currentGameDay?.id]);
 
   // Load serves when game day changes
   useEffect(() => {
@@ -351,7 +563,7 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      setCustomGameTypes(prev => ({ ...prev, [abbreviation]: name }));
+      // Game type will be added via real-time subscription
       toast.success('Game type added successfully');
     } catch (error) {
       console.error('Error adding game type:', error);
@@ -371,7 +583,7 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      setCustomGameTypes(prev => ({ ...prev, [abbreviation]: name }));
+      // Game type will be updated via real-time subscription
       toast.success('Game type updated successfully');
     } catch (error) {
       console.error('Error updating game type:', error);
@@ -391,11 +603,7 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      setCustomGameTypes(prev => {
-        const newTypes = { ...prev };
-        delete newTypes[abbreviation];
-        return newTypes;
-      });
+      // Game type will be removed via real-time subscription
       toast.success('Game type removed successfully');
     } catch (error) {
       console.error('Error removing game type:', error);
@@ -504,17 +712,7 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      setServes(prev => prev.filter(s => s.id !== serveId));
-      
-      // Update player's serves locally
-      setPlayers(prev => prev.map(player => 
-        player.id === playerId 
-          ? {
-              ...player,
-              serves: player.serves.filter(s => s.id !== serveId)
-            }
-          : player
-      ));
+      // Serve will be removed via real-time subscription
       
       toast.success('Serve removed');
     } catch (error) {
