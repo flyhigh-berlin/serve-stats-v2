@@ -1,10 +1,10 @@
 
 import React from "react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { format } from "date-fns";
 
 export function StatsDescription() {
-  const { currentGameDay, gameTypeFilter, getAllGameTypes } = useVolleyball();
+  const { currentGameDay, gameTypeFilter, getAllGameTypes } = useSupabaseVolleyball();
   
   const allGameTypes = getAllGameTypes();
   

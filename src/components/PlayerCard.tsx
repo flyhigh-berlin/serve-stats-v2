@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Player } from "../types";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,7 +15,7 @@ interface PlayerCardProps {
 }
 
 export function PlayerCard({ player, gameId }: PlayerCardProps) {
-  const { addServe, getPlayerStats } = useVolleyball();
+  const { addServe, getPlayerStats } = useSupabaseVolleyball();
   const [animatingError, setAnimatingError] = useState(false);
   const [animatingAce, setAnimatingAce] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -14,7 +14,7 @@ export function GameHistory() {
     gameTypeFilter, 
     getAllGameTypes,
     getPlayerStats
-  } = useVolleyball();
+  } = useSupabaseVolleyball();
   
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   

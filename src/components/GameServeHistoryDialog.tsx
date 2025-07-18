@@ -1,5 +1,5 @@
 import React from "react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { format } from "date-fns";
 import { 
   Dialog,
@@ -21,7 +21,7 @@ interface GameServeHistoryDialogProps {
 }
 
 export function GameServeHistoryDialog({ gameId, isOpen, onClose }: GameServeHistoryDialogProps) {
-  const { players, gameDays, getAllGameTypes, getPlayerStats } = useVolleyball();
+  const { players, gameDays, getAllGameTypes, getPlayerStats } = useSupabaseVolleyball();
   
   if (!gameId) return null;
   

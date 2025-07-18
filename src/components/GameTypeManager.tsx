@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ import { Settings, Plus, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export function GameTypeManager() {
-  const { getAllGameTypes, addCustomGameType, updateGameType, removeCustomGameType, customGameTypes, gameTypes } = useVolleyball();
+  const { getAllGameTypes, addCustomGameType, updateGameType, removeCustomGameType, customGameTypes, gameTypes } = useSupabaseVolleyball();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newAbbreviation, setNewAbbreviation] = useState("");

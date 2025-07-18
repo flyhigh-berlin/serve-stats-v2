@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { PlayerCard } from "./PlayerCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { PlayerManagementDialog } from "./PlayerManagementDialog";
 import { Settings, Plus } from "lucide-react";
 
 export function PlayerList() {
-  const { getFilteredPlayers, currentGameDay, gameTypeFilter } = useVolleyball();
+  const { getFilteredPlayers, currentGameDay, gameTypeFilter } = useSupabaseVolleyball();
   
   // Get filtered players based on current game day or game type filter
   const filteredPlayers = getFilteredPlayers();

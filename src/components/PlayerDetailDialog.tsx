@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { Serve, ServeQuality, GameType } from "../types";
 import { format } from "date-fns";
 import { 
@@ -48,7 +48,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
     canRemoveTagFromPlayer,
     getPlayerStats,
     gameTypeFilter
-  } = useVolleyball();
+  } = useSupabaseVolleyball();
   const { toast } = useToast();
   
   // Find the player by id

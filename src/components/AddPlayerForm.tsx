@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { GameType } from "../types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
 export function AddPlayerForm() {
-  const { addPlayer, getAllGameTypes } = useVolleyball();
+  const { addPlayer, getAllGameTypes } = useSupabaseVolleyball();
   const [playerName, setPlayerName] = useState("");
   const [selectedTags, setSelectedTags] = useState<(GameType | string)[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

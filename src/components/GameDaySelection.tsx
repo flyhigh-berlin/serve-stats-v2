@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -19,7 +19,7 @@ export function GameDaySelection() {
     gameTypeFilter, 
     setGameTypeFilter, 
     getAllGameTypes 
-  } = useVolleyball();
+  } = useSupabaseVolleyball();
 
   const allGameTypes = getAllGameTypes();
 

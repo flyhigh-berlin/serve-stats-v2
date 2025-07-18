@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +25,7 @@ import { format, addDays } from "date-fns";
 import { toast } from "sonner";
 
 export function AddGameDayDialog() {
-  const { addGameDay, getAllGameTypes } = useVolleyball();
+  const { addGameDay, getAllGameTypes } = useSupabaseVolleyball();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [selectedGameType, setSelectedGameType] = useState<string>("");

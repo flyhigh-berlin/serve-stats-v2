@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTeam } from "../context/TeamContext";
@@ -11,10 +10,42 @@ import { Scoreboard } from "@/components/Scoreboard";
 import { GameHistory } from "@/components/GameHistory";
 import { StatsDescription } from "@/components/StatsDescription";
 import { UnifiedTeamManagementDialog } from "@/components/UnifiedTeamManagementDialog";
-import { VolleyballProvider } from "../context/VolleyballContext";
 import { LogOut, Settings, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+
+// Create a wrapper component for the volleyball tracking
+const VolleyballTracker = () => {
+  return (
+    <>
+      <div className="mb-4">
+        <GameDaySelector />
+      </div>
+      
+      <Tabs defaultValue="players" className="w-full">
+        <StatsDescription />
+        
+        <TabsList className="mb-4 w-full grid grid-cols-3 h-auto">
+          <TabsTrigger value="players" className="text-xs sm:text-sm py-2">Players</TabsTrigger>
+          <TabsTrigger value="scoreboard" className="text-xs sm:text-sm py-2">Scoreboard</TabsTrigger>
+          <TabsTrigger value="history" className="text-xs sm:text-sm py-2">Game History</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="players" className="mt-0">
+          <PlayerList />
+        </TabsContent>
+        
+        <TabsContent value="scoreboard" className="mt-0">
+          <Scoreboard />
+        </TabsContent>
+        
+        <TabsContent value="history" className="mt-0">
+          <GameHistory />
+        </TabsContent>
+      </Tabs>
+    </>
+  );
+};
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -84,33 +115,7 @@ const Index = () => {
 
       {/* Show volleyball tracking only when a team is selected */}
       {currentTeam ? (
-        <VolleyballProvider>
-          <div className="mb-4">
-            <GameDaySelector />
-          </div>
-          
-          <Tabs defaultValue="players" className="w-full">
-            <StatsDescription />
-            
-            <TabsList className="mb-4 w-full grid grid-cols-3 h-auto">
-              <TabsTrigger value="players" className="text-xs sm:text-sm py-2">Players</TabsTrigger>
-              <TabsTrigger value="scoreboard" className="text-xs sm:text-sm py-2">Scoreboard</TabsTrigger>
-              <TabsTrigger value="history" className="text-xs sm:text-sm py-2">Game History</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="players" className="mt-0">
-              <PlayerList />
-            </TabsContent>
-            
-            <TabsContent value="scoreboard" className="mt-0">
-              <Scoreboard />
-            </TabsContent>
-            
-            <TabsContent value="history" className="mt-0">
-              <GameHistory />
-            </TabsContent>
-          </Tabs>
-        </VolleyballProvider>
+        <VolleyballTracker />
       ) : (
         <div className="text-center py-8 text-muted-foreground">
           Select or create a team to start tracking volleyball statistics.

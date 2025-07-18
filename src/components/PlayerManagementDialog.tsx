@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { Player, GameType } from "../types";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,7 +22,7 @@ interface PlayerManagementDialogProps {
 }
 
 export function PlayerManagementDialog({ children }: PlayerManagementDialogProps) {
-  const { players, getAllGameTypes, updatePlayerTags, canRemoveTagFromPlayer } = useVolleyball();
+  const { players, getAllGameTypes, updatePlayerTags, canRemoveTagFromPlayer } = useSupabaseVolleyball();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   

@@ -5,10 +5,10 @@ import { GameTypeManager } from "./GameTypeManager";
 import { AddGameDayDialog } from "./AddGameDayDialog";
 import { GameDaySelection } from "./GameDaySelection";
 import { Info } from "lucide-react";
-import { useVolleyball } from "../context/VolleyballContext";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 
 export function GameDaySelector() {
-  const { getAllGameTypes } = useVolleyball();
+  const { getAllGameTypes } = useSupabaseVolleyball();
   const allGameTypes = getAllGameTypes();
 
   return (
