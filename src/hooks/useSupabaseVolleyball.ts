@@ -360,7 +360,7 @@ export function useSupabaseVolleyball() {
         setServes(prev => [...prev, newServe]);
       }
       
-      toast.success(`${type === 'ace' ? 'Ace' : 'Fail'} recorded`);
+      toast.success(`${type === 'ace' ? 'Ace' : 'Error'} recorded`);
       return true;
     } catch (error) {
       console.error('Error recording serve:', error);
