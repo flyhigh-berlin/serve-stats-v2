@@ -104,6 +104,17 @@ export function useSupabaseVolleyball() {
     }
   };
 
+  // Helper function to check if a serve matches current filter context
+  const serveMatchesCurrentFilter = (serve: Serve): boolean => {
+    if (currentGameDay) {
+      return serve.gameId === currentGameDay.id;
+    }
+    if (gameTypeFilter) {
+      return gameDays.some(gd => gd.id === serve.gameId && gd.gameType === gameTypeFilter);
+    }
+    return true; // No filter means all serves match
+  };
+
   // Load serves based on current game day or game type filter
   const loadServes = async (gameId?: string) => {
     if (!currentTeamId) return;
@@ -131,11 +142,16 @@ export function useSupabaseVolleyball() {
           query = query.in('game_id', gameIds);
         } else {
           // No games of this type exist, return empty
+          console.log('No games found for type filter, clearing serves state');
           setServes([]);
           return;
         }
+      } else {
+        // No filter - don't load serves for stats display optimization
+        console.log('No filter active, clearing serves state');
+        setServes([]);
+        return;
       }
-      // If no filters, load all serves for the team
 
       const { data, error } = await query;
       
@@ -150,7 +166,7 @@ export function useSupabaseVolleyball() {
         timestamp: serve.timestamp || new Date().toISOString()
       }));
 
-      console.log('Loaded serves:', formattedServes.length);
+      console.log('Loaded serves:', formattedServes.length, 'for filter context');
       setServes(formattedServes);
     } catch (error) {
       console.error('Error loading serves:', error);
@@ -349,15 +365,11 @@ export function useSupabaseVolleyball() {
       }));
 
       // Also immediately update the serves state if it matches current filter
-      const shouldIncludeServe = currentGameDay 
-        ? newServe.gameId === currentGameDay.id
-        : gameTypeFilter 
-          ? gameDays.some(gd => gd.id === newServe.gameId && gd.gameType === gameTypeFilter)
-          : true;
-      
-      if (shouldIncludeServe) {
+      if (serveMatchesCurrentFilter(newServe)) {
         console.log('Adding serve to filtered serves state immediately');
         setServes(prev => [...prev, newServe]);
+      } else {
+        console.log('Serve not added to filtered state - does not match current filter');
       }
       
       toast.success(`${type === 'ace' ? 'Ace' : 'Error'} recorded`);
@@ -545,13 +557,7 @@ export function useSupabaseVolleyball() {
             }
             
             // Only add to serves state if it matches current filter context
-            const shouldIncludeServe = currentGameDay 
-              ? newServe.gameId === currentGameDay.id
-              : gameTypeFilter 
-                ? gameDays.some(gd => gd.id === newServe.gameId && gd.gameType === gameTypeFilter)
-                : true;
-            
-            if (shouldIncludeServe) {
+            if (serveMatchesCurrentFilter(newServe)) {
               console.log('Adding new serve to filtered serves state via real-time sync');
               return [...prev, newServe];
             } else {
@@ -650,14 +656,16 @@ export function useSupabaseVolleyball() {
 
   // Load serves when game day or game type filter changes
   useEffect(() => {
-    if (currentGameDay) {
-      loadServes(currentGameDay.id);
-    } else if (gameTypeFilter) {
-      loadServes(); // Load serves for game type filter
-    } else {
-      setServes([]);
+    console.log('Filter changed - reloading serves:', { 
+      currentGameDay: currentGameDay?.id, 
+      gameTypeFilter,
+      gameDaysCount: gameDays.length 
+    });
+    
+    if (currentTeamId) {
+      loadServes();
     }
-  }, [currentGameDay, gameTypeFilter, gameDays]);
+  }, [currentGameDay, gameTypeFilter, gameDays, currentTeamId]);
 
   // Custom game types management
   const addCustomGameType = async (abbreviation: string, name: string) => {
@@ -727,32 +735,42 @@ export function useSupabaseVolleyball() {
     return { ...defaultGameTypes, ...customGameTypes };
   };
 
-  // Get player stats - use database totals for all-time, filtered serves for context-specific
+  // Get player stats - simplified logic for consistency
   const getPlayerStats = (playerId: string, gameId?: string, gameType?: GameType | string) => {
     const player = players.find(p => p.id === playerId);
     if (!player) return { errors: 0, aces: 0 };
 
-    console.log('getPlayerStats called:', { playerId, gameId, gameType, playerName: player.name });
-    console.log('Current serves state length:', serves.length);
+    console.log('getPlayerStats called:', { 
+      playerId, 
+      gameId, 
+      gameType, 
+      playerName: player.name,
+      currentGameDay: currentGameDay?.id,
+      gameTypeFilter 
+    });
 
-    // If no specific game or game type filter is provided, use database totals
-    if (!gameId && !gameType) {
-      console.log('Using database totals (no filter)');
+    // If no specific context is provided AND no current filter is active, use database totals
+    if (!gameId && !gameType && !currentGameDay && !gameTypeFilter) {
+      console.log('Using database totals (no filter active)');
       return {
         aces: player.totalAces,
         errors: player.totalFails
       };
     }
 
-    // For filtered contexts, use the serves state which is already filtered by loadServes()
-    console.log('Using filtered serves state for context-specific stats');
+    // For any filtered context, use the filtered serves state
+    console.log('Using filtered serves state, total serves:', serves.length);
     const relevantServes = serves.filter(s => s.playerId === playerId);
 
-    console.log('Relevant serves found:', relevantServes.length);
     const aces = relevantServes.filter(s => s.type === 'ace').length;
     const errors = relevantServes.filter(s => s.type === 'fail').length;
     
-    console.log('Calculated stats:', { aces, errors });
+    console.log('Player stats calculated:', { 
+      playerName: player.name,
+      relevantServesCount: relevantServes.length, 
+      aces, 
+      errors 
+    });
     return { aces, errors };
   };
 
