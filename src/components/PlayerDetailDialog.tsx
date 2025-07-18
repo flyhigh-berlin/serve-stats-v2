@@ -64,7 +64,7 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   const player = players.find(p => p.id === playerId);
   
   // Initialize editedName when player is found
-  useEffect(() => {
+  React.useEffect(() => {
     if (player) {
       setEditedName(player.name);
     }
