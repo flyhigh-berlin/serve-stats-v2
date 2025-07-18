@@ -15,7 +15,7 @@ interface PlayerCardProps {
 }
 
 export function PlayerCard({ player, gameId }: PlayerCardProps) {
-  const { addServe, getPlayerStats, currentGameDay } = useSupabaseVolleyball();
+  const { addServe, getPlayerStats, currentGameDay, gameTypeFilter } = useSupabaseVolleyball();
   const [animatingError, setAnimatingError] = useState(false);
   const [animatingAce, setAnimatingAce] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -23,8 +23,12 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   const [errorPopoverOpen, setErrorPopoverOpen] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<'ace' | 'error' | null>(null);
 
-  // Get the player's stats for the current game or all games
-  const stats = getPlayerStats(player.id, gameId);
+  // Get player stats for current context (game day or game type filter)
+  const stats = getPlayerStats(
+    player.id, 
+    currentGameDay?.id, 
+    !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
+  );
 
   // Handle adding a serve
   const handleServeClick = async (type: "error" | "ace", quality: "good" | "neutral" | "bad") => {

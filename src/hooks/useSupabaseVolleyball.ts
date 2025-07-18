@@ -103,17 +103,32 @@ export function useSupabaseVolleyball() {
     }
   };
 
-  // Load serves for current game day
-  const loadServes = async (gameId: string) => {
+  // Load serves for current game day or game type filter
+  const loadServes = async (gameId?: string) => {
+    if (!currentTeamId) return;
+    
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('serves')
         .select('*')
-        .eq('game_id', gameId);
+        .eq('team_id', currentTeamId);
+
+      if (gameId) {
+        query = query.eq('game_id', gameId);
+      } else if (gameTypeFilter) {
+        // Load serves for all games of the selected type
+        const filteredGameDays = gameDays.filter(gd => gd.gameType === gameTypeFilter);
+        const gameIds = filteredGameDays.map(gd => gd.id);
+        if (gameIds.length > 0) {
+          query = query.in('game_id', gameIds);
+        }
+      }
+
+      const { data, error } = await query.order('timestamp', { ascending: true });
 
       if (error) throw error;
 
-      const formattedServes: Serve[] = data.map(serve => ({
+      const formattedServes = data.map(serve => ({
         id: serve.id,
         gameId: serve.game_id,
         type: serve.type as "fail" | "ace",
@@ -360,6 +375,7 @@ export function useSupabaseVolleyball() {
           filter: `team_id=eq.${currentTeamId}`
         },
         (payload) => {
+          console.log('Player UPDATE real-time event:', payload.new);
           setPlayers(prev => prev.map(player => 
             player.id === payload.new.id 
               ? {
@@ -455,6 +471,7 @@ export function useSupabaseVolleyball() {
           filter: `team_id=eq.${currentTeamId}`
         },
         (payload) => {
+          console.log('Serve INSERT real-time event:', payload.new);
           const newServe: Serve = {
             id: payload.new.id,
             gameId: payload.new.game_id,
@@ -468,7 +485,7 @@ export function useSupabaseVolleyball() {
             setServes(prev => [...prev, newServe]);
           }
           
-          // Update player's serves array and stats will be updated by database trigger
+          // Update player's serves array immediately
           setPlayers(prev => prev.map(player => 
             player.id === payload.new.player_id
               ? { ...player, serves: [...player.serves, newServe] }
@@ -549,14 +566,16 @@ export function useSupabaseVolleyball() {
     };
   }, [currentTeamId, currentGameDay?.id]);
 
-  // Load serves when game day changes
+  // Load serves when game day or game type filter changes
   useEffect(() => {
     if (currentGameDay) {
       loadServes(currentGameDay.id);
+    } else if (gameTypeFilter) {
+      loadServes(); // Load serves for game type filter
     } else {
       setServes([]);
     }
-  }, [currentGameDay]);
+  }, [currentGameDay, gameTypeFilter, gameDays]);
 
   // Custom game types management
   const addCustomGameType = async (abbreviation: string, name: string) => {
@@ -633,15 +652,17 @@ export function useSupabaseVolleyball() {
 
     let relevantServes = player.serves || [];
 
+    // If a specific game is selected, show stats for that game only
     if (gameId) {
       relevantServes = relevantServes.filter(s => s.gameId === gameId);
     }
-
-    if (gameType) {
+    // If a game type filter is selected but no specific game, show stats for all games of that type
+    else if (gameType) {
       const filteredGameDays = gameDays.filter(gd => gd.gameType === gameType);
       const gameIds = filteredGameDays.map(gd => gd.id);
       relevantServes = relevantServes.filter(s => gameIds.includes(s.gameId));
     }
+    // If neither, show all-time stats (this is the default behavior)
 
     return {
       errors: relevantServes.filter(s => s.type === "fail").length,
@@ -660,10 +681,9 @@ export function useSupabaseVolleyball() {
     return gameDays.filter(gd => gd.gameType === gameTypeFilter);
   };
 
-  // Get filtered players
+  // Get filtered players - now returns ALL players, filtering happens in stats
   const getFilteredPlayers = (): Player[] => {
-    if (!gameTypeFilter) return players;
-    return players.filter(p => p.tags.includes(gameTypeFilter));
+    return players; // Always return all players
   };
 
   // Sort players
