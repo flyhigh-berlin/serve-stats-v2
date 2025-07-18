@@ -301,6 +301,8 @@ export function useSupabaseVolleyball() {
     }
     
     try {
+      console.log('Adding serve:', { playerId, type, quality, gameId: currentGameDay.id });
+      
       const { data, error } = await supabase
         .from('serves')
         .insert({
@@ -325,7 +327,38 @@ export function useSupabaseVolleyball() {
         timestamp: data.timestamp || new Date().toISOString()
       };
 
-      // Serve will be added via real-time subscription
+      console.log('Serve added successfully, updating local player stats immediately');
+      
+      // Immediately update local player stats for instant UI feedback
+      setPlayers(prev => prev.map(player => {
+        if (player.id === playerId) {
+          const updatedPlayer = {
+            ...player,
+            totalAces: type === 'ace' ? player.totalAces + 1 : player.totalAces,
+            totalFails: type === 'fail' ? player.totalFails + 1 : player.totalFails,
+            serves: [...player.serves, newServe]
+          };
+          console.log('Updated player totals locally:', {
+            name: player.name,
+            newTotalAces: updatedPlayer.totalAces,
+            newTotalFails: updatedPlayer.totalFails
+          });
+          return updatedPlayer;
+        }
+        return player;
+      }));
+
+      // Also immediately update the serves state if it matches current filter
+      const shouldIncludeServe = currentGameDay 
+        ? newServe.gameId === currentGameDay.id
+        : gameTypeFilter 
+          ? gameDays.some(gd => gd.id === newServe.gameId && gd.gameType === gameTypeFilter)
+          : true;
+      
+      if (shouldIncludeServe) {
+        console.log('Adding serve to filtered serves state immediately');
+        setServes(prev => [...prev, newServe]);
+      }
       
       toast.success(`${type === 'ace' ? 'Ace' : 'Fail'} recorded`);
       return true;
@@ -493,7 +526,7 @@ export function useSupabaseVolleyball() {
           filter: `team_id=eq.${currentTeamId}`
         },
         (payload) => {
-          console.log('Serve INSERT real-time event:', payload.new);
+          console.log('Serve INSERT real-time event (syncing):', payload.new);
           const newServe: Serve = {
             id: payload.new.id,
             playerId: payload.new.player_id,
@@ -503,26 +536,41 @@ export function useSupabaseVolleyball() {
             timestamp: payload.new.timestamp || new Date().toISOString()
           };
           
-          // Only add to serves state if it matches current filter context
-          const shouldIncludeServe = currentGameDay 
-            ? newServe.gameId === currentGameDay.id
-            : gameTypeFilter 
-              ? gameDays.some(gd => gd.id === newServe.gameId && gd.gameType === gameTypeFilter)
-              : true; // If no filter, include all serves
+          // Check if this serve is already in our local state (to avoid duplicates from immediate updates)
+          setServes(prev => {
+            const exists = prev.some(s => s.id === newServe.id);
+            if (exists) {
+              console.log('Serve already exists in state (from immediate update)');
+              return prev;
+            }
+            
+            // Only add to serves state if it matches current filter context
+            const shouldIncludeServe = currentGameDay 
+              ? newServe.gameId === currentGameDay.id
+              : gameTypeFilter 
+                ? gameDays.some(gd => gd.id === newServe.gameId && gd.gameType === gameTypeFilter)
+                : true;
+            
+            if (shouldIncludeServe) {
+              console.log('Adding new serve to filtered serves state via real-time sync');
+              return [...prev, newServe];
+            } else {
+              console.log('Serve not added - does not match current filter');
+              return prev;
+            }
+          });
           
-          if (shouldIncludeServe) {
-            console.log('Adding new serve to filtered serves state');
-            setServes(prev => [...prev, newServe]);
-          } else {
-            console.log('Serve not added - does not match current filter');
-          }
-          
-          // Update player's serves array immediately
-          setPlayers(prev => prev.map(player => 
-            player.id === payload.new.player_id
-              ? { ...player, serves: [...player.serves, newServe] }
-              : player
-          ));
+          // Update player's serves array (avoid duplicates)
+          setPlayers(prev => prev.map(player => {
+            if (player.id === payload.new.player_id) {
+              const serveExists = player.serves.some(s => s.id === newServe.id);
+              if (!serveExists) {
+                console.log('Adding serve to player serves array via real-time sync');
+                return { ...player, serves: [...player.serves, newServe] };
+              }
+            }
+            return player;
+          }));
         }
       )
       .on(
@@ -534,10 +582,12 @@ export function useSupabaseVolleyball() {
           filter: `team_id=eq.${currentTeamId}`
         },
         (payload) => {
-          // Remove from serves list
+          console.log('Serve DELETE real-time event (syncing):', payload.old);
+          
+          // Remove from serves list (check if it exists to avoid double removal)
           setServes(prev => prev.filter(s => s.id !== payload.old.id));
           
-          // Remove from player's serves array
+          // Remove from player's serves array (check if it exists to avoid double removal)
           setPlayers(prev => prev.map(player => 
             player.id === payload.old.player_id
               ? { ...player, serves: player.serves.filter(s => s.id !== payload.old.id) }
@@ -771,6 +821,15 @@ export function useSupabaseVolleyball() {
   // Remove serve
   const removeServe = async (playerId: string, serveId: string) => {
     try {
+      console.log('Removing serve:', { playerId, serveId });
+      
+      // Find the serve to get its type for immediate local update
+      const serveToRemove = serves.find(s => s.id === serveId);
+      if (!serveToRemove) {
+        console.error('Serve not found in local state');
+        return;
+      }
+
       const { error } = await supabase
         .from('serves')
         .delete()
@@ -778,7 +837,29 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      // Serve will be removed via real-time subscription
+      console.log('Serve removed successfully, updating local player stats immediately');
+      
+      // Immediately update local player stats for instant UI feedback
+      setPlayers(prev => prev.map(player => {
+        if (player.id === playerId) {
+          const updatedPlayer = {
+            ...player,
+            totalAces: serveToRemove.type === 'ace' ? Math.max(0, player.totalAces - 1) : player.totalAces,
+            totalFails: serveToRemove.type === 'fail' ? Math.max(0, player.totalFails - 1) : player.totalFails,
+            serves: player.serves.filter(s => s.id !== serveId)
+          };
+          console.log('Updated player totals locally after removal:', {
+            name: player.name,
+            newTotalAces: updatedPlayer.totalAces,
+            newTotalFails: updatedPlayer.totalFails
+          });
+          return updatedPlayer;
+        }
+        return player;
+      }));
+
+      // Also immediately remove from serves state
+      setServes(prev => prev.filter(s => s.id !== serveId));
       
       toast.success('Serve removed');
     } catch (error) {
