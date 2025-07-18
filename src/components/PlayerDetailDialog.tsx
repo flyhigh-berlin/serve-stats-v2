@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { Serve, ServeQuality, GameType } from "../types";
 import { format } from "date-fns";
@@ -51,17 +51,26 @@ export function PlayerDetailDialog({ playerId, isOpen, onClose }: PlayerDetailDi
   } = useSupabaseVolleyball();
   const { toast } = useToast();
   
-  // Find the player by id
-  const player = players.find(p => p.id === playerId);
-  if (!player) return null;
-  
-  const [editedName, setEditedName] = useState(player.name);
+  // All hooks must be called before any conditional logic
+  const [editedName, setEditedName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   
   // Alert dialog state
   const [isDeleteServeDialogOpen, setIsDeleteServeDialogOpen] = useState(false);
   const [isDeletePlayerDialogOpen, setIsDeletePlayerDialogOpen] = useState(false);
   const [serveToDelete, setServeToDelete] = useState<string | null>(null);
+  
+  // Find the player by id - now after all hooks
+  const player = players.find(p => p.id === playerId);
+  
+  // Initialize editedName when player is found
+  useEffect(() => {
+    if (player) {
+      setEditedName(player.name);
+    }
+  }, [player]);
+  
+  if (!player) return null;
   
   const allGameTypes = getAllGameTypes();
   
