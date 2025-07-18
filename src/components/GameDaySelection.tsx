@@ -28,11 +28,8 @@ export function GameDaySelection() {
       setCurrentGameDay(null);
       setGameTypeFilter(null);
     } else {
-      const gameDay = gameDays.find(g => g.id === gameId);
-      if (gameDay) {
-        setCurrentGameDay(gameDay.id);
-        setGameTypeFilter(null); // Clear game type filter when specific game is selected
-      }
+      setCurrentGameDay(gameId);
+      setGameTypeFilter(null); // Clear game type filter when specific game is selected
     }
   };
 

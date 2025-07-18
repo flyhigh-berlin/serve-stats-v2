@@ -92,6 +92,11 @@ export function useSupabaseVolleyball() {
       }));
 
       setGameDays(formattedGameDays);
+      
+      // Auto-select most recent game day if none is selected
+      if (formattedGameDays.length > 0 && !currentGameDay) {
+        setCurrentGameDay(formattedGameDays[0]);
+      }
     } catch (error) {
       console.error('Error loading game days:', error);
       toast.error('Failed to load game days');
@@ -260,8 +265,11 @@ export function useSupabaseVolleyball() {
   };
 
   // Record serve (alias for addServe)
-  const addServe = async (playerId: string, type: "fail" | "ace", quality: ServeQuality) => {
-    if (!currentGameDay) return;
+  const addServe = async (playerId: string, type: "fail" | "ace", quality: ServeQuality): Promise<boolean> => {
+    if (!currentGameDay) {
+      toast.error('Please select a game day first');
+      return false;
+    }
     
     try {
       const { data, error } = await supabase
@@ -290,9 +298,11 @@ export function useSupabaseVolleyball() {
       // Serve will be added via real-time subscription
       
       toast.success(`${type === 'ace' ? 'Ace' : 'Fail'} recorded`);
+      return true;
     } catch (error) {
       console.error('Error recording serve:', error);
       toast.error('Failed to record serve');
+      return false;
     }
   };
 

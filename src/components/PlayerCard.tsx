@@ -15,7 +15,7 @@ interface PlayerCardProps {
 }
 
 export function PlayerCard({ player, gameId }: PlayerCardProps) {
-  const { addServe, getPlayerStats } = useSupabaseVolleyball();
+  const { addServe, getPlayerStats, currentGameDay } = useSupabaseVolleyball();
   const [animatingError, setAnimatingError] = useState(false);
   const [animatingAce, setAnimatingAce] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -27,20 +27,23 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   const stats = getPlayerStats(player.id, gameId);
 
   // Handle adding a serve
-  const handleServeClick = (type: "error" | "ace", quality: "good" | "neutral" | "bad") => {
-    addServe(player.id, type === "error" ? "fail" : "ace", quality);
+  const handleServeClick = async (type: "error" | "ace", quality: "good" | "neutral" | "bad") => {
+    const success = await addServe(player.id, type === "error" ? "fail" : "ace", quality);
 
-    // Action feedback animation
-    setActionFeedback(type);
-    setTimeout(() => setActionFeedback(null), 600);
+    // Only show animations and feedback if the serve was successfully recorded
+    if (success) {
+      // Action feedback animation
+      setActionFeedback(type);
+      setTimeout(() => setActionFeedback(null), 600);
 
-    // Animate the stat change
-    if (type === "error") {
-      setAnimatingError(true);
-      setTimeout(() => setAnimatingError(false), 500);
-    } else {
-      setAnimatingAce(true);
-      setTimeout(() => setAnimatingAce(false), 500);
+      // Animate the stat change
+      if (type === "error") {
+        setAnimatingError(true);
+        setTimeout(() => setAnimatingError(false), 500);
+      } else {
+        setAnimatingAce(true);
+        setTimeout(() => setAnimatingAce(false), 500);
+      }
     }
 
     // Close the specific popover
@@ -82,6 +85,12 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
             animatingError={animatingError}
             onPlayerClick={() => setIsDialogOpen(true)}
           />
+          
+          {!currentGameDay && (
+            <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded text-amber-800 dark:text-amber-200 text-sm text-center">
+              ⚠️ Select a game day to record serves
+            </div>
+          )}
           
           {/* Action buttons */}
           <div className="flex gap-2">
