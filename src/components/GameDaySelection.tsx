@@ -34,7 +34,8 @@ export function GameDaySelection() {
       const selectedGameDay = gameDays.find(gd => gd.id === gameId);
       if (selectedGameDay) {
         console.log('GameDaySelection: Setting game day to:', selectedGameDay.title || selectedGameDay.date, 'ID:', gameId);
-        setCurrentGameDay(selectedGameDay);
+        console.log('GameDaySelection: Full selected game day object:', selectedGameDay);
+        setCurrentGameDay(selectedGameDay); // Pass the full GameDay object
         setGameTypeFilter(null); // Clear game type filter when specific game is selected
       } else {
         console.error('GameDaySelection: Game day not found for ID:', gameId);
@@ -67,18 +68,23 @@ export function GameDaySelection() {
 
   console.log('GameDaySelection render:', { 
     currentGameDayId: currentGameDay?.id, 
+    currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
     gameTypeFilter,
     gameDaysCount: gameDays.length,
     timestamp: new Date().toISOString()
   });
 
-  // Memoize the current value to ensure proper re-rendering
+  // Memoize the current values to ensure proper re-rendering and prevent stale closures
   const currentGameDayValue = React.useMemo(() => {
-    return currentGameDay?.id || "all";
+    const value = currentGameDay?.id || "all";
+    console.log('GameDaySelection: currentGameDayValue computed as:', value);
+    return value;
   }, [currentGameDay?.id]);
 
   const gameTypeFilterValue = React.useMemo(() => {
-    return gameTypeFilter || "all";
+    const value = gameTypeFilter || "all";
+    console.log('GameDaySelection: gameTypeFilterValue computed as:', value);
+    return value;
   }, [gameTypeFilter]);
 
   return (
@@ -87,6 +93,7 @@ export function GameDaySelection() {
       <div className="space-y-2">
         <Label>Select Game Day</Label>
         <Select 
+          key={`gameday-${currentGameDayValue}`} // Force re-render when value changes
           value={currentGameDayValue} 
           onValueChange={handleGameDaySelect}
         >
@@ -108,6 +115,7 @@ export function GameDaySelection() {
       <div className="space-y-2">
         <Label>Filter by Game Type</Label>
         <Select 
+          key={`gametype-${gameTypeFilterValue}`} // Force re-render when value changes
           value={gameTypeFilterValue} 
           onValueChange={handleGameTypeFilterSelect}
           disabled={!!currentGameDay} // Disable when specific game is selected

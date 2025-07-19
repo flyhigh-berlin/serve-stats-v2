@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTeam } from "../context/TeamContext";
 import { Player, GameDay, Serve, GameType, ServeQuality, SortField, SortDirection, gameTypes as defaultGameTypes } from "../types";
 import { toast } from "sonner";
+import React from "react";
 
 export function useSupabaseVolleyball() {
   const { currentTeam } = useTeam();
@@ -16,6 +17,14 @@ export function useSupabaseVolleyball() {
   const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
   const currentTeamId = currentTeam?.id;
+
+  console.log('useSupabaseVolleyball hook state:', {
+    currentGameDayId: currentGameDay?.id,
+    currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
+    gameTypeFilter,
+    gameDaysCount: gameDays.length,
+    timestamp: new Date().toISOString()
+  });
 
   // Helper function to check if a serve matches current filter context
   const serveMatchesCurrentFilter = (serve: Serve): boolean => {
@@ -403,10 +412,11 @@ export function useSupabaseVolleyball() {
     }
   }, [currentTeamId]);
 
-  // Load serves when game day or game type filter changes
+  // Load serves when game day or game type filter changes - FIXED DEPENDENCIES
   useEffect(() => {
     console.log('Filter changed - reloading serves:', { 
-      currentGameDay: currentGameDay?.id, 
+      currentGameDayId: currentGameDay?.id, 
+      currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
       gameTypeFilter,
       gameDaysCount: gameDays.length,
       timestamp: new Date().toISOString()
@@ -415,7 +425,7 @@ export function useSupabaseVolleyball() {
     if (currentTeamId) {
       loadServes();
     }
-  }, [currentGameDay?.id, gameTypeFilter, gameDays.length, currentTeamId]);
+  }, [currentGameDay, gameTypeFilter, gameDays.length, currentTeamId]); // Fixed: removed ?.id and used full currentGameDay object
 
   // Set up real-time subscriptions with enhanced debugging
   useEffect(() => {
@@ -506,8 +516,10 @@ export function useSupabaseVolleyball() {
             notes: payload.new.notes || undefined
           };
           setGameDays(prev => {
-            console.log('Adding new game day to state:', newGameDay.title || newGameDay.date);
-            return [newGameDay, ...prev];
+            console.log('Adding new game day to state via real-time:', newGameDay.title || newGameDay.date);
+            const updated = [newGameDay, ...prev];
+            console.log('Game days state updated, new count:', updated.length);
+            return updated;
           });
         }
       )
@@ -738,10 +750,12 @@ export function useSupabaseVolleyball() {
     }
   };
 
-  // Get all game types (default + custom)
-  const getAllGameTypes = (): Record<string, string> => {
-    return { ...defaultGameTypes, ...customGameTypes };
-  };
+  // Get all game types (default + custom) - MEMOIZED TO PREVENT RE-RENDERS
+  const getAllGameTypes = React.useMemo((): Record<string, string> => {
+    const result = { ...defaultGameTypes, ...customGameTypes };
+    console.log('getAllGameTypes computed:', Object.keys(result).length, 'types');
+    return result;
+  }, [customGameTypes]);
 
   // Get player stats - simplified and consistent logic
   const getPlayerStats = (playerId: string, gameId?: string, gameType?: GameType | string) => {
@@ -895,9 +909,9 @@ export function useSupabaseVolleyball() {
     }
   };
 
-  // Set current game day - Fixed to properly handle GameDay objects
+  // Set current game day - Fixed to properly handle GameDay objects and trigger re-renders
   const setCurrentGameDayById = (gameDay: GameDay | null) => {
-    console.log('setCurrentGameDayById called with:', gameDay?.id || 'null', 'at', new Date().toISOString());
+    console.log('setCurrentGameDayById called with:', gameDay?.id || 'null', 'title:', gameDay?.title || gameDay?.date || 'null', 'at', new Date().toISOString());
     
     if (!gameDay) {
       console.log('Clearing current game day selection');
