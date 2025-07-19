@@ -104,12 +104,12 @@ export function useSupabaseVolleyball() {
         notes: gameDay.notes || undefined
       }));
 
-      console.log('Loaded game days:', formattedGameDays.length);
+      console.log('Loaded game days:', formattedGameDays.length, 'at', new Date().toISOString());
       setGameDays(formattedGameDays);
       
-      // Auto-select most recent game day only if none is selected AND this is initial load
-      if (formattedGameDays.length > 0 && !currentGameDay && !hasAutoSelected) {
-        console.log('Auto-selecting most recent game day:', formattedGameDays[0]);
+      // Auto-select most recent game day only on initial load AND if no current selection
+      if (formattedGameDays.length > 0 && !currentGameDay && !hasAutoSelected && !gameTypeFilter) {
+        console.log('Auto-selecting most recent game day:', formattedGameDays[0].title || formattedGameDays[0].date);
         setCurrentGameDay(formattedGameDays[0]);
         setHasAutoSelected(true);
       }
@@ -388,6 +388,7 @@ export function useSupabaseVolleyball() {
   // Load data when team changes
   useEffect(() => {
     if (currentTeamId) {
+      console.log('Loading data for team:', currentTeamId);
       loadPlayers();
       loadGameDays();
       loadCustomGameTypes();
@@ -407,17 +408,20 @@ export function useSupabaseVolleyball() {
     console.log('Filter changed - reloading serves:', { 
       currentGameDay: currentGameDay?.id, 
       gameTypeFilter,
-      gameDaysCount: gameDays.length 
+      gameDaysCount: gameDays.length,
+      timestamp: new Date().toISOString()
     });
     
     if (currentTeamId) {
       loadServes();
     }
-  }, [currentGameDay, gameTypeFilter, gameDays, currentTeamId]);
+  }, [currentGameDay?.id, gameTypeFilter, gameDays.length, currentTeamId]);
 
-  // Set up real-time subscriptions
+  // Set up real-time subscriptions with enhanced debugging
   useEffect(() => {
     if (!currentTeamId) return;
+
+    console.log('Setting up real-time subscriptions for team:', currentTeamId);
 
     const channel = supabase
       .channel('schema-db-changes')
@@ -493,6 +497,7 @@ export function useSupabaseVolleyball() {
           filter: `team_id=eq.${currentTeamId}`
         },
         (payload) => {
+          console.log('Game day INSERT real-time event:', payload.new);
           const newGameDay: GameDay = {
             id: payload.new.id,
             date: payload.new.date,
@@ -500,7 +505,10 @@ export function useSupabaseVolleyball() {
             title: payload.new.title || undefined,
             notes: payload.new.notes || undefined
           };
-          setGameDays(prev => [newGameDay, ...prev]);
+          setGameDays(prev => {
+            console.log('Adding new game day to state:', newGameDay.title || newGameDay.date);
+            return [newGameDay, ...prev];
+          });
         }
       )
       .on(
@@ -662,6 +670,7 @@ export function useSupabaseVolleyball() {
       .subscribe();
 
     return () => {
+      console.log('Cleaning up real-time subscriptions');
       supabase.removeChannel(channel);
     };
   }, [currentTeamId, currentGameDay?.id]);
@@ -886,24 +895,18 @@ export function useSupabaseVolleyball() {
     }
   };
 
-  // Set current game day by ID - Fixed to handle GameDay objects correctly
-  const setCurrentGameDayById = (gameId: string | null) => {
-    console.log('setCurrentGameDayById called with:', gameId);
+  // Set current game day - Fixed to properly handle GameDay objects
+  const setCurrentGameDayById = (gameDay: GameDay | null) => {
+    console.log('setCurrentGameDayById called with:', gameDay?.id || 'null', 'at', new Date().toISOString());
     
-    if (!gameId) {
+    if (!gameDay) {
       console.log('Clearing current game day selection');
       setCurrentGameDay(null);
       return;
     }
     
-    const gameDay = gameDays.find(gd => gd.id === gameId);
-    if (gameDay) {
-      console.log('Setting current game day to:', gameDay.title || gameDay.date, '(ID:', gameDay.id, ')');
-      setCurrentGameDay(gameDay);
-    } else {
-      console.log('Game day not found for ID:', gameId);
-      setCurrentGameDay(null);
-    }
+    console.log('Setting current game day to:', gameDay.title || gameDay.date, '(ID:', gameDay.id, ')');
+    setCurrentGameDay(gameDay);
   };
 
   // Load custom game types

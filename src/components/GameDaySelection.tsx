@@ -24,21 +24,26 @@ export function GameDaySelection() {
   const allGameTypes = getAllGameTypes();
 
   const handleGameDaySelect = (gameId: string) => {
-    console.log('GameDaySelection: handleGameDaySelect called with:', gameId);
+    console.log('GameDaySelection: handleGameDaySelect called with:', gameId, 'at', new Date().toISOString());
     
     if (gameId === "all") {
       console.log('GameDaySelection: Clearing game day and game type filter');
       setCurrentGameDay(null);
       setGameTypeFilter(null);
     } else {
-      console.log('GameDaySelection: Setting game day to:', gameId, 'and clearing game type filter');
-      setCurrentGameDay(gameId);
-      setGameTypeFilter(null); // Clear game type filter when specific game is selected
+      const selectedGameDay = gameDays.find(gd => gd.id === gameId);
+      if (selectedGameDay) {
+        console.log('GameDaySelection: Setting game day to:', selectedGameDay.title || selectedGameDay.date, 'ID:', gameId);
+        setCurrentGameDay(selectedGameDay);
+        setGameTypeFilter(null); // Clear game type filter when specific game is selected
+      } else {
+        console.error('GameDaySelection: Game day not found for ID:', gameId);
+      }
     }
   };
 
   const handleGameTypeFilterSelect = (gameType: string) => {
-    console.log('GameDaySelection: handleGameTypeFilterSelect called with:', gameType);
+    console.log('GameDaySelection: handleGameTypeFilterSelect called with:', gameType, 'at', new Date().toISOString());
     
     if (gameType === "all") {
       console.log('GameDaySelection: Clearing game type filter and game day');
@@ -63,8 +68,18 @@ export function GameDaySelection() {
   console.log('GameDaySelection render:', { 
     currentGameDayId: currentGameDay?.id, 
     gameTypeFilter,
-    gameDaysCount: gameDays.length
+    gameDaysCount: gameDays.length,
+    timestamp: new Date().toISOString()
   });
+
+  // Memoize the current value to ensure proper re-rendering
+  const currentGameDayValue = React.useMemo(() => {
+    return currentGameDay?.id || "all";
+  }, [currentGameDay?.id]);
+
+  const gameTypeFilterValue = React.useMemo(() => {
+    return gameTypeFilter || "all";
+  }, [gameTypeFilter]);
 
   return (
     <div className="space-y-4">
@@ -72,7 +87,7 @@ export function GameDaySelection() {
       <div className="space-y-2">
         <Label>Select Game Day</Label>
         <Select 
-          value={currentGameDay?.id || "all"} 
+          value={currentGameDayValue} 
           onValueChange={handleGameDaySelect}
         >
           <SelectTrigger>
@@ -93,7 +108,7 @@ export function GameDaySelection() {
       <div className="space-y-2">
         <Label>Filter by Game Type</Label>
         <Select 
-          value={gameTypeFilter || "all"} 
+          value={gameTypeFilterValue} 
           onValueChange={handleGameTypeFilterSelect}
           disabled={!!currentGameDay} // Disable when specific game is selected
         >

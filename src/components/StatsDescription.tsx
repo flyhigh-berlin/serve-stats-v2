@@ -11,7 +11,8 @@ export function StatsDescription() {
   console.log('StatsDescription render:', { 
     currentGameDay: currentGameDay?.id, 
     gameTypeFilter,
-    currentGameDayTitle: currentGameDay?.title || currentGameDay?.date
+    currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
+    timestamp: new Date().toISOString()
   });
   
   // Format game display text
@@ -40,10 +41,13 @@ export function StatsDescription() {
     }
   };
   
+  // Force re-render when dependencies change
+  const description = React.useMemo(() => getDescription(), [currentGameDay, gameTypeFilter, allGameTypes]);
+  
   return (
     <div className="mb-4 p-2 bg-muted/50 rounded-md">
       <p className="text-xs text-muted-foreground text-center truncate">
-        {getDescription()}
+        {description}
       </p>
     </div>
   );
