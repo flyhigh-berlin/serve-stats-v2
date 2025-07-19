@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeam } from "../context/TeamContext";
@@ -14,8 +13,20 @@ export function useSupabaseVolleyball() {
   const [serves, setServes] = useState<Serve[]>([]);
   const [customGameTypes, setCustomGameTypes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
   const currentTeamId = currentTeam?.id;
+
+  // Helper function to check if a serve matches current filter context
+  const serveMatchesCurrentFilter = (serve: Serve): boolean => {
+    if (currentGameDay) {
+      return serve.gameId === currentGameDay.id;
+    }
+    if (gameTypeFilter) {
+      return gameDays.some(gd => gd.id === serve.gameId && gd.gameType === gameTypeFilter);
+    }
+    return false;
+  };
 
   // Load players from database with their serves
   const loadPlayers = async () => {
@@ -63,6 +74,7 @@ export function useSupabaseVolleyball() {
       }));
 
       setPlayers(formattedPlayers);
+      console.log('Loaded players:', formattedPlayers.length);
     } catch (error) {
       console.error('Error loading players:', error);
       toast.error('Failed to load players');
@@ -92,27 +104,19 @@ export function useSupabaseVolleyball() {
         notes: gameDay.notes || undefined
       }));
 
+      console.log('Loaded game days:', formattedGameDays.length);
       setGameDays(formattedGameDays);
       
-      // Auto-select most recent game day if none is selected
-      if (formattedGameDays.length > 0 && !currentGameDay) {
+      // Auto-select most recent game day only if none is selected AND this is initial load
+      if (formattedGameDays.length > 0 && !currentGameDay && !hasAutoSelected) {
+        console.log('Auto-selecting most recent game day:', formattedGameDays[0]);
         setCurrentGameDay(formattedGameDays[0]);
+        setHasAutoSelected(true);
       }
     } catch (error) {
       console.error('Error loading game days:', error);
       toast.error('Failed to load game days');
     }
-  };
-
-  // Helper function to check if a serve matches current filter context
-  const serveMatchesCurrentFilter = (serve: Serve): boolean => {
-    if (currentGameDay) {
-      return serve.gameId === currentGameDay.id;
-    }
-    if (gameTypeFilter) {
-      return gameDays.some(gd => gd.id === serve.gameId && gd.gameType === gameTypeFilter);
-    }
-    return true; // No filter means all serves match
   };
 
   // Load serves based on current game day or game type filter
@@ -131,7 +135,7 @@ export function useSupabaseVolleyball() {
         console.log('Loading serves for specific game:', gameId);
         query = query.eq('game_id', gameId);
       } else if (currentGameDay) {
-        console.log('Loading serves for current game day:', currentGameDay.id);
+        console.log('Loading serves for current game day:', currentGameDay.id, currentGameDay.title || currentGameDay.date);
         query = query.eq('game_id', currentGameDay.id);
       } else if (gameTypeFilter) {
         console.log('Loading serves for game type filter:', gameTypeFilter);
@@ -147,7 +151,7 @@ export function useSupabaseVolleyball() {
           return;
         }
       } else {
-        // No filter - don't load serves for stats display optimization
+        // No filter - clear serves for performance and to use database totals
         console.log('No filter active, clearing serves state');
         setServes([]);
         return;
@@ -317,7 +321,7 @@ export function useSupabaseVolleyball() {
     }
     
     try {
-      console.log('Adding serve:', { playerId, type, quality, gameId: currentGameDay.id });
+      console.log('Adding serve:', { playerId, type, quality, gameId: currentGameDay.id, gameTitle: currentGameDay.title || currentGameDay.date });
       
       const { data, error } = await supabase
         .from('serves')
@@ -364,15 +368,15 @@ export function useSupabaseVolleyball() {
         return player;
       }));
 
-      // Also immediately update the serves state if it matches current filter
+      // Only add to serves state if it matches current filter
       if (serveMatchesCurrentFilter(newServe)) {
-        console.log('Adding serve to filtered serves state immediately');
+        console.log('Adding serve to filtered serves state immediately (matches current filter)');
         setServes(prev => [...prev, newServe]);
       } else {
         console.log('Serve not added to filtered state - does not match current filter');
       }
       
-      toast.success(`${type === 'ace' ? 'Ace' : 'Error'} recorded`);
+      toast.success(`${type === 'ace' ? 'Ace' : 'Error'} recorded for ${currentGameDay.title || currentGameDay.date}`);
       return true;
     } catch (error) {
       console.error('Error recording serve:', error);
@@ -387,21 +391,29 @@ export function useSupabaseVolleyball() {
       loadPlayers();
       loadGameDays();
       loadCustomGameTypes();
+      setHasAutoSelected(false);
     } else {
       setPlayers([]);
       setGameDays([]);
       setCurrentGameDay(null);
       setServes([]);
       setCustomGameTypes({});
+      setHasAutoSelected(false);
     }
   }, [currentTeamId]);
 
   // Load serves when game day or game type filter changes
   useEffect(() => {
+    console.log('Filter changed - reloading serves:', { 
+      currentGameDay: currentGameDay?.id, 
+      gameTypeFilter,
+      gameDaysCount: gameDays.length 
+    });
+    
     if (currentTeamId) {
       loadServes();
     }
-  }, [currentGameDay, gameTypeFilter, gameDays]);
+  }, [currentGameDay, gameTypeFilter, gameDays, currentTeamId]);
 
   // Set up real-time subscriptions
   useEffect(() => {
@@ -654,19 +666,6 @@ export function useSupabaseVolleyball() {
     };
   }, [currentTeamId, currentGameDay?.id]);
 
-  // Load serves when game day or game type filter changes
-  useEffect(() => {
-    console.log('Filter changed - reloading serves:', { 
-      currentGameDay: currentGameDay?.id, 
-      gameTypeFilter,
-      gameDaysCount: gameDays.length 
-    });
-    
-    if (currentTeamId) {
-      loadServes();
-    }
-  }, [currentGameDay, gameTypeFilter, gameDays, currentTeamId]);
-
   // Custom game types management
   const addCustomGameType = async (abbreviation: string, name: string) => {
     if (!currentTeamId) return;
@@ -735,7 +734,7 @@ export function useSupabaseVolleyball() {
     return { ...defaultGameTypes, ...customGameTypes };
   };
 
-  // Get player stats - simplified logic for consistency
+  // Get player stats - simplified and consistent logic
   const getPlayerStats = (playerId: string, gameId?: string, gameType?: GameType | string) => {
     const player = players.find(p => p.id === playerId);
     if (!player) return { errors: 0, aces: 0 };
@@ -746,7 +745,8 @@ export function useSupabaseVolleyball() {
       gameType, 
       playerName: player.name,
       currentGameDay: currentGameDay?.id,
-      gameTypeFilter 
+      gameTypeFilter,
+      servesStateCount: serves.length
     });
 
     // If no specific context is provided AND no current filter is active, use database totals
@@ -759,7 +759,7 @@ export function useSupabaseVolleyball() {
     }
 
     // For any filtered context, use the filtered serves state
-    console.log('Using filtered serves state, total serves:', serves.length);
+    console.log('Using filtered serves state');
     const relevantServes = serves.filter(s => s.playerId === playerId);
 
     const aces = relevantServes.filter(s => s.type === 'ace').length;
@@ -886,14 +886,24 @@ export function useSupabaseVolleyball() {
     }
   };
 
-  // Set current game day by ID
+  // Set current game day by ID - Fixed to handle GameDay objects correctly
   const setCurrentGameDayById = (gameId: string | null) => {
+    console.log('setCurrentGameDayById called with:', gameId);
+    
     if (!gameId) {
+      console.log('Clearing current game day selection');
       setCurrentGameDay(null);
       return;
     }
+    
     const gameDay = gameDays.find(gd => gd.id === gameId);
-    setCurrentGameDay(gameDay || null);
+    if (gameDay) {
+      console.log('Setting current game day to:', gameDay.title || gameDay.date, '(ID:', gameDay.id, ')');
+      setCurrentGameDay(gameDay);
+    } else {
+      console.log('Game day not found for ID:', gameId);
+      setCurrentGameDay(null);
+    }
   };
 
   // Load custom game types

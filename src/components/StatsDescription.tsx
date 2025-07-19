@@ -8,6 +8,12 @@ export function StatsDescription() {
   
   const allGameTypes = getAllGameTypes();
   
+  console.log('StatsDescription render:', { 
+    currentGameDay: currentGameDay?.id, 
+    gameTypeFilter,
+    currentGameDayTitle: currentGameDay?.title || currentGameDay?.date
+  });
+  
   // Format game display text
   const formatGameDisplay = (gameDay: any) => {
     const typeLabel = `[${gameDay.gameType}]`;
@@ -20,11 +26,17 @@ export function StatsDescription() {
   // Get description based on current context
   const getDescription = () => {
     if (currentGameDay) {
-      return `Showing stats for ${formatGameDisplay(currentGameDay)}`;
+      const description = `Showing stats for ${formatGameDisplay(currentGameDay)}`;
+      console.log('Generated description for current game day:', description);
+      return description;
     } else if (gameTypeFilter) {
-      return `Showing stats for game type [${gameTypeFilter}] ${allGameTypes[gameTypeFilter]}`;
+      const description = `Showing stats for game type [${gameTypeFilter}] ${allGameTypes[gameTypeFilter]}`;
+      console.log('Generated description for game type filter:', description);
+      return description;
     } else {
-      return "Showing stats for all games";
+      const description = "Showing stats for all games";
+      console.log('Generated description for all games:', description);
+      return description;
     }
   };
   

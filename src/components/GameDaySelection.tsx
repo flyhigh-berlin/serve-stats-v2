@@ -24,20 +24,28 @@ export function GameDaySelection() {
   const allGameTypes = getAllGameTypes();
 
   const handleGameDaySelect = (gameId: string) => {
+    console.log('GameDaySelection: handleGameDaySelect called with:', gameId);
+    
     if (gameId === "all") {
+      console.log('GameDaySelection: Clearing game day and game type filter');
       setCurrentGameDay(null);
       setGameTypeFilter(null);
     } else {
+      console.log('GameDaySelection: Setting game day to:', gameId, 'and clearing game type filter');
       setCurrentGameDay(gameId);
       setGameTypeFilter(null); // Clear game type filter when specific game is selected
     }
   };
 
   const handleGameTypeFilterSelect = (gameType: string) => {
+    console.log('GameDaySelection: handleGameTypeFilterSelect called with:', gameType);
+    
     if (gameType === "all") {
+      console.log('GameDaySelection: Clearing game type filter and game day');
       setGameTypeFilter(null);
       setCurrentGameDay(null);
     } else {
+      console.log('GameDaySelection: Setting game type filter to:', gameType, 'and clearing game day');
       setGameTypeFilter(gameType);
       setCurrentGameDay(null); // Clear specific game selection when game type filter is applied
     }
@@ -51,6 +59,12 @@ export function GameDaySelection() {
     
     return `${typeLabel} ${titlePart} (${datePart})`;
   };
+
+  console.log('GameDaySelection render:', { 
+    currentGameDayId: currentGameDay?.id, 
+    gameTypeFilter,
+    gameDaysCount: gameDays.length
+  });
 
   return (
     <div className="space-y-4">
