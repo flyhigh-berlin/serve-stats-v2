@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeam } from "../context/TeamContext";
@@ -330,7 +331,14 @@ export function useSupabaseVolleyball() {
     }
     
     try {
-      console.log('Adding serve:', { playerId, type, quality, gameId: currentGameDay.id, gameTitle: currentGameDay.title || currentGameDay.date });
+      console.log('🎯 SERVE RECORDING DEBUG - Starting serve recording:', { 
+        playerId, 
+        type, 
+        quality, 
+        targetGameId: currentGameDay.id, 
+        targetGameTitle: currentGameDay.title || currentGameDay.date,
+        timestamp: new Date().toISOString()
+      });
       
       const { data, error } = await supabase
         .from('serves')
@@ -356,7 +364,13 @@ export function useSupabaseVolleyball() {
         timestamp: data.timestamp || new Date().toISOString()
       };
 
-      console.log('Serve added successfully, updating local player stats immediately');
+      console.log('✅ SERVE RECORDING DEBUG - Serve recorded successfully:', {
+        serveId: newServe.id,
+        recordedForGameId: newServe.gameId,
+        expectedGameId: currentGameDay.id,
+        gameMatch: newServe.gameId === currentGameDay.id,
+        timestamp: new Date().toISOString()
+      });
       
       // Immediately update local player stats for instant UI feedback
       setPlayers(prev => prev.map(player => {
@@ -367,10 +381,11 @@ export function useSupabaseVolleyball() {
             totalFails: type === 'fail' ? player.totalFails + 1 : player.totalFails,
             serves: [...player.serves, newServe]
           };
-          console.log('Updated player totals locally:', {
-            name: player.name,
+          console.log('🔄 SERVE RECORDING DEBUG - Updated player stats locally:', {
+            playerName: player.name,
             newTotalAces: updatedPlayer.totalAces,
-            newTotalFails: updatedPlayer.totalFails
+            newTotalFails: updatedPlayer.totalFails,
+            timestamp: new Date().toISOString()
           });
           return updatedPlayer;
         }
@@ -379,16 +394,16 @@ export function useSupabaseVolleyball() {
 
       // Only add to serves state if it matches current filter
       if (serveMatchesCurrentFilter(newServe)) {
-        console.log('Adding serve to filtered serves state immediately (matches current filter)');
+        console.log('✅ SERVE RECORDING DEBUG - Adding serve to filtered state (matches current filter)');
         setServes(prev => [...prev, newServe]);
       } else {
-        console.log('Serve not added to filtered state - does not match current filter');
+        console.log('⚠️ SERVE RECORDING DEBUG - Serve not added to filtered state - does not match current filter');
       }
       
       toast.success(`${type === 'ace' ? 'Ace' : 'Error'} recorded for ${currentGameDay.title || currentGameDay.date}`);
       return true;
     } catch (error) {
-      console.error('Error recording serve:', error);
+      console.error('❌ SERVE RECORDING DEBUG - Error recording serve:', error);
       toast.error('Failed to record serve');
       return false;
     }
@@ -414,7 +429,7 @@ export function useSupabaseVolleyball() {
 
   // Load serves when game day or game type filter changes - FIXED DEPENDENCIES
   useEffect(() => {
-    console.log('Filter changed - reloading serves:', { 
+    console.log('🔄 FILTER CHANGE DEBUG - Filter changed, reloading serves:', { 
       currentGameDayId: currentGameDay?.id, 
       currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
       gameTypeFilter,
@@ -425,7 +440,7 @@ export function useSupabaseVolleyball() {
     if (currentTeamId) {
       loadServes();
     }
-  }, [currentGameDay, gameTypeFilter, gameDays.length, currentTeamId]); // Fixed: removed ?.id and used full currentGameDay object
+  }, [currentGameDay?.id, gameTypeFilter, gameDays.length, currentTeamId]); // Using currentGameDay?.id for proper dependency
 
   // Set up real-time subscriptions with enhanced debugging
   useEffect(() => {
@@ -507,7 +522,7 @@ export function useSupabaseVolleyball() {
           filter: `team_id=eq.${currentTeamId}`
         },
         (payload) => {
-          console.log('Game day INSERT real-time event:', payload.new);
+          console.log('🎮 GAME DAY REALTIME DEBUG - Game day INSERT event:', payload.new);
           const newGameDay: GameDay = {
             id: payload.new.id,
             date: payload.new.date,
@@ -516,11 +531,16 @@ export function useSupabaseVolleyball() {
             notes: payload.new.notes || undefined
           };
           setGameDays(prev => {
-            console.log('Adding new game day to state via real-time:', newGameDay.title || newGameDay.date);
+            console.log('🎮 GAME DAY REALTIME DEBUG - Adding new game day to state:', newGameDay.title || newGameDay.date);
             const updated = [newGameDay, ...prev];
-            console.log('Game days state updated, new count:', updated.length);
+            console.log('🎮 GAME DAY REALTIME DEBUG - Game days state updated, new count:', updated.length);
             return updated;
           });
+          
+          // Auto-select the newly created game day
+          console.log('🎮 GAME DAY REALTIME DEBUG - Auto-selecting newly created game day');
+          setCurrentGameDay(newGameDay);
+          setGameTypeFilter(null); // Clear any game type filter
         }
       )
       .on(
@@ -570,7 +590,7 @@ export function useSupabaseVolleyball() {
           filter: `team_id=eq.${currentTeamId}`
         },
         (payload) => {
-          console.log('Serve INSERT real-time event (syncing):', payload.new);
+          console.log('🏐 SERVE REALTIME DEBUG - Serve INSERT event (syncing):', payload.new);
           const newServe: Serve = {
             id: payload.new.id,
             playerId: payload.new.player_id,
@@ -584,16 +604,16 @@ export function useSupabaseVolleyball() {
           setServes(prev => {
             const exists = prev.some(s => s.id === newServe.id);
             if (exists) {
-              console.log('Serve already exists in state (from immediate update)');
+              console.log('🏐 SERVE REALTIME DEBUG - Serve already exists in state (from immediate update)');
               return prev;
             }
             
             // Only add to serves state if it matches current filter context
             if (serveMatchesCurrentFilter(newServe)) {
-              console.log('Adding new serve to filtered serves state via real-time sync');
+              console.log('🏐 SERVE REALTIME DEBUG - Adding new serve to filtered serves state via real-time sync');
               return [...prev, newServe];
             } else {
-              console.log('Serve not added - does not match current filter');
+              console.log('🏐 SERVE REALTIME DEBUG - Serve not added - does not match current filter');
               return prev;
             }
           });
@@ -603,7 +623,7 @@ export function useSupabaseVolleyball() {
             if (player.id === payload.new.player_id) {
               const serveExists = player.serves.some(s => s.id === newServe.id);
               if (!serveExists) {
-                console.log('Adding serve to player serves array via real-time sync');
+                console.log('🏐 SERVE REALTIME DEBUG - Adding serve to player serves array via real-time sync');
                 return { ...player, serves: [...player.serves, newServe] };
               }
             }
@@ -620,7 +640,7 @@ export function useSupabaseVolleyball() {
           filter: `team_id=eq.${currentTeamId}`
         },
         (payload) => {
-          console.log('Serve DELETE real-time event (syncing):', payload.old);
+          console.log('🏐 SERVE REALTIME DEBUG - Serve DELETE event (syncing):', payload.old);
           
           // Remove from serves list (check if it exists to avoid double removal)
           setServes(prev => prev.filter(s => s.id !== payload.old.id));
@@ -685,7 +705,7 @@ export function useSupabaseVolleyball() {
       console.log('Cleaning up real-time subscriptions');
       supabase.removeChannel(channel);
     };
-  }, [currentTeamId, currentGameDay?.id]);
+  }, [currentTeamId, currentGameDay?.id, gameTypeFilter, gameDays]); // Added dependencies to ensure proper cleanup and setup
 
   // Custom game types management
   const addCustomGameType = async (abbreviation: string, name: string) => {
@@ -762,19 +782,20 @@ export function useSupabaseVolleyball() {
     const player = players.find(p => p.id === playerId);
     if (!player) return { errors: 0, aces: 0 };
 
-    console.log('getPlayerStats called:', { 
+    console.log('📊 STATS DEBUG - getPlayerStats called:', { 
       playerId, 
       gameId, 
       gameType, 
       playerName: player.name,
       currentGameDay: currentGameDay?.id,
       gameTypeFilter,
-      servesStateCount: serves.length
+      servesStateCount: serves.length,
+      timestamp: new Date().toISOString()
     });
 
     // If no specific context is provided AND no current filter is active, use database totals
     if (!gameId && !gameType && !currentGameDay && !gameTypeFilter) {
-      console.log('Using database totals (no filter active)');
+      console.log('📊 STATS DEBUG - Using database totals (no filter active)');
       return {
         aces: player.totalAces,
         errors: player.totalFails
@@ -782,17 +803,18 @@ export function useSupabaseVolleyball() {
     }
 
     // For any filtered context, use the filtered serves state
-    console.log('Using filtered serves state');
+    console.log('📊 STATS DEBUG - Using filtered serves state');
     const relevantServes = serves.filter(s => s.playerId === playerId);
 
     const aces = relevantServes.filter(s => s.type === 'ace').length;
     const errors = relevantServes.filter(s => s.type === 'fail').length;
     
-    console.log('Player stats calculated:', { 
+    console.log('📊 STATS DEBUG - Player stats calculated:', { 
       playerName: player.name,
       relevantServesCount: relevantServes.length, 
       aces, 
-      errors 
+      errors,
+      timestamp: new Date().toISOString()
     });
     return { aces, errors };
   };
@@ -909,17 +931,32 @@ export function useSupabaseVolleyball() {
     }
   };
 
-  // Set current game day - Fixed to properly handle GameDay objects and trigger re-renders
+  // Set current game day - Enhanced with comprehensive debugging
   const setCurrentGameDayById = (gameDay: GameDay | null) => {
-    console.log('setCurrentGameDayById called with:', gameDay?.id || 'null', 'title:', gameDay?.title || gameDay?.date || 'null', 'at', new Date().toISOString());
+    console.log('🎯 SELECTION DEBUG - setCurrentGameDayById called with:', {
+      gameDayId: gameDay?.id || 'null', 
+      gameDayTitle: gameDay?.title || gameDay?.date || 'null',
+      timestamp: new Date().toISOString()
+    });
     
     if (!gameDay) {
-      console.log('Clearing current game day selection');
+      console.log('🎯 SELECTION DEBUG - Clearing current game day selection');
       setCurrentGameDay(null);
       return;
     }
     
-    console.log('Setting current game day to:', gameDay.title || gameDay.date, '(ID:', gameDay.id, ')');
+    console.log('🎯 SELECTION DEBUG - Setting current game day to:', {
+      title: gameDay.title || gameDay.date,
+      id: gameDay.id,
+      gameType: gameDay.gameType
+    });
+    
+    // Clear game type filter when selecting specific game
+    if (gameTypeFilter) {
+      console.log('🎯 SELECTION DEBUG - Clearing game type filter because specific game was selected');
+      setGameTypeFilter(null);
+    }
+    
     setCurrentGameDay(gameDay);
   };
 

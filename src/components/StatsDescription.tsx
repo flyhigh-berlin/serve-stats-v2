@@ -6,7 +6,7 @@ import { format } from "date-fns";
 export function StatsDescription() {
   const { currentGameDay, gameTypeFilter, getAllGameTypes } = useSupabaseVolleyball();
   
-  console.log('StatsDescription render:', { 
+  console.log('📋 STATS DESCRIPTION DEBUG - Component render:', { 
     currentGameDayId: currentGameDay?.id, 
     currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
     gameTypeFilter,
@@ -22,9 +22,9 @@ export function StatsDescription() {
     return `${typeLabel} ${titlePart} (${datePart})`;
   };
 
-  // Compute description directly in useMemo to avoid closure issues
+  // Compute description directly to ensure proper re-rendering
   const description = React.useMemo(() => {
-    console.log('StatsDescription useMemo executing with:', {
+    console.log('📋 STATS DESCRIPTION DEBUG - useMemo executing with:', {
       currentGameDayId: currentGameDay?.id,
       currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
       gameTypeFilter,
@@ -33,21 +33,21 @@ export function StatsDescription() {
     
     if (currentGameDay) {
       const result = `Showing stats for ${formatGameDisplay(currentGameDay)}`;
-      console.log('Generated description for current game day:', result);
+      console.log('📋 STATS DESCRIPTION DEBUG - Generated description for current game day:', result);
       return result;
     } else if (gameTypeFilter) {
       const allGameTypes = getAllGameTypes();
       const result = `Showing stats for game type [${gameTypeFilter}] ${allGameTypes[gameTypeFilter]}`;
-      console.log('Generated description for game type filter:', result);
+      console.log('📋 STATS DESCRIPTION DEBUG - Generated description for game type filter:', result);
       return result;
     } else {
       const result = "Showing stats for all games";
-      console.log('Generated description for all games:', result);
+      console.log('📋 STATS DESCRIPTION DEBUG - Generated description for all games:', result);
       return result;
     }
-  }, [currentGameDay, gameTypeFilter, getAllGameTypes]);
+  }, [currentGameDay?.id, currentGameDay?.title, currentGameDay?.date, currentGameDay?.gameType, gameTypeFilter, getAllGameTypes]);
   
-  console.log('StatsDescription final description:', description);
+  console.log('📋 STATS DESCRIPTION DEBUG - Final description:', description);
   
   return (
     <div className="mb-4 p-2 bg-muted/50 rounded-md">
