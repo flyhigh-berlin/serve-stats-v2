@@ -750,8 +750,8 @@ export function useSupabaseVolleyball() {
     }
   };
 
-  // Get all game types (default + custom) - MEMOIZED TO PREVENT RE-RENDERS
-  const getAllGameTypes = React.useMemo((): Record<string, string> => {
+  // Get all game types (default + custom) - STABLE FUNCTION TO PREVENT RE-RENDERS
+  const getAllGameTypes = React.useCallback((): Record<string, string> => {
     const result = { ...defaultGameTypes, ...customGameTypes };
     console.log('getAllGameTypes computed:', Object.keys(result).length, 'types');
     return result;
