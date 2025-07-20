@@ -11,6 +11,7 @@ import { Scoreboard } from "@/components/Scoreboard";
 import { GameHistory } from "@/components/GameHistory";
 import { StatsDescription } from "@/components/StatsDescription";
 import { RealTimeStatus } from "@/components/RealTimeStatus";
+import { RealTimeDebugger } from "@/components/RealTimeDebugger";
 import { UnifiedTeamManagementDialog } from "@/components/UnifiedTeamManagementDialog";
 import { LogOut, Settings, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -27,10 +28,11 @@ const VolleyballTracker = () => {
       <Tabs defaultValue="players" className="w-full">
         <StatsDescription />
         
-        <TabsList className="mb-4 w-full grid grid-cols-3 h-auto">
+        <TabsList className="mb-4 w-full grid grid-cols-4 h-auto">
           <TabsTrigger value="players" className="text-xs sm:text-sm py-2">Players</TabsTrigger>
           <TabsTrigger value="scoreboard" className="text-xs sm:text-sm py-2">Scoreboard</TabsTrigger>
           <TabsTrigger value="history" className="text-xs sm:text-sm py-2">Game History</TabsTrigger>
+          <TabsTrigger value="debug" className="text-xs sm:text-sm py-2">Debug</TabsTrigger>
         </TabsList>
         
         <TabsContent value="players" className="mt-0">
@@ -43,6 +45,12 @@ const VolleyballTracker = () => {
         
         <TabsContent value="history" className="mt-0">
           <GameHistory />
+        </TabsContent>
+        
+        <TabsContent value="debug" className="mt-0">
+          <div className="flex justify-center">
+            <RealTimeDebugger />
+          </div>
         </TabsContent>
       </Tabs>
     </>

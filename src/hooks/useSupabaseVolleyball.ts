@@ -432,128 +432,107 @@ export function useSupabaseVolleyball() {
     }
   }, [currentGameDay?.id, gameTypeFilter, currentTeamId]);
 
-  // SIMPLIFIED REAL-TIME SUBSCRIPTIONS - NO MORE COMPLEX DEPENDENCIES
+  // COMPREHENSIVE REAL-TIME SUBSCRIPTIONS WITH ERROR HANDLING
   useEffect(() => {
     if (!currentTeamId) return;
 
     console.log('📡 Setting up real-time subscriptions for team:', currentTeamId);
-    setConnectionHealth(prev => ({ ...prev, status: 'connecting' }));
+    setConnectionHealth(prev => ({ ...prev, status: 'connecting', reconnectAttempts: 0 }));
 
     const channel = supabase
-      .channel('schema-db-changes')
+      .channel(`team-${currentTeamId}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'players',
           filter: `team_id=eq.${currentTeamId}`
         },
         (payload) => {
-          console.log('📡 REALTIME - Player INSERT:', payload.new.name);
+          console.log('📡 REALTIME - Player event:', payload.eventType, payload);
           
-          const newPlayer: Player = {
-            id: payload.new.id,
-            name: payload.new.name,
-            totalFails: payload.new.total_fails || 0,
-            totalAces: payload.new.total_aces || 0,
-            serves: [],
-            tags: Array.isArray(payload.new.tags) 
-              ? payload.new.tags as string[]
-              : (typeof payload.new.tags === 'string' 
-                  ? JSON.parse(payload.new.tags) 
-                  : []) as string[]
-          };
-          
-          // FUNCTIONAL UPDATE - PREVENTS STALE CLOSURES
-          setPlayers(currentPlayers => {
-            const updated = [...currentPlayers, newPlayer];
-            console.log('📡 Updated players state:', { previousCount: currentPlayers.length, newCount: updated.length });
-            return updated;
-          });
-          
-          setLoadingStates(prev => ({ ...prev, addingPlayer: false }));
-          setLastRealTimeEvent({
-            type: 'INSERT',
-            table: 'players',
-            timestamp: new Date().toISOString(),
-            entityName: newPlayer.name,
-            entityId: newPlayer.id
-          });
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
-          
-          toast.success(`Player ${newPlayer.name} added successfully`);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'players',
-          filter: `team_id=eq.${currentTeamId}`
-        },
-        (payload) => {
-          console.log('📡 REALTIME - Player UPDATE:', payload.new.name);
-          setPlayers(currentPlayers => currentPlayers.map(player => 
-            player.id === payload.new.id 
-              ? {
-                  ...player,
-                  name: payload.new.name,
-                  totalFails: payload.new.total_fails || 0,
-                  totalAces: payload.new.total_aces || 0,
-                  tags: Array.isArray(payload.new.tags) 
-                    ? payload.new.tags as string[]
-                    : (typeof payload.new.tags === 'string' 
-                        ? JSON.parse(payload.new.tags) 
-                        : []) as string[]
-                }
-              : player
-          ));
-          
-          setLastRealTimeEvent({
-            type: 'UPDATE',
-            table: 'players',
-            timestamp: new Date().toISOString(),
-            entityName: payload.new.name,
-            entityId: payload.new.id
-          });
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
-          
-          toast.success('Player updated successfully');
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'players',
-          filter: `team_id=eq.${currentTeamId}`
-        },
-        (payload) => {
-          console.log('📡 REALTIME - Player DELETE:', payload.old.id);
-          
-          setPlayers(currentPlayers => {
-            const removedPlayerName = currentPlayers.find(p => p.id === payload.old.id)?.name || 'Unknown';
-            const updated = currentPlayers.filter(p => p.id !== payload.old.id);
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const newPlayer: Player = {
+              id: payload.new.id,
+              name: payload.new.name,
+              totalFails: payload.new.total_fails || 0,
+              totalAces: payload.new.total_aces || 0,
+              serves: [],
+              tags: Array.isArray(payload.new.tags) 
+                ? payload.new.tags as string[]
+                : (typeof payload.new.tags === 'string' 
+                    ? JSON.parse(payload.new.tags || '[]') 
+                    : []) as string[]
+            };
             
+            setPlayers(currentPlayers => {
+              if (currentPlayers.some(p => p.id === newPlayer.id)) return currentPlayers;
+              const updated = [...currentPlayers, newPlayer];
+              console.log('📡 Added player to state:', newPlayer.name);
+              return updated;
+            });
+            
+            setLoadingStates(prev => ({ ...prev, addingPlayer: false }));
+            setLastRealTimeEvent({
+              type: 'INSERT',
+              table: 'players',
+              timestamp: new Date().toISOString(),
+              entityName: newPlayer.name,
+              entityId: newPlayer.id
+            });
+            
+            toast.success(`Player ${newPlayer.name} added successfully`);
+          }
+          
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            setPlayers(currentPlayers => currentPlayers.map(player => 
+              player.id === payload.new.id 
+                ? {
+                    ...player,
+                    name: payload.new.name,
+                    totalFails: payload.new.total_fails || 0,
+                    totalAces: payload.new.total_aces || 0,
+                    tags: Array.isArray(payload.new.tags) 
+                      ? payload.new.tags as string[]
+                      : (typeof payload.new.tags === 'string' 
+                          ? JSON.parse(payload.new.tags || '[]') 
+                          : []) as string[]
+                  }
+                : player
+            ));
+            
+            setLastRealTimeEvent({
+              type: 'UPDATE',
+              table: 'players',
+              timestamp: new Date().toISOString(),
+              entityName: payload.new.name,
+              entityId: payload.new.id
+            });
+            
+            console.log('📡 Updated player:', payload.new.name);
+          }
+          
+          if (payload.eventType === 'DELETE' && payload.old) {
+            setPlayers(currentPlayers => {
+              const updated = currentPlayers.filter(player => player.id !== payload.old.id);
+              console.log('📡 Removed player from state:', payload.old.name);
+              return updated;
+            });
+            
+            setLoadingStates(prev => ({ ...prev, removingPlayer: null }));
             setLastRealTimeEvent({
               type: 'DELETE',
               table: 'players',
               timestamp: new Date().toISOString(),
-              entityName: removedPlayerName,
+              entityName: payload.old.name,
               entityId: payload.old.id
             });
             
-            return updated;
-          });
+            toast.success(`Player ${payload.old.name} removed successfully`);
+          }
           
-          setLoadingStates(prev => ({ ...prev, removingPlayer: null }));
           setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
-          
-          const removedPlayerName = payload.old.name || 'Unknown';
-          toast.success(`Player ${removedPlayerName} removed successfully`);
         }
       )
       .on(
@@ -1105,6 +1084,7 @@ export function useSupabaseVolleyball() {
     // Real-time monitoring
     lastRealTimeEvent,
     realtimeConnectionStatus: connectionHealth.status,
+    connectionHealth,
 
     // Actions
     addPlayer,

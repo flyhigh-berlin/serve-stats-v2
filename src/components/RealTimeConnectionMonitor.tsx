@@ -35,6 +35,17 @@ export function RealTimeConnectionMonitor() {
     return eventAge < 120000; // 2 minutes
   };
 
+  const getConnectionMessage = () => {
+    switch (realtimeConnectionStatus) {
+      case 'connected': 
+        return 'Real-time updates active';
+      case 'disconnected': 
+        return 'Real-time updates unavailable';
+      case 'connecting': 
+        return 'Establishing real-time connection...';
+    }
+  };
+
   return (
     <div className="flex items-center justify-center gap-2 text-xs">
       <Badge variant={getStatusColor()} className="flex items-center gap-1">
