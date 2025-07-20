@@ -1,15 +1,11 @@
 
 import React from "react";
-import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Filter } from "lucide-react";
 import { format } from "date-fns";
+import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
+import { GameDay, GameType } from "../types";
 
 export function GameDaySelection() {
   const { 
@@ -18,51 +14,31 @@ export function GameDaySelection() {
     setCurrentGameDay, 
     gameTypeFilter, 
     setGameTypeFilter, 
-    getAllGameTypes 
+    getAllGameTypes,
+    renderTrigger // Add renderTrigger for stable updates
   } = useSupabaseVolleyball();
 
+  console.log('📅 GAME DAY SELECTION DEBUG - Component render:', {
+    gameDaysCount: gameDays.length,
+    currentGameDayId: currentGameDay?.id,
+    gameTypeFilter,
+    renderTrigger,
+    timestamp: new Date().toISOString()
+  });
+
   const allGameTypes = getAllGameTypes();
+  const gameTypeEntries = Object.entries(allGameTypes);
 
-  const handleGameDaySelect = (gameId: string) => {
-    console.log('🎮 SELECTION DEBUG - handleGameDaySelect called with:', gameId, 'at', new Date().toISOString());
-    
-    if (gameId === "all") {
-      console.log('🎮 SELECTION DEBUG - Clearing game day and game type filter');
-      setCurrentGameDay(null);
-      setGameTypeFilter(null);
-    } else {
-      const selectedGameDay = gameDays.find(gd => gd.id === gameId);
-      if (selectedGameDay) {
-        console.log('🎮 SELECTION DEBUG - Setting game day to:', {
-          title: selectedGameDay.title || selectedGameDay.date, 
-          id: gameId,
-          gameType: selectedGameDay.gameType
-        });
-        console.log('🎮 SELECTION DEBUG - Full selected game day object:', selectedGameDay);
-        setCurrentGameDay(selectedGameDay); // Pass the full GameDay object
-        setGameTypeFilter(null); // Clear game type filter when specific game is selected
-      } else {
-        console.error('🎮 SELECTION DEBUG - Game day not found for ID:', gameId);
-      }
-    }
+  // Get filtered game days for display
+  const getFilteredGameDays = (): GameDay[] => {
+    if (!gameTypeFilter) return gameDays;
+    return gameDays.filter(gd => gd.gameType === gameTypeFilter);
   };
 
-  const handleGameTypeFilterSelect = (gameType: string) => {
-    console.log('🔍 FILTER DEBUG - handleGameTypeFilterSelect called with:', gameType, 'at', new Date().toISOString());
-    
-    if (gameType === "all") {
-      console.log('🔍 FILTER DEBUG - Clearing game type filter and game day');
-      setGameTypeFilter(null);
-      setCurrentGameDay(null);
-    } else {
-      console.log('🔍 FILTER DEBUG - Setting game type filter to:', gameType, 'and clearing game day');
-      setGameTypeFilter(gameType);
-      setCurrentGameDay(null); // Clear specific game selection when game type filter is applied
-    }
-  };
+  const filteredGameDays = getFilteredGameDays();
 
   // Format game display text
-  const formatGameDisplay = (gameDay: any) => {
+  const formatGameDisplay = (gameDay: GameDay) => {
     const typeLabel = `[${gameDay.gameType}]`;
     const titlePart = gameDay.title || format(new Date(gameDay.date), "EEEE");
     const datePart = format(new Date(gameDay.date), "dd.MM.yy");
@@ -70,43 +46,75 @@ export function GameDaySelection() {
     return `${typeLabel} ${titlePart} (${datePart})`;
   };
 
-  console.log('🎮 SELECTION DEBUG - GameDaySelection render:', { 
-    currentGameDayId: currentGameDay?.id, 
-    currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
-    gameTypeFilter,
-    gameDaysCount: gameDays.length,
-    timestamp: new Date().toISOString()
-  });
+  const handleGameDaySelect = (value: string) => {
+    console.log('📅 GAME DAY SELECTION DEBUG - Game day selected:', value);
+    
+    if (value === "clear") {
+      console.log('📅 GAME DAY SELECTION DEBUG - Clearing selection');
+      setCurrentGameDay(null);
+      setGameTypeFilter(null);
+      return;
+    }
 
-  // Memoize the current values to ensure proper re-rendering and prevent stale closures
-  const currentGameDayValue = React.useMemo(() => {
-    const value = currentGameDay?.id || "all";
-    console.log('🎮 SELECTION DEBUG - currentGameDayValue computed as:', value);
-    return value;
-  }, [currentGameDay?.id]);
+    const selectedGameDay = gameDays.find(gd => gd.id === value);
+    if (selectedGameDay) {
+      console.log('📅 GAME DAY SELECTION DEBUG - Setting current game day:', selectedGameDay.title || selectedGameDay.date);
+      setCurrentGameDay(selectedGameDay);
+    }
+  };
 
-  const gameTypeFilterValue = React.useMemo(() => {
-    const value = gameTypeFilter || "all";
-    console.log('🔍 FILTER DEBUG - gameTypeFilterValue computed as:', value);
-    return value;
-  }, [gameTypeFilter]);
+  const handleGameTypeSelect = (value: string) => {
+    console.log('📅 GAME DAY SELECTION DEBUG - Game type selected:', value);
+    
+    if (value === "clear") {
+      console.log('📅 GAME DAY SELECTION DEBUG - Clearing game type filter');
+      setGameTypeFilter(null);
+      setCurrentGameDay(null);
+      return;
+    }
+
+    console.log('📅 GAME DAY SELECTION DEBUG - Setting game type filter:', value);
+    setGameTypeFilter(value as GameType);
+    setCurrentGameDay(null); // Clear specific game selection when filtering by type
+  };
+
+  // Determine current selection value for game day select
+  const getCurrentGameDayValue = () => {
+    if (currentGameDay) return currentGameDay.id;
+    return "clear";
+  };
+
+  // Determine current selection value for game type select
+  const getCurrentGameTypeValue = () => {
+    if (gameTypeFilter) return gameTypeFilter;
+    return "clear";
+  };
 
   return (
-    <div className="space-y-4">
-      {/* Game Day Selection */}
+    <div className="space-y-3">
+      {/* Game Day Selector */}
       <div className="space-y-2">
-        <Label>Select Game Day</Label>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Select Game Day</span>
+          {currentGameDay && (
+            <Badge variant="secondary" className="text-xs">
+              Selected
+            </Badge>
+          )}
+        </div>
+        
         <Select 
-          key={`gameday-${currentGameDayValue}-${Date.now()}`} // Force re-render when value changes
-          value={currentGameDayValue} 
+          value={getCurrentGameDayValue()} 
           onValueChange={handleGameDaySelect}
+          key={`gameday-${renderTrigger}`} // Use renderTrigger for stable updates
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Select a game day" />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Choose a specific game day" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Games</SelectItem>
-            {gameDays.map(gameDay => (
+            <SelectItem value="clear">Clear Selection</SelectItem>
+            {gameDays.map((gameDay) => (
               <SelectItem key={gameDay.id} value={gameDay.id}>
                 {formatGameDisplay(gameDay)}
               </SelectItem>
@@ -117,19 +125,27 @@ export function GameDaySelection() {
 
       {/* Game Type Filter */}
       <div className="space-y-2">
-        <Label>Filter by Game Type</Label>
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Filter by Game Type</span>
+          {gameTypeFilter && (
+            <Badge variant="secondary" className="text-xs">
+              {allGameTypes[gameTypeFilter]}
+            </Badge>
+          )}
+        </div>
+        
         <Select 
-          key={`gametype-${gameTypeFilterValue}-${Date.now()}`} // Force re-render when value changes
-          value={gameTypeFilterValue} 
-          onValueChange={handleGameTypeFilterSelect}
-          disabled={!!currentGameDay} // Disable when specific game is selected
+          value={getCurrentGameTypeValue()} 
+          onValueChange={handleGameTypeSelect}
+          key={`gametype-${renderTrigger}`} // Use renderTrigger for stable updates
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Select game type" />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Filter by game type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Game Types</SelectItem>
-            {Object.entries(allGameTypes).map(([type, name]) => (
+            <SelectItem value="clear">Show All Types</SelectItem>
+            {gameTypeEntries.map(([type, name]) => (
               <SelectItem key={type} value={type}>
                 [{type}] {name}
               </SelectItem>
@@ -137,6 +153,13 @@ export function GameDaySelection() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Summary */}
+      {gameTypeFilter && (
+        <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+          Showing {filteredGameDays.length} game{filteredGameDays.length !== 1 ? 's' : ''} of type [{gameTypeFilter}] {allGameTypes[gameTypeFilter]}
+        </div>
+      )}
     </div>
   );
 }
