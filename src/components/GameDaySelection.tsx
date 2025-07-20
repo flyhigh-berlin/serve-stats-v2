@@ -15,14 +15,14 @@ export function GameDaySelection() {
     gameTypeFilter, 
     setGameTypeFilter, 
     getAllGameTypes,
-    renderTrigger // Add renderTrigger for stable updates
+    lastUpdateTimestamp // Replace renderTrigger with lastUpdateTimestamp
   } = useSupabaseVolleyball();
 
   console.log('📅 GAME DAY SELECTION DEBUG - Component render:', {
     gameDaysCount: gameDays.length,
     currentGameDayId: currentGameDay?.id,
     gameTypeFilter,
-    renderTrigger,
+    lastUpdateTimestamp, // Replace renderTrigger with lastUpdateTimestamp
     timestamp: new Date().toISOString()
   });
 
@@ -107,7 +107,6 @@ export function GameDaySelection() {
         <Select 
           value={getCurrentGameDayValue()} 
           onValueChange={handleGameDaySelect}
-          key={`gameday-${renderTrigger}`} // Use renderTrigger for stable updates
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Choose a specific game day" />
@@ -138,7 +137,6 @@ export function GameDaySelection() {
         <Select 
           value={getCurrentGameTypeValue()} 
           onValueChange={handleGameTypeSelect}
-          key={`gametype-${renderTrigger}`} // Use renderTrigger for stable updates
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Filter by game type" />

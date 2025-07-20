@@ -8,14 +8,14 @@ export function StatsDescription() {
     currentGameDay, 
     gameTypeFilter, 
     getAllGameTypes,
-    renderTrigger // Use renderTrigger instead of uiVersion
+    lastUpdateTimestamp // Replace renderTrigger with lastUpdateTimestamp
   } = useSupabaseVolleyball();
   
   console.log('📋 STATS DESCRIPTION DEBUG - Component render:', { 
     currentGameDayId: currentGameDay?.id, 
     currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
     gameTypeFilter,
-    renderTrigger, // Use renderTrigger instead of uiVersion
+    lastUpdateTimestamp, // Replace renderTrigger with lastUpdateTimestamp
     timestamp: new Date().toISOString()
   });
   
@@ -34,7 +34,7 @@ export function StatsDescription() {
       currentGameDayId: currentGameDay?.id,
       currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
       gameTypeFilter,
-      renderTrigger, // Use renderTrigger instead of uiVersion
+      lastUpdateTimestamp, // Replace renderTrigger with lastUpdateTimestamp
       timestamp: new Date().toISOString()
     });
     
@@ -52,7 +52,7 @@ export function StatsDescription() {
       console.log('📋 STATS DESCRIPTION DEBUG - Generated description for all games:', result);
       return result;
     }
-  }, [currentGameDay?.id, currentGameDay?.title, currentGameDay?.date, currentGameDay?.gameType, gameTypeFilter, getAllGameTypes, renderTrigger]); // Use renderTrigger instead of uiVersion
+  }, [currentGameDay?.id, currentGameDay?.title, currentGameDay?.date, currentGameDay?.gameType, gameTypeFilter, getAllGameTypes, lastUpdateTimestamp]); // Replace renderTrigger with lastUpdateTimestamp
   
   console.log('📋 STATS DESCRIPTION DEBUG - Final description:', description);
   
