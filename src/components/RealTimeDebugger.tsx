@@ -8,7 +8,6 @@ import { Wifi, WifiOff, Clock, Activity, RefreshCw } from "lucide-react";
 export function RealTimeDebugger() {
   const {
     realtimeConnectionStatus,
-    connectionHealth,
     lastRealTimeEvent,
     refreshData,
     currentGameDay,
@@ -63,12 +62,12 @@ export function RealTimeDebugger() {
           <div>
             <div className="text-muted-foreground">Last Event</div>
             <div className="font-mono">
-              {formatTime(connectionHealth.lastEventTime)}
+              {lastRealTimeEvent ? new Date(lastRealTimeEvent.timestamp).toLocaleTimeString() : 'None'}
             </div>
           </div>
           <div>
-            <div className="text-muted-foreground">Reconnect Attempts</div>
-            <div className="font-mono">{connectionHealth.reconnectAttempts}</div>
+            <div className="text-muted-foreground">Connection</div>
+            <div className="font-mono">{realtimeConnectionStatus}</div>
           </div>
         </div>
 
