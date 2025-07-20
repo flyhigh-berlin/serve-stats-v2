@@ -8,6 +8,8 @@ import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { GameDay, GameType } from "../types";
 
 export function GameDaySelection() {
+  console.log('🎨 GameDaySelection rendering'); // Debug render
+
   const { 
     gameDays, 
     currentGameDay, 
@@ -19,6 +21,12 @@ export function GameDaySelection() {
 
   const allGameTypes = getAllGameTypes();
   const gameTypeEntries = Object.entries(allGameTypes);
+
+  console.log('🎨 GameDaySelection state:', {
+    gameDaysCount: gameDays.length,
+    currentGameDayId: currentGameDay?.id,
+    gameTypeFilter
+  });
 
   // Get filtered game days for display
   const getFilteredGameDays = (): GameDay[] => {

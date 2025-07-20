@@ -9,6 +9,8 @@ import { PlayerManagementDialog } from "./PlayerManagementDialog";
 import { Settings, RefreshCw, Loader2, Wifi, WifiOff, Clock } from "lucide-react";
 
 export function PlayerList() {
+  console.log('🎨 PlayerList rendering'); // Debug render
+
   const { 
     getFilteredPlayers, 
     currentGameDay, 
@@ -22,6 +24,13 @@ export function PlayerList() {
   
   // Get filtered players based on current game day or game type filter
   const filteredPlayers = getFilteredPlayers();
+  
+  console.log('🎨 PlayerList state:', {
+    totalPlayers: players.length,
+    filteredPlayers: filteredPlayers.length,
+    connectionStatus: realtimeConnectionStatus,
+    lastEvent: lastRealTimeEvent?.type || 'none'
+  });
   
   // Show real-time event indicators for better UX
   const showEventIndicator = lastRealTimeEvent && 
@@ -108,13 +117,16 @@ export function PlayerList() {
           
           <div className="space-y-2">
             {filteredPlayers.length > 0 ? (
-              filteredPlayers.map(player => (
-                <PlayerCard 
-                  key={player.id} // Stable player ID only
-                  player={player} 
-                  gameId={currentGameDay?.id}
-                />
-              ))
+              filteredPlayers.map(player => {
+                console.log('🎨 Rendering PlayerCard for:', player.name, 'ID:', player.id);
+                return (
+                  <PlayerCard 
+                    key={player.id} // Stable player ID only
+                    player={player} 
+                    gameId={currentGameDay?.id}
+                  />
+                );
+              })
             ) : (
               <div className="text-center py-8 text-muted-foreground text-sm">
                 {currentGameDay || gameTypeFilter ? 

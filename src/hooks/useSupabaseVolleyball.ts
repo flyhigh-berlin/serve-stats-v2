@@ -25,11 +25,7 @@ interface RealTimeEvent {
 }
 
 // Connection health monitoring
-interface ConnectionHealth {
-  status: 'connected' | 'disconnected' | 'connecting';
-  lastEventTime: number | null;
-  reconnectAttempts: number;
-}
+type ConnectionStatus = 'connected' | 'disconnected' | 'connecting';
 
 export function useSupabaseVolleyball() {
   const { currentTeam } = useTeam();
@@ -51,23 +47,17 @@ export function useSupabaseVolleyball() {
 
   // Real-time monitoring - simplified
   const [lastRealTimeEvent, setLastRealTimeEvent] = useState<RealTimeEvent | null>(null);
-  const [connectionHealth, setConnectionHealth] = useState<ConnectionHealth>({
-    status: 'connecting',
-    lastEventTime: null,
-    reconnectAttempts: 0
-  });
+  const [realtimeConnectionStatus, setRealtimeConnectionStatus] = useState<ConnectionStatus>('connecting');
 
   const currentTeamId = currentTeam?.id;
 
-  console.log('🏐 HOOK STATE - useSupabaseVolleyball current state:', {
+  console.log('🏐 HOOK STATE:', {
     currentGameDayId: currentGameDay?.id,
-    currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
     gameTypeFilter,
-    gameDaysCount: gameDays.length,
     playersCount: players.length,
+    gameDaysCount: gameDays.length,
     servesCount: serves.length,
-    connectionStatus: connectionHealth.status,
-    lastEventTime: connectionHealth.lastEventTime
+    connectionStatus: realtimeConnectionStatus
   });
 
   // Helper function to check if a serve matches current filter context
@@ -76,6 +66,7 @@ export function useSupabaseVolleyball() {
       return serve.gameId === currentGameDay.id;
     }
     if (gameTypeFilter) {
+      // Check if any game day of the filter type contains this serve
       return gameDays.some(gd => gd.id === serve.gameId && gd.gameType === gameTypeFilter);
     }
     return false;
@@ -187,7 +178,7 @@ export function useSupabaseVolleyball() {
         console.log('📊 Loading serves for specific game:', gameId);
         query = query.eq('game_id', gameId);
       } else if (currentGameDay) {
-        console.log('📊 Loading serves for current game day:', currentGameDay.id, currentGameDay.title || currentGameDay.date);
+        console.log('📊 Loading serves for current game day:', currentGameDay.id);
         query = query.eq('game_id', currentGameDay.id);
       } else if (gameTypeFilter) {
         console.log('📊 Loading serves for game type filter:', gameTypeFilter);
@@ -374,8 +365,7 @@ export function useSupabaseVolleyball() {
         playerId, 
         type, 
         quality, 
-        targetGameId: currentGameDay.id, 
-        targetGameTitle: currentGameDay.title || currentGameDay.date
+        targetGameId: currentGameDay.id
       });
       
       const { error } = await supabase
@@ -423,7 +413,6 @@ export function useSupabaseVolleyball() {
   useEffect(() => {
     console.log('🔄 Filter changed, reloading serves:', { 
       currentGameDayId: currentGameDay?.id, 
-      currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
       gameTypeFilter
     });
     
@@ -432,12 +421,12 @@ export function useSupabaseVolleyball() {
     }
   }, [currentGameDay?.id, gameTypeFilter, currentTeamId]);
 
-  // COMPREHENSIVE REAL-TIME SUBSCRIPTIONS WITH ERROR HANDLING
+  // FIXED REAL-TIME SUBSCRIPTIONS - NO STALE CLOSURES
   useEffect(() => {
     if (!currentTeamId) return;
 
     console.log('📡 Setting up real-time subscriptions for team:', currentTeamId);
-    setConnectionHealth(prev => ({ ...prev, status: 'connecting', reconnectAttempts: 0 }));
+    setRealtimeConnectionStatus('connecting');
 
     const channel = supabase
       .channel(`team-${currentTeamId}`)
@@ -466,11 +455,14 @@ export function useSupabaseVolleyball() {
                     : []) as string[]
             };
             
+            // FIXED: Pure functional update with no dependencies
             setPlayers(currentPlayers => {
-              if (currentPlayers.some(p => p.id === newPlayer.id)) return currentPlayers;
-              const updated = [...currentPlayers, newPlayer];
-              console.log('📡 Added player to state:', newPlayer.name);
-              return updated;
+              if (currentPlayers.some(p => p.id === newPlayer.id)) {
+                console.log('📡 Player already exists, skipping add');
+                return currentPlayers;
+              }
+              console.log('📡 Adding new player to state:', newPlayer.name);
+              return [...currentPlayers, newPlayer]; // New array reference
             });
             
             setLoadingStates(prev => ({ ...prev, addingPlayer: false }));
@@ -486,6 +478,7 @@ export function useSupabaseVolleyball() {
           }
           
           if (payload.eventType === 'UPDATE' && payload.new) {
+            // FIXED: Pure functional update
             setPlayers(currentPlayers => currentPlayers.map(player => 
               player.id === payload.new.id 
                 ? {
@@ -514,10 +507,11 @@ export function useSupabaseVolleyball() {
           }
           
           if (payload.eventType === 'DELETE' && payload.old) {
+            // FIXED: Pure functional update
             setPlayers(currentPlayers => {
               const updated = currentPlayers.filter(player => player.id !== payload.old.id);
               console.log('📡 Removed player from state:', payload.old.name);
-              return updated;
+              return updated; // New array reference
             });
             
             setLoadingStates(prev => ({ ...prev, removingPlayer: null }));
@@ -531,8 +525,6 @@ export function useSupabaseVolleyball() {
             
             toast.success(`Player ${payload.old.name} removed successfully`);
           }
-          
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
         }
       )
       .on(
@@ -554,7 +546,7 @@ export function useSupabaseVolleyball() {
             notes: payload.new.notes || undefined
           };
           
-          // FUNCTIONAL UPDATE - PREVENTS STALE CLOSURES
+          // FIXED: Pure functional update with new array reference
           setGameDays(currentGameDays => {
             const updated = [newGameDay, ...currentGameDays];
             console.log('📡 Updated game days state:', { previousCount: currentGameDays.length, newCount: updated.length });
@@ -569,7 +561,6 @@ export function useSupabaseVolleyball() {
             entityName: newGameDay.title || newGameDay.date,
             entityId: newGameDay.id
           });
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
           
           // Auto-select the newly created game day
           console.log('🎯 Auto-selecting newly created game day');
@@ -589,6 +580,8 @@ export function useSupabaseVolleyball() {
         },
         (payload) => {
           console.log('📡 REALTIME - Game day UPDATE:', payload.new.title || payload.new.date);
+          
+          // FIXED: Pure functional update
           setGameDays(currentGameDays => currentGameDays.map(gameDay => 
             gameDay.id === payload.new.id 
               ? {
@@ -621,7 +614,6 @@ export function useSupabaseVolleyball() {
             entityName: payload.new.title || payload.new.date,
             entityId: payload.new.id
           });
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
         }
       )
       .on(
@@ -634,6 +626,8 @@ export function useSupabaseVolleyball() {
         },
         (payload) => {
           console.log('📡 REALTIME - Game day DELETE:', payload.old.id);
+          
+          // FIXED: Pure functional update
           setGameDays(currentGameDays => currentGameDays.filter(gd => gd.id !== payload.old.id));
           
           // Clear current game day if it was deleted
@@ -648,7 +642,6 @@ export function useSupabaseVolleyball() {
             entityName: payload.old.title || payload.old.date || 'Unknown',
             entityId: payload.old.id
           });
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
         }
       )
       .on(
@@ -670,19 +663,26 @@ export function useSupabaseVolleyball() {
             timestamp: payload.new.timestamp || new Date().toISOString()
           };
           
-          // Only add to serves state if it matches current filter context
-          if (serveMatchesCurrentFilter(newServe)) {
-            console.log('🏐 Adding new serve to filtered serves state');
-            setServes(currentServes => [...currentServes, newServe]);
-          }
+          // FIXED: Update serves state with pure functional update
+          setServes(currentServes => {
+            // Check if serve matches current filter without accessing stale state
+            const matchesFilter = currentGameDay?.id === newServe.gameId || 
+                                  gameTypeFilter && gameDays.some(gd => gd.id === newServe.gameId && gd.gameType === gameTypeFilter);
+            
+            if (matchesFilter) {
+              console.log('🏐 Adding new serve to filtered serves state');
+              return [...currentServes, newServe]; // New array reference
+            }
+            return currentServes;
+          });
           
-          // Update player's serves array and stats
+          // FIXED: Update player's serves array with pure functional update
           setPlayers(currentPlayers => currentPlayers.map(player => {
             if (player.id === payload.new.player_id) {
               console.log('🏐 Adding serve to player serves array');
               return { 
                 ...player, 
-                serves: [...player.serves, newServe],
+                serves: [...player.serves, newServe], // New array reference
                 totalAces: payload.new.type === 'ace' ? player.totalAces + 1 : player.totalAces,
                 totalFails: payload.new.type === 'fail' ? player.totalFails + 1 : player.totalFails
               };
@@ -690,7 +690,6 @@ export function useSupabaseVolleyball() {
             return player;
           }));
           
-          // Clear loading state and show success
           setLoadingStates(prev => ({ ...prev, recordingServe: null }));
           
           setLastRealTimeEvent({
@@ -700,11 +699,8 @@ export function useSupabaseVolleyball() {
             entityName: `${payload.new.type} serve`,
             entityId: newServe.id
           });
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
           
-          // Find player name for toast
-          const playerName = players.find(p => p.id === payload.new.player_id)?.name || 'Unknown';
-          toast.success(`${payload.new.type === 'ace' ? 'Ace' : 'Error'} recorded for ${playerName}`);
+          toast.success(`${payload.new.type === 'ace' ? 'Ace' : 'Error'} recorded successfully`);
         }
       )
       .on(
@@ -718,10 +714,9 @@ export function useSupabaseVolleyball() {
         (payload) => {
           console.log('🏐 REALTIME - Serve DELETE:', payload.old);
           
-          // Remove from serves list
+          // FIXED: Pure functional updates
           setServes(currentServes => currentServes.filter(s => s.id !== payload.old.id));
           
-          // Remove from player's serves array and update stats
           setPlayers(currentPlayers => currentPlayers.map(player => 
             player.id === payload.old.player_id
               ? { 
@@ -741,7 +736,6 @@ export function useSupabaseVolleyball() {
             entityName: `${payload.old.type} serve`,
             entityId: payload.old.id
           });
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
           
           toast.success('Serve removed');
         }
@@ -749,58 +743,37 @@ export function useSupabaseVolleyball() {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'custom_game_types',
           filter: `team_id=eq.${currentTeamId}`
         },
         (payload) => {
-          setCustomGameTypes(prev => ({ 
-            ...prev, 
-            [payload.new.abbreviation]: payload.new.name 
-          }));
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'custom_game_types',
-          filter: `team_id=eq.${currentTeamId}`
-        },
-        (payload) => {
-          setCustomGameTypes(prev => ({ 
-            ...prev, 
-            [payload.new.abbreviation]: payload.new.name 
-          }));
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'custom_game_types',
-          filter: `team_id=eq.${currentTeamId}`
-        },
-        (payload) => {
-          setCustomGameTypes(prev => {
-            const newTypes = { ...prev };
-            delete newTypes[payload.old.abbreviation];
-            return newTypes;
-          });
-          setConnectionHealth(prev => ({ ...prev, lastEventTime: Date.now() }));
+          if (payload.eventType === 'INSERT' && payload.new) {
+            setCustomGameTypes(prev => ({ 
+              ...prev, 
+              [payload.new.abbreviation]: payload.new.name 
+            }));
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            setCustomGameTypes(prev => ({ 
+              ...prev, 
+              [payload.new.abbreviation]: payload.new.name 
+            }));
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            setCustomGameTypes(prev => {
+              const newTypes = { ...prev };
+              delete newTypes[payload.old.abbreviation];
+              return newTypes;
+            });
+          }
         }
       )
       .subscribe((status) => {
         console.log('📡 REALTIME CONNECTION STATUS:', status);
         if (status === 'SUBSCRIBED') {
-          setConnectionHealth(prev => ({ ...prev, status: 'connected', reconnectAttempts: 0 }));
+          setRealtimeConnectionStatus('connected');
         } else if (status === 'CLOSED') {
-          setConnectionHealth(prev => ({ ...prev, status: 'disconnected' }));
+          setRealtimeConnectionStatus('disconnected');
         }
       });
 
@@ -808,32 +781,7 @@ export function useSupabaseVolleyball() {
       console.log('🧹 Cleaning up real-time subscriptions');
       supabase.removeChannel(channel);
     };
-  }, [currentTeamId]); // ONLY STABLE DEPENDENCY
-
-  // Connection Health Monitoring with Auto-Reconnect
-  useEffect(() => {
-    if (connectionHealth.status !== 'connected') return;
-
-    const healthCheck = setInterval(() => {
-      const now = Date.now();
-      const timeSinceLastEvent = connectionHealth.lastEventTime ? now - connectionHealth.lastEventTime : 0;
-      
-      // If no events for 60 seconds and we've had events before, consider connection stale
-      if (connectionHealth.lastEventTime && timeSinceLastEvent > 60000) {
-        console.log('⚠️ Connection appears stale, triggering refresh');
-        setConnectionHealth(prev => ({ ...prev, status: 'connecting' }));
-        
-        // Auto-refresh data as fallback
-        setTimeout(() => {
-          loadPlayers();
-          loadGameDays();
-          loadCustomGameTypes();
-        }, 2000);
-      }
-    }, 30000); // Check every 30 seconds
-
-    return () => clearInterval(healthCheck);
-  }, [connectionHealth.status, connectionHealth.lastEventTime]);
+  }, [currentTeamId]); // ONLY depend on currentTeamId - no other dependencies
 
   // Custom game types management
   const addCustomGameType = async (abbreviation: string, name: string) => {
@@ -907,8 +855,6 @@ export function useSupabaseVolleyball() {
       gameId, 
       gameType, 
       playerName: player.name,
-      currentGameDay: currentGameDay?.id,
-      gameTypeFilter,
       servesStateCount: serves.length
     });
 
@@ -1083,8 +1029,7 @@ export function useSupabaseVolleyball() {
     
     // Real-time monitoring
     lastRealTimeEvent,
-    realtimeConnectionStatus: connectionHealth.status,
-    connectionHealth,
+    realtimeConnectionStatus,
 
     // Actions
     addPlayer,

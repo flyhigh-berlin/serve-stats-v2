@@ -9,6 +9,8 @@ import { GameServeHistoryDialog } from "./GameServeHistoryDialog";
 import { RefreshCw, Wifi, WifiOff, Clock } from "lucide-react";
 
 export function GameHistory() {
+  console.log('🎨 GameHistory rendering'); // Debug render
+
   const { 
     gameDays, 
     players, 
@@ -24,6 +26,13 @@ export function GameHistory() {
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   
   const allGameTypes = getAllGameTypes();
+  
+  console.log('🎨 GameHistory state:', {
+    gameDaysCount: gameDays.length,
+    playersCount: players.length,
+    connectionStatus: realtimeConnectionStatus,
+    lastEvent: lastRealTimeEvent?.type || 'none'
+  });
   
   // Show real-time event indicators for better UX
   const showEventIndicator = lastRealTimeEvent && 
@@ -167,6 +176,7 @@ export function GameHistory() {
           {sortedGames.length > 0 ? (
             <div className="space-y-3">
               {sortedGames.map(game => {
+                console.log('🎨 Rendering game history item for:', game.id, game.title || game.date);
                 const stats = calculateGameStats(game.id);
                 const isSelected = currentGameDay?.id === game.id;
                 
