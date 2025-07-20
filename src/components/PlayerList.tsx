@@ -9,10 +9,18 @@ import { PlayerManagementDialog } from "./PlayerManagementDialog";
 import { Settings, Plus } from "lucide-react";
 
 export function PlayerList() {
-  const { getFilteredPlayers, currentGameDay, gameTypeFilter } = useSupabaseVolleyball();
+  const { getFilteredPlayers, currentGameDay, gameTypeFilter, players } = useSupabaseVolleyball();
   
   // Get filtered players based on current game day or game type filter
   const filteredPlayers = getFilteredPlayers();
+  
+  console.log('👥 PLAYER LIST DEBUG - Component render:', {
+    filteredPlayersCount: filteredPlayers.length,
+    totalPlayersCount: players.length,
+    currentGameDay: currentGameDay?.id,
+    gameTypeFilter,
+    timestamp: new Date().toISOString()
+  });
   
   return (
     <>
@@ -40,7 +48,7 @@ export function PlayerList() {
             {filteredPlayers.length > 0 ? (
               filteredPlayers.map(player => (
                 <PlayerCard 
-                  key={player.id} 
+                  key={`player-${player.id}-${Date.now()}`} // Force re-render when players change
                   player={player} 
                   gameId={currentGameDay?.id}
                 />
