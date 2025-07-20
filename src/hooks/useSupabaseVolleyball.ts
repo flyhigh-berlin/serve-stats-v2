@@ -1,9 +1,19 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeam } from "../context/TeamContext";
 import { Player, GameDay, Serve, GameType, ServeQuality, SortField, SortDirection, gameTypes as defaultGameTypes } from "../types";
 import { toast } from "sonner";
 import React from "react";
+
+// Loading states for CRUD operations
+interface LoadingStates {
+  addingPlayer: boolean;
+  removingPlayer: string | null;
+  addingGameDay: boolean;
+  recordingServe: string | null; // player ID for whom serve is being recorded
+  removingServe: string | null;
+}
 
 export function useSupabaseVolleyball() {
   const { currentTeam } = useTeam();
@@ -15,6 +25,13 @@ export function useSupabaseVolleyball() {
   const [customGameTypes, setCustomGameTypes] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [hasAutoSelected, setHasAutoSelected] = useState(false);
+  const [loadingStates, setLoadingStates] = useState<LoadingStates>({
+    addingPlayer: false,
+    removingPlayer: null,
+    addingGameDay: false,
+    recordingServe: null,
+    removingServe: null
+  });
 
   const currentTeamId = currentTeam?.id;
 
@@ -25,6 +42,7 @@ export function useSupabaseVolleyball() {
     gameDaysCount: gameDays.length,
     playersCount: players.length,
     servesCount: serves.length,
+    loadingStates,
     timestamp: new Date().toISOString()
   });
 
@@ -192,14 +210,17 @@ export function useSupabaseVolleyball() {
     }
   };
 
-  // Add player with immediate state update
+  // Add player - REAL-TIME FIRST APPROACH
   const addPlayer = async (name: string, tags: string[] = []) => {
     if (!currentTeamId) return;
+    
+    setLoadingStates(prev => ({ ...prev, addingPlayer: true }));
+    toast("Adding player...", { description: "Please wait for confirmation" });
     
     try {
       console.log('➕ PLAYER ADD DEBUG - Starting to add player:', name, 'with tags:', tags);
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('players')
         .insert({
           name,
@@ -207,49 +228,31 @@ export function useSupabaseVolleyball() {
           tags: JSON.stringify(tags),
           total_aces: 0,
           total_fails: 0
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
-      const newPlayer: Player = {
-        id: data.id,
-        name: data.name,
-        totalFails: data.total_fails || 0,
-        totalAces: data.total_aces || 0,
-        serves: [],
-        tags: Array.isArray(data.tags) 
-          ? data.tags as string[]
-          : (typeof data.tags === 'string' 
-              ? JSON.parse(data.tags) 
-              : []) as string[]
-      };
-
-      console.log('✅ PLAYER ADD DEBUG - Player added to database, updating local state immediately');
-      
-      // Immediately add to local state for instant UI feedback
-      setPlayers(prev => {
-        const updated = [...prev, newPlayer];
-        console.log('🔄 PLAYER ADD DEBUG - Local players state updated, new count:', updated.length);
-        return updated;
-      });
-      
-      toast.success(`Player ${name} added successfully`);
+      console.log('✅ PLAYER ADD DEBUG - Player added to database, waiting for real-time confirmation');
+      // Success toast will be shown by real-time subscription
     } catch (error) {
       console.error('❌ PLAYER ADD DEBUG - Error adding player:', error);
       toast.error('Failed to add player');
+      setLoadingStates(prev => ({ ...prev, addingPlayer: false }));
     }
   };
 
-  // Remove player with immediate state update
+  // Remove player - REAL-TIME FIRST APPROACH
   const removePlayer = async (id: string) => {
+    setLoadingStates(prev => ({ ...prev, removingPlayer: id }));
+    
+    // Find player name for toast message
+    const playerToRemove = players.find(p => p.id === id);
+    const playerName = playerToRemove?.name || 'Unknown';
+    
+    toast("Removing player...", { description: `Removing ${playerName}` });
+    
     try {
       console.log('➖ PLAYER REMOVE DEBUG - Starting to remove player:', id);
-      
-      // Find player name for toast message
-      const playerToRemove = players.find(p => p.id === id);
-      const playerName = playerToRemove?.name || 'Unknown';
       
       const { error } = await supabase
         .from('players')
@@ -258,23 +261,16 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      console.log('✅ PLAYER REMOVE DEBUG - Player removed from database, updating local state immediately');
-      
-      // Immediately remove from local state for instant UI feedback
-      setPlayers(prev => {
-        const updated = prev.filter(p => p.id !== id);
-        console.log('🔄 PLAYER REMOVE DEBUG - Local players state updated, new count:', updated.length);
-        return updated;
-      });
-      
-      toast.success(`Player ${playerName} removed successfully`);
+      console.log('✅ PLAYER REMOVE DEBUG - Player removed from database, waiting for real-time confirmation');
+      // Success toast will be shown by real-time subscription
     } catch (error) {
       console.error('❌ PLAYER REMOVE DEBUG - Error removing player:', error);
       toast.error('Failed to remove player');
+      setLoadingStates(prev => ({ ...prev, removingPlayer: null }));
     }
   };
 
-  // Update player name
+  // Update player name - REAL-TIME FIRST APPROACH
   const updatePlayerName = async (playerId: string, newName: string) => {
     try {
       const { error } = await supabase
@@ -284,19 +280,15 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      // Immediately update local state
-      setPlayers(prev => prev.map(player => 
-        player.id === playerId ? { ...player, name: newName } : player
-      ));
-      
-      toast.success('Player name updated');
+      // Success feedback will come from real-time subscription
+      console.log('✅ PLAYER NAME UPDATE - Player name updated in database, waiting for real-time confirmation');
     } catch (error) {
       console.error('Error updating player name:', error);
       toast.error('Failed to update player name');
     }
   };
 
-  // Update player tags
+  // Update player tags - REAL-TIME FIRST APPROACH
   const updatePlayerTags = async (playerId: string, tags: string[]) => {
     try {
       const { error } = await supabase
@@ -306,12 +298,8 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      // Immediately update local state
-      setPlayers(prev => prev.map(player => 
-        player.id === playerId ? { ...player, tags } : player
-      ));
-      
-      toast.success('Player tags updated');
+      // Success feedback will come from real-time subscription
+      console.log('✅ PLAYER TAGS UPDATE - Player tags updated in database, waiting for real-time confirmation');
     } catch (error) {
       console.error('Error updating player tags:', error);
       toast.error('Failed to update player tags');
@@ -325,14 +313,17 @@ export function useSupabaseVolleyball() {
     return player.tags.length > 1 || !player.tags.includes(tag);
   };
 
-  // Add game day with immediate state update and auto-selection
+  // Add game day - REAL-TIME FIRST APPROACH
   const addGameDay = async (date: string, gameType: GameType | string, title?: string, notes?: string) => {
     if (!currentTeamId) return;
+    
+    setLoadingStates(prev => ({ ...prev, addingGameDay: true }));
+    toast("Creating game day...", { description: "Please wait for confirmation" });
     
     try {
       console.log('➕ GAME DAY ADD DEBUG - Starting to add game day:', { date, gameType, title });
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('game_days')
         .insert({
           team_id: currentTeamId,
@@ -340,47 +331,32 @@ export function useSupabaseVolleyball() {
           game_type: gameType,
           title: title,
           notes: notes
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
-      const newGameDay: GameDay = {
-        id: data.id,
-        date: data.date,
-        gameType: data.game_type as GameType,
-        title: data.title || undefined,
-        notes: data.notes || undefined
-      };
-
-      console.log('✅ GAME DAY ADD DEBUG - Game day added to database, updating local state immediately');
-      
-      // Immediately add to local state (add to beginning since we order by date desc)
-      setGameDays(prev => {
-        const updated = [newGameDay, ...prev];
-        console.log('🔄 GAME DAY ADD DEBUG - Local game days state updated, new count:', updated.length);
-        return updated;
-      });
-      
-      // Auto-select the newly created game day
-      console.log('🎯 GAME DAY ADD DEBUG - Auto-selecting newly created game day');
-      setCurrentGameDay(newGameDay);
-      setGameTypeFilter(null); // Clear any game type filter
-      
-      toast.success('Game day added successfully');
+      console.log('✅ GAME DAY ADD DEBUG - Game day added to database, waiting for real-time confirmation');
+      // Success toast and auto-selection will be handled by real-time subscription
     } catch (error) {
       console.error('❌ GAME DAY ADD DEBUG - Error adding game day:', error);
       toast.error('Failed to add game day');
+      setLoadingStates(prev => ({ ...prev, addingGameDay: false }));
     }
   };
 
-  // Record serve (alias for addServe)
+  // Record serve - REAL-TIME FIRST APPROACH
   const addServe = async (playerId: string, type: "fail" | "ace", quality: ServeQuality): Promise<boolean> => {
     if (!currentGameDay) {
       toast.error('Please select a game day first');
       return false;
     }
+    
+    setLoadingStates(prev => ({ ...prev, recordingServe: playerId }));
+    
+    const player = players.find(p => p.id === playerId);
+    toast("Recording serve...", { 
+      description: `Recording ${type} for ${player?.name || 'player'}` 
+    });
     
     try {
       console.log('🎯 SERVE RECORDING DEBUG - Starting serve recording:', { 
@@ -392,7 +368,7 @@ export function useSupabaseVolleyball() {
         timestamp: new Date().toISOString()
       });
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('serves')
         .insert({
           player_id: playerId,
@@ -401,62 +377,17 @@ export function useSupabaseVolleyball() {
           type,
           quality,
           timestamp: new Date().toISOString()
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
-      const newServe: Serve = {
-        id: data.id,
-        playerId: data.player_id,
-        gameId: data.game_id,
-        type: data.type as "fail" | "ace",
-        quality: data.quality as "good" | "neutral" | "bad",
-        timestamp: data.timestamp || new Date().toISOString()
-      };
-
-      console.log('✅ SERVE RECORDING DEBUG - Serve recorded successfully:', {
-        serveId: newServe.id,
-        recordedForGameId: newServe.gameId,
-        expectedGameId: currentGameDay.id,
-        gameMatch: newServe.gameId === currentGameDay.id,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Immediately update local player stats for instant UI feedback
-      setPlayers(prev => prev.map(player => {
-        if (player.id === playerId) {
-          const updatedPlayer = {
-            ...player,
-            totalAces: type === 'ace' ? player.totalAces + 1 : player.totalAces,
-            totalFails: type === 'fail' ? player.totalFails + 1 : player.totalFails,
-            serves: [...player.serves, newServe]
-          };
-          console.log('🔄 SERVE RECORDING DEBUG - Updated player stats locally:', {
-            playerName: player.name,
-            newTotalAces: updatedPlayer.totalAces,
-            newTotalFails: updatedPlayer.totalFails,
-            timestamp: new Date().toISOString()
-          });
-          return updatedPlayer;
-        }
-        return player;
-      }));
-
-      // Only add to serves state if it matches current filter
-      if (serveMatchesCurrentFilter(newServe)) {
-        console.log('✅ SERVE RECORDING DEBUG - Adding serve to filtered state (matches current filter)');
-        setServes(prev => [...prev, newServe]);
-      } else {
-        console.log('⚠️ SERVE RECORDING DEBUG - Serve not added to filtered state - does not match current filter');
-      }
-      
-      toast.success(`${type === 'ace' ? 'Ace' : 'Error'} recorded for ${currentGameDay.title || currentGameDay.date}`);
+      console.log('✅ SERVE RECORDING DEBUG - Serve recorded successfully, waiting for real-time confirmation');
+      // Success toast will be shown by real-time subscription
       return true;
     } catch (error) {
       console.error('❌ SERVE RECORDING DEBUG - Error recording serve:', error);
       toast.error('Failed to record serve');
+      setLoadingStates(prev => ({ ...prev, recordingServe: null }));
       return false;
     }
   };
@@ -480,22 +411,21 @@ export function useSupabaseVolleyball() {
     }
   }, [currentTeamId]);
 
-  // Load serves when game day or game type filter changes - FIXED DEPENDENCIES
+  // Load serves when game day or game type filter changes
   useEffect(() => {
     console.log('🔄 FILTER CHANGE DEBUG - Filter changed, reloading serves:', { 
       currentGameDayId: currentGameDay?.id, 
       currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
       gameTypeFilter,
-      gameDaysCount: gameDays.length,
       timestamp: new Date().toISOString()
     });
     
     if (currentTeamId) {
       loadServes();
     }
-  }, [currentGameDay?.id, gameTypeFilter, gameDays.length, currentTeamId]); // Using currentGameDay?.id for proper dependency
+  }, [currentGameDay?.id, gameTypeFilter, currentTeamId]);
 
-  // Set up real-time subscriptions with enhanced debugging and duplicate prevention
+  // Set up real-time subscriptions - SIMPLIFIED AND STABLE
   useEffect(() => {
     if (!currentTeamId) return;
 
@@ -527,16 +457,9 @@ export function useSupabaseVolleyball() {
                   : []) as string[]
           };
           
-          // Check if player already exists to prevent duplicates from immediate updates
-          setPlayers(prev => {
-            const exists = prev.some(p => p.id === newPlayer.id);
-            if (exists) {
-              console.log('⚠️ REALTIME DEBUG - Player already exists in state (from immediate update), skipping');
-              return prev;
-            }
-            console.log('✅ REALTIME DEBUG - Adding new player via real-time sync:', newPlayer.name);
-            return [...prev, newPlayer];
-          });
+          setPlayers(prev => [...prev, newPlayer]);
+          setLoadingStates(prev => ({ ...prev, addingPlayer: false }));
+          toast.success(`Player ${newPlayer.name} added successfully`);
         }
       )
       .on(
@@ -564,6 +487,7 @@ export function useSupabaseVolleyball() {
                 }
               : player
           ));
+          toast.success('Player updated successfully');
         }
       )
       .on(
@@ -577,16 +501,10 @@ export function useSupabaseVolleyball() {
         (payload) => {
           console.log('📡 REALTIME DEBUG - Player DELETE event received:', payload.old.id);
           
-          // Check if player still exists to prevent double removal from immediate updates
-          setPlayers(prev => {
-            const exists = prev.some(p => p.id === payload.old.id);
-            if (!exists) {
-              console.log('⚠️ REALTIME DEBUG - Player already removed from state (from immediate update), skipping');
-              return prev;
-            }
-            console.log('✅ REALTIME DEBUG - Removing player via real-time sync');
-            return prev.filter(p => p.id !== payload.old.id);
-          });
+          const removedPlayerName = players.find(p => p.id === payload.old.id)?.name || 'Unknown';
+          setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
+          setLoadingStates(prev => ({ ...prev, removingPlayer: null }));
+          toast.success(`Player ${removedPlayerName} removed successfully`);
         }
       )
       .on(
@@ -608,23 +526,15 @@ export function useSupabaseVolleyball() {
             notes: payload.new.notes || undefined
           };
           
-          // Check if game day already exists to prevent duplicates from immediate updates
-          setGameDays(prev => {
-            const exists = prev.some(gd => gd.id === newGameDay.id);
-            if (exists) {
-              console.log('⚠️ REALTIME DEBUG - Game day already exists in state (from immediate update), skipping');
-              return prev;
-            }
-            console.log('✅ REALTIME DEBUG - Adding new game day via real-time sync:', newGameDay.title || newGameDay.date);
-            return [newGameDay, ...prev];
-          });
+          setGameDays(prev => [newGameDay, ...prev]);
+          setLoadingStates(prev => ({ ...prev, addingGameDay: false }));
           
-          // Only auto-select if not already set by immediate update
-          if (!currentGameDay || currentGameDay.id !== newGameDay.id) {
-            console.log('🎯 REALTIME DEBUG - Auto-selecting newly created game day via real-time sync');
-            setCurrentGameDay(newGameDay);
-            setGameTypeFilter(null);
-          }
+          // Auto-select the newly created game day
+          console.log('🎯 REALTIME DEBUG - Auto-selecting newly created game day via real-time sync');
+          setCurrentGameDay(newGameDay);
+          setGameTypeFilter(null);
+          
+          toast.success('Game day added successfully');
         }
       )
       .on(
@@ -699,35 +609,30 @@ export function useSupabaseVolleyball() {
             timestamp: payload.new.timestamp || new Date().toISOString()
           };
           
-          // Check if this serve is already in our local state (to avoid duplicates from immediate updates)
-          setServes(prev => {
-            const exists = prev.some(s => s.id === newServe.id);
-            if (exists) {
-              console.log('🏐 SERVE REALTIME DEBUG - Serve already exists in state (from immediate update)');
-              return prev;
-            }
-            
-            // Only add to serves state if it matches current filter context
-            if (serveMatchesCurrentFilter(newServe)) {
-              console.log('🏐 SERVE REALTIME DEBUG - Adding new serve to filtered serves state via real-time sync');
-              return [...prev, newServe];
-            } else {
-              console.log('🏐 SERVE REALTIME DEBUG - Serve not added - does not match current filter');
-              return prev;
-            }
-          });
+          // Only add to serves state if it matches current filter context
+          if (serveMatchesCurrentFilter(newServe)) {
+            console.log('🏐 SERVE REALTIME DEBUG - Adding new serve to filtered serves state via real-time sync');
+            setServes(prev => [...prev, newServe]);
+          }
           
-          // Update player's serves array (avoid duplicates)
+          // Update player's serves array and stats
           setPlayers(prev => prev.map(player => {
             if (player.id === payload.new.player_id) {
-              const serveExists = player.serves.some(s => s.id === newServe.id);
-              if (!serveExists) {
-                console.log('🏐 SERVE REALTIME DEBUG - Adding serve to player serves array via real-time sync');
-                return { ...player, serves: [...player.serves, newServe] };
-              }
+              console.log('🏐 SERVE REALTIME DEBUG - Adding serve to player serves array via real-time sync');
+              return { 
+                ...player, 
+                serves: [...player.serves, newServe],
+                totalAces: payload.new.type === 'ace' ? player.totalAces + 1 : player.totalAces,
+                totalFails: payload.new.type === 'fail' ? player.totalFails + 1 : player.totalFails
+              };
             }
             return player;
           }));
+          
+          // Clear loading state and show success
+          setLoadingStates(prev => ({ ...prev, recordingServe: null }));
+          const playerName = players.find(p => p.id === payload.new.player_id)?.name || 'Unknown';
+          toast.success(`${payload.new.type === 'ace' ? 'Ace' : 'Error'} recorded for ${playerName}`);
         }
       )
       .on(
@@ -741,15 +646,23 @@ export function useSupabaseVolleyball() {
         (payload) => {
           console.log('🏐 SERVE REALTIME DEBUG - Serve DELETE event (syncing):', payload.old);
           
-          // Remove from serves list (check if it exists to avoid double removal)
+          // Remove from serves list
           setServes(prev => prev.filter(s => s.id !== payload.old.id));
           
-          // Remove from player's serves array (check if it exists to avoid double removal)
+          // Remove from player's serves array and update stats
           setPlayers(prev => prev.map(player => 
             player.id === payload.old.player_id
-              ? { ...player, serves: player.serves.filter(s => s.id !== payload.old.id) }
+              ? { 
+                  ...player, 
+                  serves: player.serves.filter(s => s.id !== payload.old.id),
+                  totalAces: payload.old.type === 'ace' ? Math.max(0, player.totalAces - 1) : player.totalAces,
+                  totalFails: payload.old.type === 'fail' ? Math.max(0, player.totalFails - 1) : player.totalFails
+                }
               : player
           ));
+          
+          setLoadingStates(prev => ({ ...prev, removingServe: null }));
+          toast.success('Serve removed');
         }
       )
       .on(
@@ -804,7 +717,7 @@ export function useSupabaseVolleyball() {
       console.log('🧹 REALTIME DEBUG - Cleaning up real-time subscriptions');
       supabase.removeChannel(channel);
     };
-  }, [currentTeamId, currentGameDay?.id, gameTypeFilter, gameDays]); // Added dependencies to ensure proper cleanup and setup
+  }, [currentTeamId]); // Only depend on currentTeamId for stable subscriptions
 
   // Custom game types management
   const addCustomGameType = async (abbreviation: string, name: string) => {
@@ -980,18 +893,14 @@ export function useSupabaseVolleyball() {
     });
   };
 
-  // Remove serve
+  // Remove serve - REAL-TIME FIRST APPROACH
   const removeServe = async (playerId: string, serveId: string) => {
+    setLoadingStates(prev => ({ ...prev, removingServe: serveId }));
+    toast("Removing serve...", { description: "Please wait for confirmation" });
+    
     try {
       console.log('Removing serve:', { playerId, serveId });
       
-      // Find the serve to get its type for immediate local update
-      const serveToRemove = serves.find(s => s.id === serveId);
-      if (!serveToRemove) {
-        console.error('Serve not found in local state');
-        return;
-      }
-
       const { error } = await supabase
         .from('serves')
         .delete()
@@ -999,34 +908,12 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      console.log('Serve removed successfully, updating local player stats immediately');
-      
-      // Immediately update local player stats for instant UI feedback
-      setPlayers(prev => prev.map(player => {
-        if (player.id === playerId) {
-          const updatedPlayer = {
-            ...player,
-            totalAces: serveToRemove.type === 'ace' ? Math.max(0, player.totalAces - 1) : player.totalAces,
-            totalFails: serveToRemove.type === 'fail' ? Math.max(0, player.totalFails - 1) : player.totalFails,
-            serves: player.serves.filter(s => s.id !== serveId)
-          };
-          console.log('Updated player totals locally after removal:', {
-            name: player.name,
-            newTotalAces: updatedPlayer.totalAces,
-            newTotalFails: updatedPlayer.totalFails
-          });
-          return updatedPlayer;
-        }
-        return player;
-      }));
-
-      // Also immediately remove from serves state
-      setServes(prev => prev.filter(s => s.id !== serveId));
-      
-      toast.success('Serve removed');
+      console.log('Serve removed successfully, waiting for real-time confirmation');
+      // Success toast will be shown by real-time subscription
     } catch (error) {
       console.error('Error removing serve:', error);
       toast.error('Failed to remove serve');
+      setLoadingStates(prev => ({ ...prev, removingServe: null }));
     }
   };
 
@@ -1089,6 +976,7 @@ export function useSupabaseVolleyball() {
     gameTypeFilter,
     serves,
     loading,
+    loadingStates, // Expose loading states for UI
     gameTypes: defaultGameTypes,
     customGameTypes,
     
