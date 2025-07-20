@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
+import { useVolleyball } from "../context/VolleyballContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 
 export function Scoreboard() {
-  const { sortedPlayers, getPlayerStats, currentGameDay, gameTypeFilter } = useSupabaseVolleyball();
+  const { sortedPlayers, getPlayerStats, currentGameDay, gameTypeFilter } = useVolleyball();
   const [sortField, setSortField] = useState<SortField>("aeRatio");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
@@ -57,7 +57,7 @@ export function Scoreboard() {
       relevantServes = player.serves.filter(s => s.gameId === currentGameDay.id);
     } else if (gameTypeFilter) {
       // Game type filter applied
-      const { getFilteredGameDays } = useSupabaseVolleyball();
+      const { getFilteredGameDays } = useVolleyball();
       const gameIds = getFilteredGameDays().map(g => g.id);
       relevantServes = player.serves.filter(s => gameIds.includes(s.gameId));
     }

@@ -1,5 +1,5 @@
 
-// Quality of serve: good (close error/clean ace), neutral, bad (not close error/enemy's fault ace)
+// Quality of serve: good (close fail/clean ace), neutral, bad (not close fail/enemy's fault ace)
 export type ServeQuality = "good" | "neutral" | "bad";
 
 // Game types
@@ -27,7 +27,6 @@ export interface Player {
 // Serve record
 export interface Serve {
   id: string;
-  playerId: string;
   gameId: string;
   type: "fail" | "ace";
   quality: ServeQuality;

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
+import { useVolleyball } from "../context/VolleyballContext";
 import { ServeQuality } from "../types";
 import { Plus, Minus, Circle } from "lucide-react";
 
@@ -10,7 +10,7 @@ interface PlayerCardStatsProps {
 }
 
 export function PlayerCardStats({ playerId, gameId }: PlayerCardStatsProps) {
-  const { players } = useSupabaseVolleyball();
+  const { players } = useVolleyball();
 
   // Calculate quality stats for the player
   const calculateQualityStats = (playerId: string) => {

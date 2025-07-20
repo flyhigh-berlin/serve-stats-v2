@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Player } from "../types";
-import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
+import { useVolleyball } from "../context/VolleyballContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,7 +15,7 @@ interface PlayerCardProps {
 }
 
 export function PlayerCard({ player, gameId }: PlayerCardProps) {
-  const { addServe, getPlayerStats, currentGameDay, gameTypeFilter } = useSupabaseVolleyball();
+  const { addServe, getPlayerStats } = useVolleyball();
   const [animatingError, setAnimatingError] = useState(false);
   const [animatingAce, setAnimatingAce] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -23,31 +23,24 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
   const [errorPopoverOpen, setErrorPopoverOpen] = useState(false);
   const [actionFeedback, setActionFeedback] = useState<'ace' | 'error' | null>(null);
 
-  // Get player stats for current context (game day or game type filter)
-  const stats = getPlayerStats(
-    player.id, 
-    currentGameDay?.id, 
-    !currentGameDay && gameTypeFilter ? gameTypeFilter : undefined
-  );
+  // Get the player's stats for the current game or all games
+  const stats = getPlayerStats(player.id, gameId);
 
   // Handle adding a serve
-  const handleServeClick = async (type: "error" | "ace", quality: "good" | "neutral" | "bad") => {
-    const success = await addServe(player.id, type === "error" ? "fail" : "ace", quality);
+  const handleServeClick = (type: "error" | "ace", quality: "good" | "neutral" | "bad") => {
+    addServe(player.id, type === "error" ? "fail" : "ace", quality);
 
-    // Only show animations and feedback if the serve was successfully recorded
-    if (success) {
-      // Action feedback animation
-      setActionFeedback(type);
-      setTimeout(() => setActionFeedback(null), 600);
+    // Action feedback animation
+    setActionFeedback(type);
+    setTimeout(() => setActionFeedback(null), 600);
 
-      // Animate the stat change
-      if (type === "error") {
-        setAnimatingError(true);
-        setTimeout(() => setAnimatingError(false), 500);
-      } else {
-        setAnimatingAce(true);
-        setTimeout(() => setAnimatingAce(false), 500);
-      }
+    // Animate the stat change
+    if (type === "error") {
+      setAnimatingError(true);
+      setTimeout(() => setAnimatingError(false), 500);
+    } else {
+      setAnimatingAce(true);
+      setTimeout(() => setAnimatingAce(false), 500);
     }
 
     // Close the specific popover
@@ -89,12 +82,6 @@ export function PlayerCard({ player, gameId }: PlayerCardProps) {
             animatingError={animatingError}
             onPlayerClick={() => setIsDialogOpen(true)}
           />
-          
-          {!currentGameDay && (
-            <div className="mb-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded text-amber-800 dark:text-amber-200 text-sm text-center">
-              ⚠️ Select a game day to record serves
-            </div>
-          )}
           
           {/* Action buttons */}
           <div className="flex gap-2">

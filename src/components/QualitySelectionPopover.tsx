@@ -27,7 +27,7 @@ export function QualitySelectionPopover({ type, onServeClick, onClose }: Quality
         case "good":
           return "Very good serve attempt, but just out or net";
         case "neutral":
-          return "Mediocre execution, average error";
+          return "Mediocre execution, average fail";
         case "bad":
           return "Poorly executed serve, not close";
       }

@@ -1,14 +1,12 @@
 
 import React from "react";
-import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
+import { useVolleyball } from "../context/VolleyballContext";
 import { format } from "date-fns";
 
 export function StatsDescription() {
-  const { 
-    currentGameDay, 
-    gameTypeFilter, 
-    getAllGameTypes
-  } = useSupabaseVolleyball();
+  const { currentGameDay, gameTypeFilter, getAllGameTypes } = useVolleyball();
+  
+  const allGameTypes = getAllGameTypes();
   
   // Format game display text
   const formatGameDisplay = (gameDay: any) => {
@@ -19,12 +17,11 @@ export function StatsDescription() {
     return `${typeLabel} ${titlePart} (${datePart})`;
   };
 
-  // Compute description directly - no complex memoization needed
+  // Get description based on current context
   const getDescription = () => {
     if (currentGameDay) {
       return `Showing stats for ${formatGameDisplay(currentGameDay)}`;
     } else if (gameTypeFilter) {
-      const allGameTypes = getAllGameTypes();
       return `Showing stats for game type [${gameTypeFilter}] ${allGameTypes[gameTypeFilter]}`;
     } else {
       return "Showing stats for all games";

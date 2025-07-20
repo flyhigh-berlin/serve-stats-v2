@@ -1,56 +1,42 @@
 
 import React, { useState } from "react";
-import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
+import { useVolleyball } from "../context/VolleyballContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { GameServeHistoryDialog } from "./GameServeHistoryDialog";
-import { RefreshCw, Wifi, WifiOff, Clock } from "lucide-react";
 
 export function GameHistory() {
-  console.log('🎨 GameHistory rendering'); // Debug render
-
   const { 
     gameDays, 
     players, 
     currentGameDay, 
     gameTypeFilter, 
     getAllGameTypes,
-    getPlayerStats,
-    lastRealTimeEvent,
-    realtimeConnectionStatus,
-    refreshData
-  } = useSupabaseVolleyball();
+    getPlayerStats
+  } = useVolleyball();
   
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
   
   const allGameTypes = getAllGameTypes();
   
-  console.log('🎨 GameHistory state:', {
-    gameDaysCount: gameDays.length,
-    playersCount: players.length,
-    connectionStatus: realtimeConnectionStatus,
-    lastEvent: lastRealTimeEvent?.type || 'none'
-  });
-  
-  // Show real-time event indicators for better UX
-  const showEventIndicator = lastRealTimeEvent && 
-    lastRealTimeEvent.table === 'game_days' && 
-    (Date.now() - new Date(lastRealTimeEvent.timestamp).getTime()) < 3000; // Show for 3 seconds
-  
   // Get games to display based on current context
   const getDisplayedGames = () => {
     if (currentGameDay) {
+      // Show all games with the same game type as the selected game
       return gameDays.filter(game => game.gameType === currentGameDay.gameType);
     } else if (gameTypeFilter) {
+      // Show games of the filtered game type
       return gameDays.filter(game => game.gameType === gameTypeFilter);
     } else {
+      // Show all games
       return gameDays;
     }
   };
 
   const displayedGames = getDisplayedGames();
+
+  // Sort games by date (newest first)
   const sortedGames = [...displayedGames].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
@@ -60,6 +46,7 @@ export function GameHistory() {
     let totalErrors = 0;
     let totalAces = 0;
 
+    // Get all serves for this game from all players
     const gameServes = players.flatMap(player => 
       player.serves
         .filter(serve => serve.gameId === gameId)
@@ -70,22 +57,32 @@ export function GameHistory() {
         }))
     );
 
+    // Count aces and errors
     totalAces = gameServes.filter(s => s.type === "ace").length;
     totalErrors = gameServes.filter(s => s.type === "fail").length;
 
+    // Get players who participated in this game
     const gamePlayerIds = [...new Set(gameServes.map(serve => serve.playerId))];
     const gamePlayers = players.filter(p => gamePlayerIds.includes(p.id));
     
+    // Calculate stats for each player in this game (for A/E ratio average)
     const playerStats = gamePlayers.map(player => {
       const stats = getPlayerStats(player.id, gameId);
+      
+      // Calculate A/E Ratio
       const aeRatio = stats.errors === 0 ? stats.aces : stats.aces / stats.errors;
-      return { aeRatio };
+      
+      return {
+        aeRatio
+      };
     });
     
+    // Calculate average A/E ratio from individual player ratios
     const avgAERatio = playerStats.length > 0 
       ? playerStats.reduce((sum, p) => sum + p.aeRatio, 0) / playerStats.length
       : 0;
     
+    // Calculate overall Quality Score from all serves (not averaged per player)
     const overallQualityScore = gameServes.length > 0
       ? gameServes.reduce((sum, serve) => {
           const qualityValue = serve.quality === "good" ? 1 : serve.quality === "neutral" ? 0 : -1;
@@ -121,68 +118,18 @@ export function GameHistory() {
     <>
       <Card>
         <CardHeader className="pb-3 px-3 sm:px-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg sm:text-xl">Game History</CardTitle>
-              
-              {/* Real-time connection status */}
-              <div className="flex items-center gap-1 text-xs">
-                {realtimeConnectionStatus === 'connected' && (
-                  <div className="flex items-center gap-1 text-green-600">
-                    <Wifi className="h-3 w-3" />
-                    <span>Live</span>
-                  </div>
-                )}
-                {realtimeConnectionStatus === 'disconnected' && (
-                  <div className="flex items-center gap-1 text-red-600">
-                    <WifiOff className="h-3 w-3" />
-                    <span>Offline</span>
-                  </div>
-                )}
-                {realtimeConnectionStatus === 'connecting' && (
-                  <div className="flex items-center gap-1 text-yellow-600">
-                    <Clock className="h-3 w-3 animate-spin" />
-                    <span>Connecting...</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Real-time event indicator for game days */}
-              {showEventIndicator && (
-                <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded animate-pulse">
-                  <Clock className="h-3 w-3" />
-                  <span>
-                    {lastRealTimeEvent.type.toLowerCase()}: {lastRealTimeEvent.entityName}
-                  </span>
-                </div>
-              )}
-            </div>
-            
-            {/* Manual refresh button - only visible when connection issues */}
-            {realtimeConnectionStatus !== 'connected' && (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={refreshData}
-                className="h-8 w-8 p-0"
-                title="Manual refresh (connection issues)"
-              >
-                <RefreshCw className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
+          <CardTitle className="text-lg sm:text-xl">Game History</CardTitle>
         </CardHeader>
         <CardContent className="px-2 sm:px-4">
           {sortedGames.length > 0 ? (
             <div className="space-y-3">
               {sortedGames.map(game => {
-                console.log('🎨 Rendering game history item for:', game.id, game.title || game.date);
                 const stats = calculateGameStats(game.id);
                 const isSelected = currentGameDay?.id === game.id;
                 
                 return (
                   <div 
-                    key={game.id} // Stable game ID only
+                    key={game.id} 
                     className={`p-3 sm:p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-all duration-200 shadow-sm hover:shadow-md ${isSelected ? 'bg-muted border-primary ring-1 ring-primary/20' : ''}`}
                     onClick={() => setSelectedGameId(game.id)}
                   >

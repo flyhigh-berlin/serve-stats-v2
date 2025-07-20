@@ -10,52 +10,11 @@ import { GameDaySelector } from "@/components/GameDaySelector";
 import { Scoreboard } from "@/components/Scoreboard";
 import { GameHistory } from "@/components/GameHistory";
 import { StatsDescription } from "@/components/StatsDescription";
-import { RealTimeStatus } from "@/components/RealTimeStatus";
-import { RealTimeDebugger } from "@/components/RealTimeDebugger";
 import { UnifiedTeamManagementDialog } from "@/components/UnifiedTeamManagementDialog";
+import { VolleyballProvider } from "../context/VolleyballContext";
 import { LogOut, Settings, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-
-// Create a wrapper component for the volleyball tracking
-const VolleyballTracker = () => {
-  return (
-    <>
-      <div className="mb-4">
-        <GameDaySelector />
-      </div>
-      
-      <Tabs defaultValue="players" className="w-full">
-        <StatsDescription />
-        
-        <TabsList className="mb-4 w-full grid grid-cols-4 h-auto">
-          <TabsTrigger value="players" className="text-xs sm:text-sm py-2">Players</TabsTrigger>
-          <TabsTrigger value="scoreboard" className="text-xs sm:text-sm py-2">Scoreboard</TabsTrigger>
-          <TabsTrigger value="history" className="text-xs sm:text-sm py-2">Game History</TabsTrigger>
-          <TabsTrigger value="debug" className="text-xs sm:text-sm py-2">Debug</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="players" className="mt-0">
-          <PlayerList />
-        </TabsContent>
-        
-        <TabsContent value="scoreboard" className="mt-0">
-          <Scoreboard />
-        </TabsContent>
-        
-        <TabsContent value="history" className="mt-0">
-          <GameHistory />
-        </TabsContent>
-        
-        <TabsContent value="debug" className="mt-0">
-          <div className="flex justify-center">
-            <RealTimeDebugger />
-          </div>
-        </TabsContent>
-      </Tabs>
-    </>
-  );
-};
 
 const Index = () => {
   const { user, signOut } = useAuth();
@@ -116,13 +75,6 @@ const Index = () => {
             </Button>
           </div>
         </div>
-
-        {/* Real-time connection status */}
-        {currentTeam && (
-          <div className="flex justify-center mb-4">
-            <RealTimeStatus />
-          </div>
-        )}
       </header>
 
       {/* Team Selection */}
@@ -132,7 +84,33 @@ const Index = () => {
 
       {/* Show volleyball tracking only when a team is selected */}
       {currentTeam ? (
-        <VolleyballTracker />
+        <VolleyballProvider>
+          <div className="mb-4">
+            <GameDaySelector />
+          </div>
+          
+          <Tabs defaultValue="players" className="w-full">
+            <StatsDescription />
+            
+            <TabsList className="mb-4 w-full grid grid-cols-3 h-auto">
+              <TabsTrigger value="players" className="text-xs sm:text-sm py-2">Players</TabsTrigger>
+              <TabsTrigger value="scoreboard" className="text-xs sm:text-sm py-2">Scoreboard</TabsTrigger>
+              <TabsTrigger value="history" className="text-xs sm:text-sm py-2">Game History</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="players" className="mt-0">
+              <PlayerList />
+            </TabsContent>
+            
+            <TabsContent value="scoreboard" className="mt-0">
+              <Scoreboard />
+            </TabsContent>
+            
+            <TabsContent value="history" className="mt-0">
+              <GameHistory />
+            </TabsContent>
+          </Tabs>
+        </VolleyballProvider>
       ) : (
         <div className="text-center py-8 text-muted-foreground">
           Select or create a team to start tracking volleyball statistics.
