@@ -7,17 +7,8 @@ export function StatsDescription() {
   const { 
     currentGameDay, 
     gameTypeFilter, 
-    getAllGameTypes,
-    lastUpdateTimestamp // Replace renderTrigger with lastUpdateTimestamp
+    getAllGameTypes
   } = useSupabaseVolleyball();
-  
-  console.log('📋 STATS DESCRIPTION DEBUG - Component render:', { 
-    currentGameDayId: currentGameDay?.id, 
-    currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
-    gameTypeFilter,
-    lastUpdateTimestamp, // Replace renderTrigger with lastUpdateTimestamp
-    timestamp: new Date().toISOString()
-  });
   
   // Format game display text
   const formatGameDisplay = (gameDay: any) => {
@@ -28,38 +19,22 @@ export function StatsDescription() {
     return `${typeLabel} ${titlePart} (${datePart})`;
   };
 
-  // Compute description directly to ensure proper re-rendering
-  const description = React.useMemo(() => {
-    console.log('📋 STATS DESCRIPTION DEBUG - useMemo executing with:', {
-      currentGameDayId: currentGameDay?.id,
-      currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
-      gameTypeFilter,
-      lastUpdateTimestamp, // Replace renderTrigger with lastUpdateTimestamp
-      timestamp: new Date().toISOString()
-    });
-    
+  // Compute description directly - no complex memoization needed
+  const getDescription = () => {
     if (currentGameDay) {
-      const result = `Showing stats for ${formatGameDisplay(currentGameDay)}`;
-      console.log('📋 STATS DESCRIPTION DEBUG - Generated description for current game day:', result);
-      return result;
+      return `Showing stats for ${formatGameDisplay(currentGameDay)}`;
     } else if (gameTypeFilter) {
       const allGameTypes = getAllGameTypes();
-      const result = `Showing stats for game type [${gameTypeFilter}] ${allGameTypes[gameTypeFilter]}`;
-      console.log('📋 STATS DESCRIPTION DEBUG - Generated description for game type filter:', result);
-      return result;
+      return `Showing stats for game type [${gameTypeFilter}] ${allGameTypes[gameTypeFilter]}`;
     } else {
-      const result = "Showing stats for all games";
-      console.log('📋 STATS DESCRIPTION DEBUG - Generated description for all games:', result);
-      return result;
+      return "Showing stats for all games";
     }
-  }, [currentGameDay?.id, currentGameDay?.title, currentGameDay?.date, currentGameDay?.gameType, gameTypeFilter, getAllGameTypes, lastUpdateTimestamp]); // Replace renderTrigger with lastUpdateTimestamp
-  
-  console.log('📋 STATS DESCRIPTION DEBUG - Final description:', description);
+  };
   
   return (
     <div className="mb-4 p-2 bg-muted/50 rounded-md">
       <p className="text-xs text-muted-foreground text-center truncate">
-        {description}
+        {getDescription()}
       </p>
     </div>
   );

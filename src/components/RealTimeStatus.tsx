@@ -1,35 +1,14 @@
 
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { Wifi, WifiOff, Clock, AlertCircle } from "lucide-react";
+import React from "react";
 import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
+import { Badge } from "@/components/ui/badge";
+import { Wifi, WifiOff, Clock, CheckCircle } from "lucide-react";
 
 export function RealTimeStatus() {
   const { 
     realtimeConnectionStatus, 
-    lastRealTimeEvent,
-    lastUpdateTimestamp 
+    lastRealTimeEvent
   } = useSupabaseVolleyball();
-  
-  const [globalEventCount, setGlobalEventCount] = useState(0);
-  const [lastGlobalEventTime, setLastGlobalEventTime] = useState<Date | null>(null);
-
-  useEffect(() => {
-    // Track global real-time events for debugging
-    const eventChannel = supabase
-      .channel('global-events-monitor')
-      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-        console.log('🌐 Global real-time event detected:', payload);
-        setGlobalEventCount(prev => prev + 1);
-        setLastGlobalEventTime(new Date());
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(eventChannel);
-    };
-  }, []);
 
   const getStatusColor = () => {
     switch (realtimeConnectionStatus) {
@@ -47,14 +26,9 @@ export function RealTimeStatus() {
     }
   };
 
-  const isRealtimeHealthy = () => {
-    if (realtimeConnectionStatus !== 'connected') return false;
-    if (!lastRealTimeEvent) return true; // No events yet is fine
-    
-    // Check if last event was recent (within 30 seconds for active operations)
-    const eventAge = Date.now() - new Date(lastRealTimeEvent.timestamp).getTime();
-    return eventAge < 30000; // 30 seconds
-  };
+  // Show recent event indicator
+  const showRecentEventIndicator = lastRealTimeEvent && 
+    (Date.now() - new Date(lastRealTimeEvent.timestamp).getTime()) < 5000; // Show for 5 seconds
 
   return (
     <div className="flex items-center gap-2 text-xs">
@@ -63,32 +37,30 @@ export function RealTimeStatus() {
         Real-time {realtimeConnectionStatus}
       </Badge>
       
-      {/* Health indicator */}
-      {realtimeConnectionStatus === 'connected' && !isRealtimeHealthy() && (
-        <Badge variant="secondary" className="flex items-center gap-1">
-          <AlertCircle className="h-3 w-3" />
-          Sync Warning
+      {/* Recent activity indicator */}
+      {showRecentEventIndicator && realtimeConnectionStatus === 'connected' && (
+        <Badge variant="secondary" className="flex items-center gap-1 animate-pulse">
+          <CheckCircle className="h-3 w-3" />
+          <span>Data updated</span>
         </Badge>
       )}
       
-      {/* Last event info */}
-      {lastRealTimeEvent && (
-        <span className="text-muted-foreground">
-          Last {lastRealTimeEvent.table} event: {new Date(lastRealTimeEvent.timestamp).toLocaleTimeString()}
+      {/* Connection status message */}
+      {realtimeConnectionStatus === 'connected' && (
+        <span className="text-green-600 text-xs">
+          Auto-sync active
         </span>
       )}
       
-      {/* Global event counter for debugging */}
-      {process.env.NODE_ENV === 'development' && (
-        <span className="text-muted-foreground">
-          Events: {globalEventCount} | Update: {lastUpdateTimestamp}
+      {realtimeConnectionStatus === 'disconnected' && (
+        <span className="text-red-600 text-xs">
+          Manual refresh required
         </span>
       )}
       
-      {/* Connection health indicator */}
-      {lastGlobalEventTime && (
-        <span className="text-muted-foreground">
-          Global sync: {lastGlobalEventTime.toLocaleTimeString()}
+      {realtimeConnectionStatus === 'connecting' && (
+        <span className="text-yellow-600 text-xs">
+          Establishing connection...
         </span>
       )}
     </div>

@@ -14,17 +14,8 @@ export function GameDaySelection() {
     setCurrentGameDay, 
     gameTypeFilter, 
     setGameTypeFilter, 
-    getAllGameTypes,
-    lastUpdateTimestamp // Replace renderTrigger with lastUpdateTimestamp
+    getAllGameTypes
   } = useSupabaseVolleyball();
-
-  console.log('📅 GAME DAY SELECTION DEBUG - Component render:', {
-    gameDaysCount: gameDays.length,
-    currentGameDayId: currentGameDay?.id,
-    gameTypeFilter,
-    lastUpdateTimestamp, // Replace renderTrigger with lastUpdateTimestamp
-    timestamp: new Date().toISOString()
-  });
 
   const allGameTypes = getAllGameTypes();
   const gameTypeEntries = Object.entries(allGameTypes);
@@ -47,10 +38,7 @@ export function GameDaySelection() {
   };
 
   const handleGameDaySelect = (value: string) => {
-    console.log('📅 GAME DAY SELECTION DEBUG - Game day selected:', value);
-    
     if (value === "clear") {
-      console.log('📅 GAME DAY SELECTION DEBUG - Clearing selection');
       setCurrentGameDay(null);
       setGameTypeFilter(null);
       return;
@@ -58,22 +46,17 @@ export function GameDaySelection() {
 
     const selectedGameDay = gameDays.find(gd => gd.id === value);
     if (selectedGameDay) {
-      console.log('📅 GAME DAY SELECTION DEBUG - Setting current game day:', selectedGameDay.title || selectedGameDay.date);
       setCurrentGameDay(selectedGameDay);
     }
   };
 
   const handleGameTypeSelect = (value: string) => {
-    console.log('📅 GAME DAY SELECTION DEBUG - Game type selected:', value);
-    
     if (value === "clear") {
-      console.log('📅 GAME DAY SELECTION DEBUG - Clearing game type filter');
       setGameTypeFilter(null);
       setCurrentGameDay(null);
       return;
     }
 
-    console.log('📅 GAME DAY SELECTION DEBUG - Setting game type filter:', value);
     setGameTypeFilter(value as GameType);
     setCurrentGameDay(null); // Clear specific game selection when filtering by type
   };

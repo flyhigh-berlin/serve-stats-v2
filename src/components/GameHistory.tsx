@@ -16,7 +16,6 @@ export function GameHistory() {
     gameTypeFilter, 
     getAllGameTypes,
     getPlayerStats,
-    lastUpdateTimestamp,
     lastRealTimeEvent,
     realtimeConnectionStatus,
     refreshData
@@ -26,16 +25,10 @@ export function GameHistory() {
   
   const allGameTypes = getAllGameTypes();
   
-  // Component render tracking
-  React.useEffect(() => {
-    console.log('🎮 GAME HISTORY DEBUG - Component rendered:', {
-      lastUpdateTimestamp,
-      gameDaysCount: gameDays.length,
-      lastRealTimeEvent,
-      realtimeConnectionStatus,
-      timestamp: new Date().toISOString()
-    });
-  }); // Run on every render to track all updates
+  // Show real-time event indicators for better UX
+  const showEventIndicator = lastRealTimeEvent && 
+    lastRealTimeEvent.table === 'game_days' && 
+    (Date.now() - new Date(lastRealTimeEvent.timestamp).getTime()) < 3000; // Show for 3 seconds
   
   // Get games to display based on current context
   const getDisplayedGames = () => {
@@ -146,43 +139,31 @@ export function GameHistory() {
               </div>
               
               {/* Real-time event indicator for game days */}
-              {lastRealTimeEvent && lastRealTimeEvent.table === 'game_days' && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+              {showEventIndicator && (
+                <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded animate-pulse">
                   <Clock className="h-3 w-3" />
                   <span>
-                    Last {lastRealTimeEvent.type.toLowerCase()}: {lastRealTimeEvent.entityName}
-                  </span>
-                  <span className="text-xs opacity-75">
-                    {new Date(lastRealTimeEvent.timestamp).toLocaleTimeString()}
+                    {lastRealTimeEvent.type.toLowerCase()}: {lastRealTimeEvent.entityName}
                   </span>
                 </div>
               )}
             </div>
             
-            {/* Manual refresh button */}
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={refreshData}
-              className="h-8 w-8 p-0"
-              title="Manual refresh"
-            >
-              <RefreshCw className="h-3 w-3" />
-            </Button>
+            {/* Manual refresh button - only visible when connection issues */}
+            {realtimeConnectionStatus !== 'connected' && (
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={refreshData}
+                className="h-8 w-8 p-0"
+                title="Manual refresh (connection issues)"
+              >
+                <RefreshCw className="h-3 w-3" />
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="px-2 sm:px-4">
-          {/* Debug info in development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mb-4 p-2 bg-slate-100 rounded text-xs text-slate-600">
-              <div>Games: {sortedGames.length} | Update: {lastUpdateTimestamp}</div>
-              <div>Connection: {realtimeConnectionStatus}</div>
-              {lastRealTimeEvent && lastRealTimeEvent.table === 'game_days' && (
-                <div>Last Event: {lastRealTimeEvent.type} - {lastRealTimeEvent.entityName}</div>
-              )}
-            </div>
-          )}
-          
           {sortedGames.length > 0 ? (
             <div className="space-y-3">
               {sortedGames.map(game => {
@@ -191,7 +172,7 @@ export function GameHistory() {
                 
                 return (
                   <div 
-                    key={game.id} // Use stable game ID only
+                    key={game.id} // Stable game ID only
                     className={`p-3 sm:p-4 border rounded-lg cursor-pointer hover:bg-muted/50 transition-all duration-200 shadow-sm hover:shadow-md ${isSelected ? 'bg-muted border-primary ring-1 ring-primary/20' : ''}`}
                     onClick={() => setSelectedGameId(game.id)}
                   >

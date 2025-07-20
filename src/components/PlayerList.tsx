@@ -15,7 +15,6 @@ export function PlayerList() {
     gameTypeFilter, 
     players, 
     loadingStates,
-    lastUpdateTimestamp,
     lastRealTimeEvent,
     realtimeConnectionStatus,
     refreshData
@@ -24,27 +23,10 @@ export function PlayerList() {
   // Get filtered players based on current game day or game type filter
   const filteredPlayers = getFilteredPlayers();
   
-  // Component render tracking
-  React.useEffect(() => {
-    console.log('👥 PLAYER LIST DEBUG - Component rendered:', {
-      lastUpdateTimestamp,
-      filteredPlayersCount: filteredPlayers.length,
-      totalPlayersCount: players.length,
-      lastRealTimeEvent,
-      realtimeConnectionStatus,
-      timestamp: new Date().toISOString()
-    });
-  }); // Run on every render to track all updates
-  
-  // Debug component re-renders based on dependencies
-  React.useEffect(() => {
-    console.log('👥 PLAYER LIST DEBUG - Component dependency change detected:', {
-      playersLength: players.length,
-      lastUpdateTimestamp,
-      lastRealTimeEvent,
-      timestamp: new Date().toISOString()
-    });
-  }, [players.length, lastUpdateTimestamp, lastRealTimeEvent]);
+  // Show real-time event indicators for better UX
+  const showEventIndicator = lastRealTimeEvent && 
+    lastRealTimeEvent.table === 'players' && 
+    (Date.now() - new Date(lastRealTimeEvent.timestamp).getTime()) < 3000; // Show for 3 seconds
   
   return (
     <>
@@ -76,30 +58,29 @@ export function PlayerList() {
                 )}
               </div>
               
-              {/* Real-time event indicator */}
-              {lastRealTimeEvent && lastRealTimeEvent.table === 'players' && (
-                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+              {/* Real-time event indicator - shows briefly when data changes */}
+              {showEventIndicator && (
+                <div className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded animate-pulse">
                   <Clock className="h-3 w-3" />
                   <span>
-                    Last {lastRealTimeEvent.type.toLowerCase()}: {lastRealTimeEvent.entityName}
-                  </span>
-                  <span className="text-xs opacity-75">
-                    {new Date(lastRealTimeEvent.timestamp).toLocaleTimeString()}
+                    {lastRealTimeEvent.type.toLowerCase()}: {lastRealTimeEvent.entityName}
                   </span>
                 </div>
               )}
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
-              {/* Manual refresh button */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={refreshData}
-                className="h-8 w-8 p-0"
-                title="Manual refresh"
-              >
-                <RefreshCw className="h-3 w-3" />
-              </Button>
+              {/* Manual refresh button - only visible when connection issues */}
+              {realtimeConnectionStatus !== 'connected' && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={refreshData}
+                  className="h-8 w-8 p-0"
+                  title="Manual refresh (connection issues)"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                </Button>
+              )}
               
               <PlayerManagementDialog>
                 <Button 
@@ -125,22 +106,11 @@ export function PlayerList() {
             </div>
           )}
           
-          {/* Debug info in development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mb-4 p-2 bg-slate-100 rounded text-xs text-slate-600">
-              <div>Players: {filteredPlayers.length} | Update: {lastUpdateTimestamp}</div>
-              <div>Connection: {realtimeConnectionStatus}</div>
-              {lastRealTimeEvent && lastRealTimeEvent.table === 'players' && (
-                <div>Last Event: {lastRealTimeEvent.type} - {lastRealTimeEvent.entityName}</div>
-              )}
-            </div>
-          )}
-          
           <div className="space-y-2">
             {filteredPlayers.length > 0 ? (
               filteredPlayers.map(player => (
                 <PlayerCard 
-                  key={player.id} // Use stable player ID only
+                  key={player.id} // Stable player ID only
                   player={player} 
                   gameId={currentGameDay?.id}
                 />
