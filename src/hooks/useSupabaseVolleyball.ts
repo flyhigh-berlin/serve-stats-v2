@@ -31,12 +31,16 @@ export function useSupabaseVolleyball() {
     recordingServe: null,
     removingServe: null
   });
+
+  // Real-time event tracking
+  const [lastPlayerEvent, setLastPlayerEvent] = useState<{
+    type: string;
+    timestamp: string;
+    playerName: string;
+  } | null>(null);
   
-  // Add version counter for force re-renders
-  const [uiVersion, setUiVersion] = useState(0);
-  
-  // Add fallback refresh mechanism
-  const [pendingOperations, setPendingOperations] = useState<Set<string>>(new Set());
+  // Render trigger using timestamp for more reliable updates
+  const [renderTrigger, setRenderTrigger] = useState(Date.now());
 
   const currentTeamId = currentTeam?.id;
 
@@ -48,29 +52,32 @@ export function useSupabaseVolleyball() {
     playersCount: players.length,
     servesCount: serves.length,
     loadingStates,
-    uiVersion,
-    pendingOperations: Array.from(pendingOperations),
+    renderTrigger,
+    lastPlayerEvent,
     timestamp: new Date().toISOString()
   });
 
   // Force UI re-render when data changes
-  const forceUIUpdate = () => {
-    const newVersion = uiVersion + 1;
-    console.log('🔄 FORCE UPDATE - Incrementing UI version:', uiVersion, '->', newVersion);
-    setUiVersion(newVersion);
-  };
+  const forceUIUpdate = React.useCallback(() => {
+    const newTrigger = Date.now();
+    console.log('🔄 FORCE UPDATE - Triggering render:', renderTrigger, '->', newTrigger);
+    setRenderTrigger(newTrigger);
+  }, [renderTrigger]);
 
-  // Add operation to pending list
-  const addPendingOperation = (operationId: string) => {
+  // Add operation tracking for fallback refresh
+  const [pendingOperations, setPendingOperations] = useState<Set<string>>(new Set());
+
+  // Add operation to pending list with timeout fallback
+  const addPendingOperation = React.useCallback((operationId: string) => {
     console.log('⏳ PENDING OPERATION - Adding:', operationId);
     setPendingOperations(prev => new Set([...prev, operationId]));
     
-    // Set up fallback timeout
+    // Set up fallback timeout - refresh data if real-time doesn't work
     setTimeout(() => {
       setPendingOperations(current => {
         if (current.has(operationId)) {
-          console.log('⚠️ FALLBACK TRIGGERED - Operation timeout:', operationId);
-          toast.warning('Operation took longer than expected, refreshing data...');
+          console.log('⚠️ FALLBACK TRIGGERED - Operation timeout, refreshing data:', operationId);
+          toast.warning('Real-time sync delayed, refreshing data...');
           loadPlayers(); // Fallback refresh
           const newSet = new Set(current);
           newSet.delete(operationId);
@@ -79,17 +86,29 @@ export function useSupabaseVolleyball() {
         return current;
       });
     }, 3000); // 3 second timeout
-  };
+  }, []);
 
   // Remove operation from pending list
-  const removePendingOperation = (operationId: string) => {
+  const removePendingOperation = React.useCallback((operationId: string) => {
     console.log('✅ PENDING OPERATION - Completing:', operationId);
     setPendingOperations(prev => {
       const newSet = new Set(prev);
       newSet.delete(operationId);
       return newSet;
     });
-  };
+  }, []);
+
+  // Validate state after updates
+  const validateStateUpdate = React.useCallback((context: string, expectedChange: any) => {
+    setTimeout(() => {
+      console.log(`🔍 STATE VALIDATION - ${context}:`, {
+        playersCount: players.length,
+        expectedChange,
+        currentPlayers: players.map(p => ({ id: p.id, name: p.name })),
+        timestamp: new Date().toISOString()
+      });
+    }, 100); // Small delay to ensure state has updated
+  }, [players.length]);
 
   // Helper function to check if a serve matches current filter context
   const serveMatchesCurrentFilter = (serve: Serve): boolean => {
@@ -268,6 +287,7 @@ export function useSupabaseVolleyball() {
     
     try {
       console.log('➕ PLAYER ADD DEBUG - Starting to add player:', name, 'with tags:', tags, 'operationId:', operationId);
+      console.log('📊 PRE-ADD STATE - Current players count:', players.length);
       
       const { error } = await supabase
         .from('players')
@@ -475,7 +495,7 @@ export function useSupabaseVolleyball() {
     }
   }, [currentGameDay?.id, gameTypeFilter, currentTeamId]);
 
-  // Set up real-time subscriptions - ENHANCED WITH DEBUGGING
+  // Set up real-time subscriptions - ENHANCED WITH STALE CLOSURE FIXES
   useEffect(() => {
     if (!currentTeamId) return;
 
@@ -493,7 +513,6 @@ export function useSupabaseVolleyball() {
         },
         (payload) => {
           console.log('📡 REALTIME DEBUG - Player INSERT event received:', payload.new.name);
-          console.log('📡 REALTIME DEBUG - Current players state before update:', players.length, 'players');
           
           const newPlayer: Player = {
             id: payload.new.id,
@@ -508,13 +527,38 @@ export function useSupabaseVolleyball() {
                   : []) as string[]
           };
           
+          // Use callback pattern to avoid stale closure
           setPlayers(prev => {
             const updated = [...prev, newPlayer];
-            console.log('📡 REALTIME DEBUG - Updated players state:', updated.length, 'players');
+            console.log('📡 REALTIME DEBUG - Updated players state:', {
+              previousCount: prev.length,
+              newCount: updated.length,
+              addedPlayer: newPlayer.name,
+              timestamp: new Date().toISOString()
+            });
+            
+            // Immediate validation
+            setTimeout(() => {
+              console.log('🔍 POST-UPDATE VALIDATION - Player addition:', {
+                newPlayerExists: updated.some(p => p.id === newPlayer.id),
+                totalPlayers: updated.length,
+                newPlayerName: newPlayer.name
+              });
+            }, 50);
+            
             return updated;
           });
           
           setLoadingStates(prev => ({ ...prev, addingPlayer: false }));
+          
+          // Update real-time event tracker
+          setLastPlayerEvent({
+            type: 'INSERT',
+            timestamp: new Date().toISOString(),
+            playerName: newPlayer.name
+          });
+          
+          // Force UI update
           forceUIUpdate();
           
           // Remove from pending operations
@@ -551,6 +595,13 @@ export function useSupabaseVolleyball() {
                 }
               : player
           ));
+          
+          setLastPlayerEvent({
+            type: 'UPDATE',
+            timestamp: new Date().toISOString(),
+            playerName: payload.new.name
+          });
+          
           forceUIUpdate();
           toast.success('Player updated successfully');
         }
@@ -566,10 +617,23 @@ export function useSupabaseVolleyball() {
         (payload) => {
           console.log('📡 REALTIME DEBUG - Player DELETE event received:', payload.old.id);
           
-          const removedPlayerName = players.find(p => p.id === payload.old.id)?.name || 'Unknown';
-          setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
+          setPlayers(prev => {
+            const removedPlayerName = prev.find(p => p.id === payload.old.id)?.name || 'Unknown';
+            const updated = prev.filter(p => p.id !== payload.old.id);
+            
+            setLastPlayerEvent({
+              type: 'DELETE',
+              timestamp: new Date().toISOString(),
+              playerName: removedPlayerName
+            });
+            
+            return updated;
+          });
+          
           setLoadingStates(prev => ({ ...prev, removingPlayer: null }));
           forceUIUpdate();
+          
+          const removedPlayerName = payload.old.name || 'Unknown';
           toast.success(`Player ${removedPlayerName} removed successfully`);
         }
       )
@@ -783,7 +847,7 @@ export function useSupabaseVolleyball() {
       console.log('🧹 REALTIME DEBUG - Cleaning up real-time subscriptions');
       supabase.removeChannel(channel);
     };
-  }, [currentTeamId]); // Only depend on currentTeamId for stable subscriptions
+  }, [currentTeamId, forceUIUpdate, addPendingOperation, removePendingOperation]);
 
   // Custom game types management
   const addCustomGameType = async (abbreviation: string, name: string) => {
@@ -1042,11 +1106,12 @@ export function useSupabaseVolleyball() {
     gameTypeFilter,
     serves,
     loading,
-    loadingStates, // Expose loading states for UI
+    loadingStates,
     gameTypes: defaultGameTypes,
     customGameTypes,
-    uiVersion, // Expose UI version for components that need to track updates
-    
+    renderTrigger,
+    lastPlayerEvent,
+
     // Actions
     addPlayer,
     removePlayer,
@@ -1056,24 +1121,24 @@ export function useSupabaseVolleyball() {
     addGameDay,
     setCurrentGameDay: setCurrentGameDayById,
     setGameTypeFilter,
-    
+
     // Game type management
     addCustomGameType,
     updateGameType,
     removeCustomGameType,
     getAllGameTypes,
-    
+
     // Stats tracking
     addServe,
     removeServe,
-    
+
     // Helper functions
     getPlayerStats,
     getGameDayServes,
     getFilteredGameDays,
     getFilteredPlayers,
     sortedPlayers,
-    
+
     // Utility
     refreshData: () => {
       loadPlayers();

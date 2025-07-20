@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTeam } from "../context/TeamContext";
@@ -9,6 +10,7 @@ import { GameDaySelector } from "@/components/GameDaySelector";
 import { Scoreboard } from "@/components/Scoreboard";
 import { GameHistory } from "@/components/GameHistory";
 import { StatsDescription } from "@/components/StatsDescription";
+import { RealTimeStatus } from "@/components/RealTimeStatus";
 import { UnifiedTeamManagementDialog } from "@/components/UnifiedTeamManagementDialog";
 import { LogOut, Settings, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -106,6 +108,13 @@ const Index = () => {
             </Button>
           </div>
         </div>
+
+        {/* Real-time connection status */}
+        {currentTeam && (
+          <div className="flex justify-center mb-4">
+            <RealTimeStatus />
+          </div>
+        )}
       </header>
 
       {/* Team Selection */}

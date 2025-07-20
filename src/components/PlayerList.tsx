@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AddPlayerForm } from "./AddPlayerForm";
 import { PlayerManagementDialog } from "./PlayerManagementDialog";
-import { Settings, Plus, Loader2 } from "lucide-react";
+import { Settings, Plus, Loader2, Clock, RefreshCw } from "lucide-react";
 
 export function PlayerList() {
   const { 
@@ -15,38 +15,67 @@ export function PlayerList() {
     gameTypeFilter, 
     players, 
     loadingStates,
-    uiVersion // Add uiVersion to track updates
+    renderTrigger, // Track render updates
+    lastPlayerEvent, // Show last real-time event
+    refreshData // Manual refresh function
   } = useSupabaseVolleyball();
   
   // Get filtered players based on current game day or game type filter
   const filteredPlayers = getFilteredPlayers();
   
-  console.log('👥 PLAYER LIST DEBUG - Component render:', {
-    filteredPlayersCount: filteredPlayers.length,
-    totalPlayersCount: players.length,
-    currentGameDay: currentGameDay?.id,
-    gameTypeFilter,
-    loadingStates,
-    uiVersion,
-    timestamp: new Date().toISOString()
-  });
-  
-  // Debug component re-renders
+  // Component render tracking
   React.useEffect(() => {
-    console.log('👥 PLAYER LIST DEBUG - Component re-rendered due to dependency change:', {
-      playersLength: players.length,
-      uiVersion,
+    console.log('👥 PLAYER LIST DEBUG - Component rendered:', {
+      renderTrigger,
+      filteredPlayersCount: filteredPlayers.length,
+      totalPlayersCount: players.length,
+      lastPlayerEvent,
       timestamp: new Date().toISOString()
     });
-  }, [players.length, uiVersion]);
+  }); // Run on every render to track all updates
+  
+  // Debug component re-renders based on dependencies
+  React.useEffect(() => {
+    console.log('👥 PLAYER LIST DEBUG - Component dependency change detected:', {
+      playersLength: players.length,
+      renderTrigger,
+      lastPlayerEvent,
+      timestamp: new Date().toISOString()
+    });
+  }, [players.length, renderTrigger, lastPlayerEvent]);
   
   return (
     <>
       <Card className="w-full">
         <CardHeader className="pb-3 px-3 sm:px-6">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg sm:text-xl">Players</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg sm:text-xl">Players</CardTitle>
+              {/* Real-time event indicator */}
+              {lastPlayerEvent && (
+                <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                  <Clock className="h-3 w-3" />
+                  <span>
+                    Last {lastPlayerEvent.type.toLowerCase()}: {lastPlayerEvent.playerName}
+                  </span>
+                  <span className="text-xs opacity-75">
+                    {new Date(lastPlayerEvent.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+              )}
+            </div>
             <div className="flex items-center gap-1 sm:gap-2">
+              {/* Manual refresh button */}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={refreshData}
+                className="h-8 w-8 p-0"
+                title="Manual refresh"
+              >
+                <RefreshCw className="h-3 w-3" />
+              </Button>
+              
               <PlayerManagementDialog>
                 <Button 
                   variant="outline" 
@@ -71,11 +100,21 @@ export function PlayerList() {
             </div>
           )}
           
+          {/* Debug info in development */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="mb-4 p-2 bg-slate-100 rounded text-xs text-slate-600">
+              <div>Players: {filteredPlayers.length} | Render: {renderTrigger}</div>
+              {lastPlayerEvent && (
+                <div>Last Event: {lastPlayerEvent.type} - {lastPlayerEvent.playerName}</div>
+              )}
+            </div>
+          )}
+          
           <div className="space-y-2">
             {filteredPlayers.length > 0 ? (
               filteredPlayers.map(player => (
                 <PlayerCard 
-                  key={player.id} // Use only stable ID
+                  key={`${player.id}-${renderTrigger}`} // Force re-render when renderTrigger changes
                   player={player} 
                   gameId={currentGameDay?.id}
                 />
