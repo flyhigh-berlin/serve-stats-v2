@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AddPlayerForm } from "./AddPlayerForm";
 import { PlayerManagementDialog } from "./PlayerManagementDialog";
-import { Settings, Plus, Loader2, Clock, RefreshCw } from "lucide-react";
+import { Settings, RefreshCw, Loader2, Wifi, WifiOff, Clock } from "lucide-react";
 
 export function PlayerList() {
   const { 
@@ -15,9 +15,10 @@ export function PlayerList() {
     gameTypeFilter, 
     players, 
     loadingStates,
-    renderTrigger, // Track render updates
-    lastPlayerEvent, // Show last real-time event
-    refreshData // Manual refresh function
+    lastUpdateTimestamp,
+    lastRealTimeEvent,
+    realtimeConnectionStatus,
+    refreshData
   } = useSupabaseVolleyball();
   
   // Get filtered players based on current game day or game type filter
@@ -26,10 +27,11 @@ export function PlayerList() {
   // Component render tracking
   React.useEffect(() => {
     console.log('👥 PLAYER LIST DEBUG - Component rendered:', {
-      renderTrigger,
+      lastUpdateTimestamp,
       filteredPlayersCount: filteredPlayers.length,
       totalPlayersCount: players.length,
-      lastPlayerEvent,
+      lastRealTimeEvent,
+      realtimeConnectionStatus,
       timestamp: new Date().toISOString()
     });
   }); // Run on every render to track all updates
@@ -38,11 +40,11 @@ export function PlayerList() {
   React.useEffect(() => {
     console.log('👥 PLAYER LIST DEBUG - Component dependency change detected:', {
       playersLength: players.length,
-      renderTrigger,
-      lastPlayerEvent,
+      lastUpdateTimestamp,
+      lastRealTimeEvent,
       timestamp: new Date().toISOString()
     });
-  }, [players.length, renderTrigger, lastPlayerEvent]);
+  }, [players.length, lastUpdateTimestamp, lastRealTimeEvent]);
   
   return (
     <>
@@ -51,15 +53,38 @@ export function PlayerList() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <CardTitle className="text-lg sm:text-xl">Players</CardTitle>
+              
+              {/* Real-time connection status */}
+              <div className="flex items-center gap-1 text-xs">
+                {realtimeConnectionStatus === 'connected' && (
+                  <div className="flex items-center gap-1 text-green-600">
+                    <Wifi className="h-3 w-3" />
+                    <span>Live</span>
+                  </div>
+                )}
+                {realtimeConnectionStatus === 'disconnected' && (
+                  <div className="flex items-center gap-1 text-red-600">
+                    <WifiOff className="h-3 w-3" />
+                    <span>Offline</span>
+                  </div>
+                )}
+                {realtimeConnectionStatus === 'connecting' && (
+                  <div className="flex items-center gap-1 text-yellow-600">
+                    <Clock className="h-3 w-3 animate-spin" />
+                    <span>Connecting...</span>
+                  </div>
+                )}
+              </div>
+              
               {/* Real-time event indicator */}
-              {lastPlayerEvent && (
+              {lastRealTimeEvent && lastRealTimeEvent.table === 'players' && (
                 <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
                   <Clock className="h-3 w-3" />
                   <span>
-                    Last {lastPlayerEvent.type.toLowerCase()}: {lastPlayerEvent.playerName}
+                    Last {lastRealTimeEvent.type.toLowerCase()}: {lastRealTimeEvent.entityName}
                   </span>
                   <span className="text-xs opacity-75">
-                    {new Date(lastPlayerEvent.timestamp).toLocaleTimeString()}
+                    {new Date(lastRealTimeEvent.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
               )}
@@ -103,9 +128,10 @@ export function PlayerList() {
           {/* Debug info in development */}
           {process.env.NODE_ENV === 'development' && (
             <div className="mb-4 p-2 bg-slate-100 rounded text-xs text-slate-600">
-              <div>Players: {filteredPlayers.length} | Render: {renderTrigger}</div>
-              {lastPlayerEvent && (
-                <div>Last Event: {lastPlayerEvent.type} - {lastPlayerEvent.playerName}</div>
+              <div>Players: {filteredPlayers.length} | Update: {lastUpdateTimestamp}</div>
+              <div>Connection: {realtimeConnectionStatus}</div>
+              {lastRealTimeEvent && lastRealTimeEvent.table === 'players' && (
+                <div>Last Event: {lastRealTimeEvent.type} - {lastRealTimeEvent.entityName}</div>
               )}
             </div>
           )}
@@ -114,7 +140,7 @@ export function PlayerList() {
             {filteredPlayers.length > 0 ? (
               filteredPlayers.map(player => (
                 <PlayerCard 
-                  key={`${player.id}-${renderTrigger}`} // Force re-render when renderTrigger changes
+                  key={player.id} // Use stable player ID only
                   player={player} 
                   gameId={currentGameDay?.id}
                 />
