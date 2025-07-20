@@ -9,7 +9,14 @@ import { PlayerManagementDialog } from "./PlayerManagementDialog";
 import { Settings, Plus, Loader2 } from "lucide-react";
 
 export function PlayerList() {
-  const { getFilteredPlayers, currentGameDay, gameTypeFilter, players, loadingStates } = useSupabaseVolleyball();
+  const { 
+    getFilteredPlayers, 
+    currentGameDay, 
+    gameTypeFilter, 
+    players, 
+    loadingStates,
+    uiVersion // Add uiVersion to track updates
+  } = useSupabaseVolleyball();
   
   // Get filtered players based on current game day or game type filter
   const filteredPlayers = getFilteredPlayers();
@@ -20,8 +27,18 @@ export function PlayerList() {
     currentGameDay: currentGameDay?.id,
     gameTypeFilter,
     loadingStates,
+    uiVersion,
     timestamp: new Date().toISOString()
   });
+  
+  // Debug component re-renders
+  React.useEffect(() => {
+    console.log('👥 PLAYER LIST DEBUG - Component re-rendered due to dependency change:', {
+      playersLength: players.length,
+      uiVersion,
+      timestamp: new Date().toISOString()
+    });
+  }, [players.length, uiVersion]);
   
   return (
     <>
@@ -58,7 +75,7 @@ export function PlayerList() {
             {filteredPlayers.length > 0 ? (
               filteredPlayers.map(player => (
                 <PlayerCard 
-                  key={player.id} // Use stable ID only, no Date.now()
+                  key={player.id} // Use only stable ID
                   player={player} 
                   gameId={currentGameDay?.id}
                 />

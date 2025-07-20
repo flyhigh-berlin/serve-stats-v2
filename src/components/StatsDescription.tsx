@@ -4,12 +4,18 @@ import { useSupabaseVolleyball } from "../hooks/useSupabaseVolleyball";
 import { format } from "date-fns";
 
 export function StatsDescription() {
-  const { currentGameDay, gameTypeFilter, getAllGameTypes } = useSupabaseVolleyball();
+  const { 
+    currentGameDay, 
+    gameTypeFilter, 
+    getAllGameTypes,
+    uiVersion // Add uiVersion to track updates
+  } = useSupabaseVolleyball();
   
   console.log('📋 STATS DESCRIPTION DEBUG - Component render:', { 
     currentGameDayId: currentGameDay?.id, 
     currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
     gameTypeFilter,
+    uiVersion,
     timestamp: new Date().toISOString()
   });
   
@@ -28,6 +34,7 @@ export function StatsDescription() {
       currentGameDayId: currentGameDay?.id,
       currentGameDayTitle: currentGameDay?.title || currentGameDay?.date,
       gameTypeFilter,
+      uiVersion,
       timestamp: new Date().toISOString()
     });
     
@@ -45,7 +52,7 @@ export function StatsDescription() {
       console.log('📋 STATS DESCRIPTION DEBUG - Generated description for all games:', result);
       return result;
     }
-  }, [currentGameDay?.id, currentGameDay?.title, currentGameDay?.date, currentGameDay?.gameType, gameTypeFilter, getAllGameTypes]);
+  }, [currentGameDay?.id, currentGameDay?.title, currentGameDay?.date, currentGameDay?.gameType, gameTypeFilter, getAllGameTypes, uiVersion]);
   
   console.log('📋 STATS DESCRIPTION DEBUG - Final description:', description);
   

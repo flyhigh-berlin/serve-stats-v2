@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeam } from "../context/TeamContext";
@@ -32,6 +31,12 @@ export function useSupabaseVolleyball() {
     recordingServe: null,
     removingServe: null
   });
+  
+  // Add version counter for force re-renders
+  const [uiVersion, setUiVersion] = useState(0);
+  
+  // Add fallback refresh mechanism
+  const [pendingOperations, setPendingOperations] = useState<Set<string>>(new Set());
 
   const currentTeamId = currentTeam?.id;
 
@@ -43,8 +48,48 @@ export function useSupabaseVolleyball() {
     playersCount: players.length,
     servesCount: serves.length,
     loadingStates,
+    uiVersion,
+    pendingOperations: Array.from(pendingOperations),
     timestamp: new Date().toISOString()
   });
+
+  // Force UI re-render when data changes
+  const forceUIUpdate = () => {
+    const newVersion = uiVersion + 1;
+    console.log('🔄 FORCE UPDATE - Incrementing UI version:', uiVersion, '->', newVersion);
+    setUiVersion(newVersion);
+  };
+
+  // Add operation to pending list
+  const addPendingOperation = (operationId: string) => {
+    console.log('⏳ PENDING OPERATION - Adding:', operationId);
+    setPendingOperations(prev => new Set([...prev, operationId]));
+    
+    // Set up fallback timeout
+    setTimeout(() => {
+      setPendingOperations(current => {
+        if (current.has(operationId)) {
+          console.log('⚠️ FALLBACK TRIGGERED - Operation timeout:', operationId);
+          toast.warning('Operation took longer than expected, refreshing data...');
+          loadPlayers(); // Fallback refresh
+          const newSet = new Set(current);
+          newSet.delete(operationId);
+          return newSet;
+        }
+        return current;
+      });
+    }, 3000); // 3 second timeout
+  };
+
+  // Remove operation from pending list
+  const removePendingOperation = (operationId: string) => {
+    console.log('✅ PENDING OPERATION - Completing:', operationId);
+    setPendingOperations(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(operationId);
+      return newSet;
+    });
+  };
 
   // Helper function to check if a serve matches current filter context
   const serveMatchesCurrentFilter = (serve: Serve): boolean => {
@@ -106,6 +151,7 @@ export function useSupabaseVolleyball() {
 
       console.log('✅ LOADING DEBUG - Players loaded successfully:', formattedPlayers.length, 'players');
       setPlayers(formattedPlayers);
+      forceUIUpdate();
     } catch (error) {
       console.error('❌ LOADING DEBUG - Error loading players:', error);
       toast.error('Failed to load players');
@@ -210,15 +256,18 @@ export function useSupabaseVolleyball() {
     }
   };
 
-  // Add player - REAL-TIME FIRST APPROACH
+  // Add player - REAL-TIME FIRST APPROACH with enhanced debugging
   const addPlayer = async (name: string, tags: string[] = []) => {
     if (!currentTeamId) return;
+    
+    const operationId = `add-player-${Date.now()}`;
+    addPendingOperation(operationId);
     
     setLoadingStates(prev => ({ ...prev, addingPlayer: true }));
     toast("Adding player...", { description: "Please wait for confirmation" });
     
     try {
-      console.log('➕ PLAYER ADD DEBUG - Starting to add player:', name, 'with tags:', tags);
+      console.log('➕ PLAYER ADD DEBUG - Starting to add player:', name, 'with tags:', tags, 'operationId:', operationId);
       
       const { error } = await supabase
         .from('players')
@@ -232,12 +281,13 @@ export function useSupabaseVolleyball() {
 
       if (error) throw error;
 
-      console.log('✅ PLAYER ADD DEBUG - Player added to database, waiting for real-time confirmation');
+      console.log('✅ PLAYER ADD DEBUG - Player added to database, waiting for real-time confirmation, operationId:', operationId);
       // Success toast will be shown by real-time subscription
     } catch (error) {
       console.error('❌ PLAYER ADD DEBUG - Error adding player:', error);
       toast.error('Failed to add player');
       setLoadingStates(prev => ({ ...prev, addingPlayer: false }));
+      removePendingOperation(operationId);
     }
   };
 
@@ -425,7 +475,7 @@ export function useSupabaseVolleyball() {
     }
   }, [currentGameDay?.id, gameTypeFilter, currentTeamId]);
 
-  // Set up real-time subscriptions - SIMPLIFIED AND STABLE
+  // Set up real-time subscriptions - ENHANCED WITH DEBUGGING
   useEffect(() => {
     if (!currentTeamId) return;
 
@@ -443,6 +493,7 @@ export function useSupabaseVolleyball() {
         },
         (payload) => {
           console.log('📡 REALTIME DEBUG - Player INSERT event received:', payload.new.name);
+          console.log('📡 REALTIME DEBUG - Current players state before update:', players.length, 'players');
           
           const newPlayer: Player = {
             id: payload.new.id,
@@ -457,8 +508,21 @@ export function useSupabaseVolleyball() {
                   : []) as string[]
           };
           
-          setPlayers(prev => [...prev, newPlayer]);
+          setPlayers(prev => {
+            const updated = [...prev, newPlayer];
+            console.log('📡 REALTIME DEBUG - Updated players state:', updated.length, 'players');
+            return updated;
+          });
+          
           setLoadingStates(prev => ({ ...prev, addingPlayer: false }));
+          forceUIUpdate();
+          
+          // Remove from pending operations
+          const operationId = Array.from(pendingOperations).find(id => id.includes('add-player'));
+          if (operationId) {
+            removePendingOperation(operationId);
+          }
+          
           toast.success(`Player ${newPlayer.name} added successfully`);
         }
       )
@@ -487,6 +551,7 @@ export function useSupabaseVolleyball() {
                 }
               : player
           ));
+          forceUIUpdate();
           toast.success('Player updated successfully');
         }
       )
@@ -504,6 +569,7 @@ export function useSupabaseVolleyball() {
           const removedPlayerName = players.find(p => p.id === payload.old.id)?.name || 'Unknown';
           setPlayers(prev => prev.filter(p => p.id !== payload.old.id));
           setLoadingStates(prev => ({ ...prev, removingPlayer: null }));
+          forceUIUpdate();
           toast.success(`Player ${removedPlayerName} removed successfully`);
         }
       )
@@ -979,6 +1045,7 @@ export function useSupabaseVolleyball() {
     loadingStates, // Expose loading states for UI
     gameTypes: defaultGameTypes,
     customGameTypes,
+    uiVersion, // Expose UI version for components that need to track updates
     
     // Actions
     addPlayer,
